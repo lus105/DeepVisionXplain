@@ -73,6 +73,7 @@ class CnnLitModule(LightningModule):
             - A tensor of target labels.
         """
         x, y = batch
+        y = y.view(-1, 1).float()
         logits = self.forward(x)
         loss = self.criterion(logits, y)
         preds = (logits > 0.5).float()

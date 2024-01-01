@@ -1,0 +1,8 @@
+_target_: src.data.dir_datamodule.DirDataModule
+data_dir: "data/"
+train_subdir: "train/"
+val_subdir: "val/"
+test_subdir: "test/"
+batch_size: 64
+num_workers: 0
+pin_memory: false

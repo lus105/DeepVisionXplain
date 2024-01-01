@@ -1,0 +1,24 @@
+_target_: src.models.cnn_module.CnnLitModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  weight_decay: 0.0
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 10
+
+net:
+  _target_: src.models.components.cnn_cam_multihead.EfficientNetB3CAMMultihead
+  multi_head: false
+  return_nodes: {"features.5.1.block.2": "layerout"}
+  last_layer_features: 816
+  weights: "IMAGENET1K_V1"
+
+# compile model for faster training with pytorch 2.0
+compile: false
