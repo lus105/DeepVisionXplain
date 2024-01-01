@@ -1,0 +1,39 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: dir
+  - override /model: cnn
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: csv
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["cnn", "EfficientNetB3CAMMultihead"]
+
+seed: 12345
+
+trainer:
+  min_epochs: 10
+  max_epochs: 20
+  gradient_clip_val: 0.5
+  accelerator: gpu
+
+model:
+  optimizer:
+    lr: 0.001
+  compile: false
+
+data:
+  batch_size: 8
+  data_dir: ${oc.env:data_path}
+# logger:
+#   wandb:
+#     tags: ${tags}
+#     group: "mnist"
+#   aim:
+#     experiment: "mnist"

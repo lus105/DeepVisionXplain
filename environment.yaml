@@ -18,6 +18,9 @@ dependencies:
   - pre-commit=3.*
   - pytest=7.*
   - wandb=0.*
+  - opencv=4.*
+  - matplotlib=3.*
+
 
   - pip>=23
   - pip:

@@ -1,25 +1,31 @@
 ## Project Description
 
-This repository aims to compare CNN (CAM) and ViT (attention rollout) explainability output. 
+This repository aims to compare CNN (CAM) and ViT (attention rollout) explainability output.
 
 ## Tasks
+
 In progress:
+
 - [ ] Implement CAM for CNN (single iteration).
 - [ ] Image patching preprocessing step.
 
 To do:
+
 - [ ] Implement attention rollout for ViT (single iteration).
 - [ ] Training both models on defect detection datasets.
 - [ ] Compare the results based on conventional and custom metrics.
 - [ ] Open source repo, paper?
 
 Done:
-- [X] Environment setup, getting used to template style.
+
+- [x] Environment setup, getting used to template style.
 
 Considerations:
+
 1. Higher resolution images preprocessing into patches.
-* Preprocessing as separate process and caching patches into directory.
-* Using patch-based pipelines (https://torchio.readthedocs.io/patches/index.html)
+
+- Preprocessing as separate process and caching patches into directory.
+- Using patch-based pipelines (https://torchio.readthedocs.io/patches/index.html)
 
 ## Installation
 
