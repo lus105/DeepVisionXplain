@@ -7,7 +7,7 @@ from torchvision.models.feature_extraction import create_feature_extractor
 
 class FeatureExtractor(nn.Module):
     """Initialize Feature extractor."""
-    
+
     def __init__(self, pretrained_model, return_nodes: dict) -> None:
         """Initialize a `FeatureExtractor` module.
 
@@ -85,10 +85,11 @@ class ClassActivationMapGenerator(nn.Module):
         weights = self.sigmoid_fc.weight.data.unsqueeze(-1).unsqueeze(-1)
         cam = torch.einsum("ijkl,ijkl->ikl", features, weights).unsqueeze(1)  # (B, 1, H, W)
 
-        cam = F.interpolate(cam,
-                            size=input.size()[2:],
-                            mode="bilinear",
-                            align_corners=False).squeeze(1)  # (B, H, W)
+        cam = F.interpolate(
+            cam, size=input.size()[2:], mode="bilinear", align_corners=False
+        ).squeeze(
+            1
+        )  # (B, H, W)
 
         return cam
 

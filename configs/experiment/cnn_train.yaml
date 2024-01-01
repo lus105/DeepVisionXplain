@@ -31,7 +31,6 @@ model:
 data:
   batch_size: 8
   data_dir: ${oc.env:data_path}
-
 # logger:
 #   wandb:
 #     tags: ${tags}

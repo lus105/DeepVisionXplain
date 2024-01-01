@@ -16,7 +16,7 @@ scheduler:
 net:
   _target_: src.models.components.cnn_cam_multihead.EfficientNetB3CAMMultihead
   multi_head: false
-  return_nodes: {"features.5.1.block.2": "layerout"}
+  return_nodes: { "features.5.1.block.2": "layerout" }
   last_layer_features: 816
   weights: "IMAGENET1K_V1"
 
