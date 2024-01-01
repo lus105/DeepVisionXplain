@@ -3,12 +3,12 @@
 This repository aims to compare CNN (CAM) and ViT (attention rollout) explainability output. 
 
 Main goals:
-1. Environment setup, getting used to template style.
-2. Implement CAM for CNN (single iteration).
-3. Implement attention rollout for ViT (single iteration).
-4. Training both models on defect detection datasets.
-5. Compare the results based on conventional and custom metrics.
-6. Open source repo, paper?
+- [X] Environment setup, getting used to template style.
+- [ ] Implement CAM for CNN (single iteration).
+- [ ] Implement attention rollout for ViT (single iteration).
+- [ ] Training both models on defect detection datasets.
+- [ ] Compare the results based on conventional and custom metrics.
+- [ ] Open source repo, paper?
 
 ## Installation
 
