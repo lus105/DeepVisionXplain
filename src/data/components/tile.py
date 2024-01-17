@@ -66,3 +66,8 @@ class Tile:
     def save_label_tile(self, output_dir: str) -> None:
         """Save the label tile to the specified directory."""
         cv2.imwrite(self.get_label_tile_path(output_dir), self.__tile_label)
+
+    def is_defective(self, min_defective_area) -> bool:
+        """Return True if the tile is defective, False otherwise."""
+        defective_area = np.sum(self.__tile_label == 255)
+        return defective_area > min_defective_area
