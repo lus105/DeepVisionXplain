@@ -30,7 +30,7 @@ model:
 
 data:
   batch_size: 8
-  data_dir: ${oc.env:data_path}
+  data_dir: ${oc.env:gears_data_path}
 # logger:
 #   wandb:
 #     tags: ${tags}
