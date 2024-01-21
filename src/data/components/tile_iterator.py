@@ -2,7 +2,7 @@ import math
 import numpy as np
 from collections import defaultdict
 
-from tile import Tile
+from src.data.components.tile import Tile
 
 class TileIterator:
     def __init__(self,
