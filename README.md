@@ -5,7 +5,7 @@ This repository aims to compare CNN (CAM) and ViT (attention rollout) explainabi
 ## Tasks
 In progress:
 - [ ] Implement CAM for CNN (single iteration).
-- [ ] Image patching preprocessing step.
+- [ ] Image splitting and patching preprocessing step.
 
 To do:
 - [ ] Implement attention rollout for ViT (single iteration).
@@ -16,10 +16,6 @@ To do:
 Done:
 - [X] Environment setup, getting used to template style.
 
-Considerations:
-1. Higher resolution images preprocessing into patches.
-* Preprocessing as separate process and caching patches into directory.
-* Using patch-based pipelines (https://torchio.readthedocs.io/patches/index.html)
 
 ## Installation
 
