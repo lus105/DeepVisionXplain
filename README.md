@@ -19,8 +19,6 @@ To do:
 Done:
 
 
-- Preprocessing as separate process and caching patches into directory.
-- Using patch-based pipelines (https://torchio.readthedocs.io/patches/index.html)
 
 ## Installation
 
