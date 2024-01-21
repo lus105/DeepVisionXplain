@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 from typing import Tuple
 
-
 class Tile:
     def __init__(self,
                  image: np.array,
@@ -61,10 +60,12 @@ class Tile:
 
     def save_tile(self, output_dir: str) -> None:
         """Save the tile image to the specified directory."""
+        os.makedirs(output_dir, exist_ok=True)
         cv2.imwrite(self.get_tile_path(output_dir), self.__tile_image)
 
     def save_label_tile(self, output_dir: str) -> None:
         """Save the label tile to the specified directory."""
+        os.makedirs(output_dir, exist_ok=True)
         cv2.imwrite(self.get_label_tile_path(output_dir), self.__tile_label)
 
     def is_defective(self, min_defective_area) -> bool:
