@@ -1,24 +1,8 @@
-import glob
 import os
 import shutil
 
-def gather_image_from_dir(input_dir: str):
-    """
-    Collects a list of image file paths from a specified directory.
-
-    Args:
-    - input_dir (str): The directory from which to gather image files.
-
-    Returns:
-    - list: A list of file paths for images in the specified directory.
-    Supported image formats include BMP, JPG, and PNG.
-    """
-    image_extensions = ['*.bmp', '*.jpg', '*.png']
-    image_list = []
-    for image_extension in image_extensions:
-        image_list.extend(glob.glob(input_dir + image_extension))
-    image_list.sort()
-    return image_list
+IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp']
+ANNOTATION_EXTENSIONS = ['.json', '.xml']
 
 def get_file_name(path: str) -> str:
     """
@@ -58,9 +42,9 @@ def find_annotation_file(directory: str, file_name: str):
     Returns:
     - str or None: The path of the found file with the specified base name, or None if not found.
     """
-    image_extensions = ['.bmp', '.jpg', '.png', '.json']
-    for image_extension in image_extensions:
-        file_path = os.path.join(directory, file_name + image_extension)
+    file_extensions = IMAGE_EXTENSIONS + ANNOTATION_EXTENSIONS
+    for extension in file_extensions:
+        file_path = os.path.join(directory, file_name + extension)
         if os.path.isfile(file_path):
             return file_path
     return None
@@ -82,7 +66,7 @@ def clear_directory(directory_path):
             clear_directory(file_path)
             os.rmdir(file_path)
 
-def get_image_paths(directory_path: str):
+def get_file_paths_rec(directory_path: str):
     """
     Returns a list of image paths from the given directory and its subdirectories.
 
@@ -92,13 +76,13 @@ def get_image_paths(directory_path: str):
     Returns:
     - list: List of image paths. Supported image formats include JPG, JPEG, PNG, and BMP.
     """
-    image_extensions = ['.jpg', '.jpeg', '.png', '.bmp']
-    image_paths = [os.path.join(root, file) 
-                   for root, dirs, files in os.walk(directory_path) 
-                   for file in files 
-                   if os.path.splitext(file)[1].lower() in image_extensions]
+    file_extensions = IMAGE_EXTENSIONS + ANNOTATION_EXTENSIONS
+    file_paths = [os.path.join(root, file) 
+                  for root, dirs, files in os.walk(directory_path) 
+                  for file in files 
+                  if os.path.splitext(file)[1].lower() in file_extensions]
     
-    return image_paths
+    return file_paths
 
 def save_files(file_paths, target_dir):
     """
