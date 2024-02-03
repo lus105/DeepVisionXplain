@@ -17,6 +17,9 @@ defaults:
   # e.g. best hyperparameters for given model and datamodule
   - experiment: null
 
+  # training runs
+  - runs: null
+
   # config for hyperparameter optimization
   - hparams_search: null
 
