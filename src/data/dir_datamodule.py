@@ -1,12 +1,13 @@
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
-import torch
 from lightning import LightningDataModule
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
 
+from src.data.components.data_splitter import DatasetSplitter
+from src.data.components.tile_processor import TilingProcessor
 
 class DirDataModule(LightningDataModule):
     def __init__(
@@ -15,9 +16,12 @@ class DirDataModule(LightningDataModule):
         train_subdir: str = "train/",
         val_subdir: str = "val/",
         test_subdir: str = "test/",
+        image_subdir: str = "images/",
+        label_subdir: str = "labels/",
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
+        preprocessor: TilingProcessor = None,
     ) -> None:
         """Initialize a `DirDataModule`.
 
@@ -49,6 +53,9 @@ class DirDataModule(LightningDataModule):
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
 
+        self.data_splitter = DatasetSplitter(os.path.join(self.hparams.data_dir, self.hparams.image_subdir),
+                                             os.path.join(self.hparams.data_dir, self.hparams.label_subdir))
+
     @property
     def num_classes(self) -> int:
         """Get the number of classes.
@@ -58,8 +65,25 @@ class DirDataModule(LightningDataModule):
         return 2
 
     def prepare_data(self) -> None:
-        # Assuming the directory dataset doesn't need downloading.
-        pass
+        """Prepare data.
+        """
+        
+        # Define directories for train, test, and validation subsets.
+        subsets = ['train', 'test', 'val']
+        dirs = {subset: os.path.join(self.hparams.data_dir, getattr(self.hparams, f"{subset}_subdir")) for subset in subsets}
+        
+        # Save data splits.
+        self.data_splitter.save_splits(
+            dirs['train'],
+            dirs['test'],
+            dirs['val'],
+            self.hparams.image_subdir,
+            self.hparams.label_subdir
+        )
+
+        # Preprocess data for each subset.
+        for dir in dirs.values():
+            self.hparams.preprocessor.process(dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data.

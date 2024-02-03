@@ -18,3 +18,4 @@ rich            # beautiful text formatting in terminal
 pytest          # tests
 opencv-python
 matplotlib
+scikit-learn
