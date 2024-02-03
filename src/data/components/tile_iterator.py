@@ -2,7 +2,7 @@ import math
 import numpy as np
 from collections import defaultdict
 
-from src.data.components.tile import Tile
+from .tile import Tile
 
 class TileIterator:
     def __init__(self,
@@ -28,7 +28,7 @@ class TileIterator:
         self.__good_name = good_name
         self.__defective_name = defective_name
 
-    def get_tiles(self,
+    def _get_tiles(self,
                   image: np.array,
                   label: np.array,
                   image_name: str) -> dict[str, list[Tile]]:
