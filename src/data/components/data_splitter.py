@@ -1,7 +1,7 @@
 import os
 from sklearn.model_selection import train_test_split
 
-from src.data.components.helper_utils import save_files, get_file_paths_rec
+from .helper_utils import save_files, get_file_paths_rec
 
 class DatasetSplitter:
     def __init__(self,

@@ -42,7 +42,7 @@ class TilingProcessor(TileIterator):
         tile_images_dir = os.path.join(path, self.tiles_dir, self.images_dir)
         tile_labels_dir = os.path.join(path, self.tiles_dir, self.labels_dir)
 
-        progress = tqdm(image_list, desc='Processing images') if use_tqdm else image_list
+        progress = tqdm(image_list, desc='Processing images: ' + path) if use_tqdm else image_list
         for image_path in progress:
             image_name = get_file_name(image_path)
             image = cv2.imread(str(image_path))
