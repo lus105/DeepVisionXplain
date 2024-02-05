@@ -9,6 +9,9 @@ from .helper_utils import (get_file_paths_rec,
 from .tile_iterator import TileIterator
 from .label_strategies.label_strategy_factory import get_label_strategy
 
+from src.utils import RankedLogger
+
+log = RankedLogger(__name__, rank_zero_only=True)
 
 class TilingProcessor(TileIterator):
     def __init__(self,
@@ -33,7 +36,7 @@ class TilingProcessor(TileIterator):
 
     def process(self,
                 path: str,
-                use_tqdm: bool = True) -> None:
+                use_tqdm: bool = True) -> str:
         """
         Process all images in the given directory, creating tiles and corresponding labels.
         """
@@ -42,6 +45,11 @@ class TilingProcessor(TileIterator):
         tile_images_dir = os.path.join(path, self.tiles_dir, self.images_dir)
         tile_labels_dir = os.path.join(path, self.tiles_dir, self.labels_dir)
 
+        for directory in [tile_images_dir, tile_labels_dir]:
+            if os.path.exists(directory) and os.listdir(directory):
+                log.warning(f"Directory {directory} is not empty. Skipping tiling.")
+                return tile_images_dir
+
         progress = tqdm(image_list, desc='Processing images: ' + path) if use_tqdm else image_list
         for image_path in progress:
             image_name = get_file_name(image_path)
@@ -49,6 +57,8 @@ class TilingProcessor(TileIterator):
             label = self.__get_label(image, image_name, label_source_dir)
             tiles = self._get_tiles(image, label, image_name)
             self.__save_tiles(tiles, tile_images_dir, tile_labels_dir)
+        
+        return tile_images_dir
 
     def __get_label(self,
                     image: np.array,

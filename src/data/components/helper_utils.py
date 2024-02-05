@@ -1,5 +1,8 @@
 import os
 import shutil
+from src.utils import RankedLogger
+
+log = RankedLogger(__name__, rank_zero_only=True)
 
 IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp']
 ANNOTATION_EXTENSIONS = ['.json', '.xml']
@@ -93,5 +96,11 @@ def save_files(file_paths, target_dir):
     - target_dir (str): The destination directory where files will be copied to.
     """
     os.makedirs(target_dir, exist_ok=True)
+
+    # Check if the directory is empty. If not, raise an exception.
+    if os.listdir(target_dir):  # This returns a non-empty list if the directory has contents.
+        log.warning(f"Directory {target_dir} is not empty. Skipping saving.")
+        return
+    
     for f in file_paths:
         shutil.copy(f, target_dir)
