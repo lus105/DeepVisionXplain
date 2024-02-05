@@ -47,3 +47,7 @@ python src/train.py trainer=cpu
 # train on GPU
 python src/train.py trainer=gpu
 ```
+
+## Resources
+
+PCB, GID and BSData [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
