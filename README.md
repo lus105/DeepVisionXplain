@@ -8,10 +8,10 @@ In progress:
 
 - [ ] Implement CAM for CNN (single iteration).
 - [ ] Image splitting and patching preprocessing step.
+- [ ] Implement attention rollout for ViT (single iteration).
 
 To do:
 
-- [ ] Implement attention rollout for ViT (single iteration).
 - [ ] Training both models on defect detection datasets.
 - [ ] Compare the results based on conventional and custom metrics.
 - [ ] Open source repo, paper?
