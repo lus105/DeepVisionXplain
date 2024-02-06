@@ -28,7 +28,8 @@ Done:
 # clone project
 git clone https://github.com/lus105/DeepVisionXplain.git
 cd DeepVisionXplain
-
+# update conda
+conda update -n base conda
 # create conda environment and install dependencies
 conda env create -f environment.yaml -n DeepVisionXplain
 
