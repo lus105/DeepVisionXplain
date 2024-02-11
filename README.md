@@ -1,6 +1,9 @@
 ## Project Description
 
 This repository aims to compare CNN (CAM) and ViT (attention rollout) explainability output.
+<p align="center">
+  <img src="res/vit_rollout.png" />
+</p>
 
 ## Tasks
 
