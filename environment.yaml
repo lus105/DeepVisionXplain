@@ -28,3 +28,4 @@ dependencies:
       - hydra-optuna-sweeper
       - hydra-colorlog
       - rootutils
+      - torch-summary
