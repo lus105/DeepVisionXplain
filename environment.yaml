@@ -29,3 +29,6 @@ dependencies:
       - hydra-colorlog
       - rootutils
       - torch-summary
+      - timm
+      - onnx
+      - onnxruntime
