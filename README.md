@@ -59,3 +59,7 @@ PCB, GID and BSData [datasets](https://drive.google.com/drive/folders/10yYU8yl3u
 ## Experiments
 
 Experiments [log](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
+
+## Huggingface
+
+Trained [models](https://huggingface.co/DeepVisionXplain).
