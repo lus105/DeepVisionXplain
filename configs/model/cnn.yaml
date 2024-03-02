@@ -1,4 +1,4 @@
-_target_: src.models.cnn_module.CnnLitModule
+_target_: src.models.training_module.TrainingLitModule
 
 optimizer:
   _target_: torch.optim.Adam
