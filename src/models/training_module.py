@@ -6,7 +6,7 @@ from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 
 
-class CnnLitModule(LightningModule):
+class TrainingLitModule(LightningModule):
     def __init__(
         self,
         net: torch.nn.Module,
@@ -74,7 +74,7 @@ class CnnLitModule(LightningModule):
         """
         x, y = batch
         y = y.view(-1, 1).float()
-        logits = self.forward(x)
+        logits = torch.sigmoid(self.forward(x))
         loss = self.criterion(logits, y)
         preds = (logits > 0.5).float()
         return loss, preds, y
@@ -183,4 +183,4 @@ class CnnLitModule(LightningModule):
 
 
 if __name__ == "__main__":
-    _ = CnnLitModule(None, None, None, None)
+    _ = TrainingLitModule(None, None, None, None)
