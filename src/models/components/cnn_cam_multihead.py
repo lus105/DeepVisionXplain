@@ -48,7 +48,7 @@ class BinaryClassificationHead(nn.Module):
         """
         super().__init__()
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.sigmoid_fc = nn.Linear(last_layer_features, 1)
+        self.fc = nn.Linear(last_layer_features, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the network.
@@ -58,8 +58,8 @@ class BinaryClassificationHead(nn.Module):
         """
         x = self.global_avg_pool(x)
         x = torch.flatten(x, 1)
-        x = self.sigmoid_fc(x)
-        return torch.sigmoid(x)
+        x = self.fc(x)
+        return x
 
 
 class ClassActivationMapGenerator(nn.Module):
@@ -118,7 +118,7 @@ class EfficientNetB3CAMMultihead(nn.Module):
         pretrained_model = efficientnet_b3(weights=weights)
         self.feature_extractor = FeatureExtractor(pretrained_model, return_nodes=return_nodes)
         self.output_layer = BinaryClassificationHead(last_layer_features=last_layer_features)
-        self.cam_generator = ClassActivationMapGenerator(self.output_layer.sigmoid_fc)
+        self.cam_generator = ClassActivationMapGenerator(self.output_layer.fc)
         self.multi_head = multi_head
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
