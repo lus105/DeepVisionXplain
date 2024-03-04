@@ -24,7 +24,7 @@ def load_and_run_onnx_model(onnx_file_path, input_size=(1, 3, 224, 224)):
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Load and run an ONNX model")
-    parser.add_argument("onnx_file_path",
+    parser.add_argument("--onnx_file_path",
                         help="Path to the ONNX model file")
     parser.add_argument("--input_size",
                         nargs="+",
@@ -32,7 +32,8 @@ def main():
                         default=[1, 3, 224, 224],
                         help="Input size of the model")
     args = parser.parse_args()
-    load_and_run_onnx_model(args)
+    
+    load_and_run_onnx_model(args.onnx_file_path, args.input_size)
 
 if __name__ == "__main__":
     main()
