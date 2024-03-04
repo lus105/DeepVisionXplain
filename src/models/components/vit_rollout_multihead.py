@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import timm
+from torchvision.models.feature_extraction import create_feature_extractor
 
 class Vit(nn.Module):
     def __init__(
@@ -9,7 +10,8 @@ class Vit(nn.Module):
             pretrained: bool = True,
             weight_path: str = None,
             output_size: int = 1,
-            return_nodes: str = 'attn_drop'
+            return_nodes: str = 'attn_drop',
+            head_name: str = 'head'
             ) -> None:
         super().__init__()
         self.model_name = model_name
@@ -17,15 +19,16 @@ class Vit(nn.Module):
         self.weight_path = weight_path
         self.output_size = output_size
         self.return_nodes = return_nodes
+        self.head_name = head_name
         self.model = self.__create_model()
         self.__customize_classifier()
-        self.feature_outputs = []  # For storing features from hooks
-        self.__attach_hooks()
+        self.feature_extractor = self.__create_feature_extractor()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        out = self.model(input)
-        features = self.feature_outputs
-        return features, out 
+        out = self.feature_extractor(input)
+        attn_drop_tensors = [v for k, v in out.items() if self.return_nodes in k]
+        classification_out = out[self.head_name]
+        return attn_drop_tensors, classification_out
     
     def __create_model(self) -> nn.Module:
         model = timm.create_model(self.model_name, pretrained=self.pretrained)
@@ -37,61 +40,63 @@ class Vit(nn.Module):
         in_features = self.model.head.in_features
         self.model.head = nn.Linear(in_features, self.output_size)
     
-    def __attach_hooks(self) -> nn.Module:
+    def __create_feature_extractor(self) -> nn.Module:
         for block in self.model.blocks:
             block.attn.fused_attn = False
         
-        def hook_fn(module, input, output):
-            self.feature_outputs.append(output)
+        feature_layer_names = []
+        for name, i in self.model.named_modules():
+            if 'attn_drop' in name:
+                feature_layer_names.append(name)
+        
+        # add classification output
+        feature_layer_names.append(self.head_name)
 
-        # Traverse the model and attach hooks to the layers of interest
-        for name, layer in self.model.named_modules():
-            if self.return_nodes in name:
-                layer.register_forward_hook(hook_fn)
+        feature_extractor = create_feature_extractor(self.model,
+                                                     return_nodes=feature_layer_names)
+        return feature_extractor
 
 
 class AttentionRollout():
-    def __init__(
-            self,
-            discard_ratio: int = 0.2,
-            head_fusion: str = "mean"
-            ) -> None:
+    def __init__(self, discard_ratio: float = 0.2, head_fusion: str = "mean") -> None:
         self.discard_ratio = discard_ratio
         self.head_fusion = head_fusion
 
     def __call__(self, attentions: list[torch.Tensor]) -> torch.Tensor:
         device = attentions[0].device
-        # create eye matrix the same sahpe as the attention matrix
-        result = torch.eye(attentions[0].size(-1), device=device)
+        batch_size, num_heads, height, width = attentions[0].shape
+        # Create eye matrix the same shape as the attention matrix for each item in the batch
+        result = torch.eye(height, device=device).expand(batch_size, height, height)
+        
         with torch.no_grad():
             for attention in attentions:
                 if self.head_fusion == "mean":
-                    attention_heads_fused = attention.mean(axis=1)
+                    attention_heads_fused = attention.mean(dim=1)
                 elif self.head_fusion == "max":
-                   attention_heads_fused = attention.max(axis=1)[0]
+                    attention_heads_fused = attention.max(dim=1).values
                 elif self.head_fusion == "min":
-                   attention_heads_fused = attention.min(axis=1)[0]
+                    attention_heads_fused = attention.min(dim=1).values
                 else:
-                   raise "Attention head fusion type Not supported"
+                    raise ValueError("Attention head fusion type not supported")
+                
+                # Drop the lowest attentions, but don't drop the class token for each in the batch
+                flat = attention_heads_fused.view(batch_size, -1)
+                _, indices = flat.topk(int(width * height * self.discard_ratio), dim=-1, largest=False)
+                flat.scatter_(1, indices, 0)
 
-                # Drop the lowest attentions, but don't drop the class token
-                flat = attention_heads_fused.view(attention_heads_fused.size(0), -1)
-                _, indices = flat.topk(int(flat.size(-1) * self.discard_ratio), -1, False)
-                indices = indices[indices != 0]
-                flat[0, indices] = 0
+                I = torch.eye(height, device=device).expand_as(attention_heads_fused)
+                a = (attention_heads_fused + I) / 2
+                a = a / a.sum(dim=-1, keepdim=True)
 
-                I = torch.eye(attention_heads_fused.size(-1)).to(device)
-                a = (attention_heads_fused + 1.0 * I) / 2
-                a = a / a.sum(dim=-1)
-
-                result = torch.matmul(a, result)
+                result = torch.bmm(a, result)
         
-        # Look at the total attention between the class token and the image patches
-        mask = result[0, 0, 1:]
-        width = int(mask.size(-1) ** 0.5)
-        mask = mask.reshape(width, width)
-        mask = mask / mask.max()
-        return mask
+        # Look at the total attention between the class token and the image patches for each in the batch
+        masks = result[:, 0, 1:]
+        mask_width = int((height - 1) ** 0.5)
+        masks = masks.view(batch_size, mask_width, mask_width)
+        masks = masks / masks.view(batch_size, -1).max(dim=1).values.view(batch_size, 1, 1)
+
+        return masks
 
 
 class VitRolloutMultihead(nn.Module):
@@ -102,6 +107,7 @@ class VitRolloutMultihead(nn.Module):
             weight_path: str = None,
             output_size: int = 1,
             return_nodes: str = 'attn_drop',
+            head_name: str = 'head',
             discard_ratio: int = 0.2,
             head_fusion: str = "mean",
             visualize: bool = False,
@@ -111,24 +117,19 @@ class VitRolloutMultihead(nn.Module):
                          pretrained=pretrained,
                          weight_path=weight_path,
                          output_size=output_size,
-                         return_nodes=return_nodes)
+                         return_nodes=return_nodes,
+                         head_name=head_name)
         self.attention_rollout = AttentionRollout(discard_ratio=discard_ratio,
                                                   head_fusion=head_fusion)
         self.visualize = visualize
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        features, out =  self.model(input)
-        out =  self.model(input)
+        attn_drop_tensors, classification_out =  self.model(input)
         if self.visualize:
-            attn_mask = self.attention_rollout(features)
-            return out, attn_mask
+            attn_mask = self.attention_rollout(attn_drop_tensors)
+            return classification_out, attn_mask
         else:
-            return out
+            return classification_out
 
 if __name__ == "__main__":
     _ = VitRolloutMultihead()
-    # model = VitRolloutMultihead(visualize=True).to("cuda")
-    # dummy_input = torch.randn((1, 3, 224, 224)).to("cuda")
-    # x, out = model(dummy_input)
-    # print(x)
-    # print(out)
