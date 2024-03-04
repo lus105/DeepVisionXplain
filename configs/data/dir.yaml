@@ -10,7 +10,7 @@ num_workers: 0
 pin_memory: false
 preprocessor:
   _target_: src.data.components.tile_processor.TilingProcessor
-  tile_width: 512
-  tile_height: 512
+  tile_width: 224
+  tile_height: 224
   min_defective_area: 0.1
-  overlap: 256
+  overlap: 10
