@@ -1,11 +1,11 @@
 # @package _global_
 
 # to execute this experiment run:
-# python src/train.py runs=cnn_train
+# python src/train.py runs=vit_train
 
 defaults:
   - override /data: dir
-  - override /model: cnn
+  - override /model: vit
   - override /callbacks: default
   - override /trainer: default
   - override /logger: csv
@@ -13,7 +13,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["cnn", "EfficientNetB3CAMMultihead"]
+tags: ["vit", "VitRolloutMultihead"]
 
 seed: 12345
 
@@ -29,12 +29,17 @@ model:
   compile: false
 
 data:
-  batch_size: 8
-  data_dir: ${oc.env:gears_data_path}
+  batch_size: 32
+  data_dir: ${oc.env:pcb_data_path}
+  preprocessor:
+    tile_width: 224
+    tile_height: 224
+    min_defective_area: 0.1
+    overlap: 10
 
 logger:
   wandb:
     tags: ${tags}
-    group: "cnn"
+    group: "vit"
   aim:
-    experiment: "cnn"
+    experiment: "vit"
