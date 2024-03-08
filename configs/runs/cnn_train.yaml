@@ -8,7 +8,7 @@ defaults:
   - override /model: cnn
   - override /callbacks: default
   - override /trainer: default
-  - override /logger: csv
+  - override /logger: wandb
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
