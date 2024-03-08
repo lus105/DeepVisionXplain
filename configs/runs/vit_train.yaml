@@ -8,7 +8,7 @@ defaults:
   - override /model: vit
   - override /callbacks: default
   - override /trainer: default
-  - override /logger: csv
+  - override /logger: wandb
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -20,22 +20,16 @@ seed: 12345
 trainer:
   min_epochs: 10
   max_epochs: 20
-  gradient_clip_val: 0.5
   accelerator: gpu
 
 model:
   optimizer:
-    lr: 0.001
+    lr: 5e-5
   compile: false
 
 data:
-  batch_size: 32
+  batch_size: 64
   data_dir: ${oc.env:pcb_data_path}
-  preprocessor:
-    tile_width: 224
-    tile_height: 224
-    min_defective_area: 0.1
-    overlap: 10
 
 logger:
   wandb:
