@@ -48,7 +48,7 @@ class DirDataModule(LightningDataModule):
             [
                 transforms.ToTensor(),
                 transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomVerticalFlip(p=0.5),
+                transforms.RandomVerticalFlip(p=0.5)
             ]
         )
         self.val_test_transforms = transforms.Compose([transforms.ToTensor()])
@@ -102,7 +102,7 @@ class DirDataModule(LightningDataModule):
         """
         if hasattr(self, 'updated_dirs'):
             self.data_train = ImageFolder(self.updated_dirs['train'], transform=self.train_transforms)
-            self.data_test = ImageFolder(self.updated_dirs['test'], transform=self.train_transforms)
+            self.data_test = ImageFolder(self.updated_dirs['test'], transform=self.val_test_transforms)
             self.data_val = ImageFolder(self.updated_dirs['val'], transform=self.val_test_transforms)
         else:
             raise ValueError("Data directories are not prepared or updated paths are missing.")
