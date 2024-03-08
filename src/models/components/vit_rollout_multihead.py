@@ -11,7 +11,8 @@ class Vit(nn.Module):
             weight_path: str = None,
             output_size: int = 1,
             return_nodes: str = 'attn_drop',
-            head_name: str = 'head'
+            head_name: str = 'head',
+            img_size: int = 224
             ) -> None:
         super().__init__()
         self.model_name = model_name
@@ -20,8 +21,8 @@ class Vit(nn.Module):
         self.output_size = output_size
         self.return_nodes = return_nodes
         self.head_name = head_name
+        self.img_size = img_size
         self.model = self.__create_model()
-        self.__customize_classifier()
         self.feature_extractor = self.__create_feature_extractor()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -31,14 +32,13 @@ class Vit(nn.Module):
         return attn_drop_tensors, classification_out
     
     def __create_model(self) -> nn.Module:
-        model = timm.create_model(self.model_name, pretrained=self.pretrained)
+        model = timm.create_model(self.model_name,
+                                  pretrained=self.pretrained,
+                                  num_classes=self.output_size,
+                                  img_size=self.img_size)
         if self.weight_path is not None:
             model.load_state_dict(torch.load(self.weight_path))
         return model
-    
-    def __customize_classifier(self) -> None:
-        in_features = self.model.head.in_features
-        self.model.head = nn.Linear(in_features, self.output_size)
     
     def __create_feature_extractor(self) -> nn.Module:
         for block in self.model.blocks:
@@ -102,12 +102,13 @@ class AttentionRollout():
 class VitRolloutMultihead(nn.Module):
     def __init__(
             self,
-            model_name: str = "vit_tiny_patch16_224.augreg_in21k",
+            model_name: str = "vit_tiny_patch16_224.augreg_in21k_ft_in1k",
             pretrained: bool = True,
             weight_path: str = None,
             output_size: int = 1,
             return_nodes: str = 'attn_drop',
             head_name: str = 'head',
+            img_size: int = 224,
             discard_ratio: int = 0.2,
             head_fusion: str = "mean",
             visualize: bool = False,
@@ -118,7 +119,8 @@ class VitRolloutMultihead(nn.Module):
                          weight_path=weight_path,
                          output_size=output_size,
                          return_nodes=return_nodes,
-                         head_name=head_name)
+                         head_name=head_name,
+                         img_size=img_size)
         self.attention_rollout = AttentionRollout(discard_ratio=discard_ratio,
                                                   head_fusion=head_fusion)
         self.visualize = visualize
