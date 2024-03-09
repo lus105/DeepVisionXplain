@@ -30,6 +30,7 @@ model:
 
 data:
   batch_size: 8
+  num_workers: 4
   data_dir: ${oc.env:gears_data_path}
 
 logger:
