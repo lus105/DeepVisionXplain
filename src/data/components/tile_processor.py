@@ -19,6 +19,8 @@ class TilingProcessor(TileIterator):
                  tile_height: int = 128,
                  min_defective_area: float = 0.1,
                  overlap: int = 64,
+                 step_size: int = 10,
+                 iterate_over_defective_areas: bool = False,
                  images_dir: str = 'images',
                  labels_dir: str = 'labels',
                  tiles_dir: str = 'tiles'):
@@ -29,7 +31,9 @@ class TilingProcessor(TileIterator):
         super().__init__(tile_width = tile_width,
                          tile_height = tile_height,
                          min_defective_area = min_defective_area,
-                         overlap = overlap)
+                         overlap = overlap,
+                         step_size=step_size)
+        self.iterate_over_defective_areas = iterate_over_defective_areas
         self.images_dir = images_dir
         self.labels_dir = labels_dir
         self.tiles_dir = tiles_dir
@@ -55,8 +59,12 @@ class TilingProcessor(TileIterator):
             image_name = get_file_name(image_path)
             image = cv2.imread(str(image_path))
             label = self.__get_label(image, image_name, label_source_dir)
-            tiles = self._get_tiles(image, label, image_name)
-            self.__save_tiles(tiles, tile_images_dir, tile_labels_dir)
+            tiles_whole_area = self._get_tiles_whole_area(image, label, image_name)
+            self.__save_tiles(tiles_whole_area, tile_images_dir, tile_labels_dir)
+
+            if self.iterate_over_defective_areas:
+                tiles_defective_area = self._get_tiles_defective_area(image, label, image_name)
+                self.__save_tiles(tiles_defective_area, tile_images_dir, tile_labels_dir)
         
         return tile_images_dir
 

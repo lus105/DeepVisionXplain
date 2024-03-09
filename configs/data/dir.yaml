@@ -14,3 +14,5 @@ preprocessor:
   tile_height: 224
   min_defective_area: 0.01
   overlap: 10
+  step_size: 10
+  iterate_over_defective_areas: true
