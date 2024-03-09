@@ -21,6 +21,7 @@ class TilingProcessor(TileIterator):
                  overlap: int = 64,
                  step_size: int = 10,
                  iterate_over_defective_areas: bool = False,
+                 save_every_second_good_tile: bool = False,
                  images_dir: str = 'images',
                  labels_dir: str = 'labels',
                  tiles_dir: str = 'tiles'):
@@ -34,6 +35,7 @@ class TilingProcessor(TileIterator):
                          overlap = overlap,
                          step_size=step_size)
         self.iterate_over_defective_areas = iterate_over_defective_areas
+        self.save_every_second_good_tile = save_every_second_good_tile
         self.images_dir = images_dir
         self.labels_dir = labels_dir
         self.tiles_dir = tiles_dir
@@ -92,6 +94,8 @@ class TilingProcessor(TileIterator):
         Save the generated tiles and their labels to the respective directories.
         """
         for key, tile_list in tiles.items():
-            for tile in tile_list:
+            for i,  tile in enumerate(tile_list):
+                if key == self._good_name and self.save_every_second_good_tile and i % 2 != 0:
+                    continue
                 tile.save_tile(os.path.join(tile_images_dir, key))
                 tile.save_label_tile(os.path.join(tile_labels_dir, key))

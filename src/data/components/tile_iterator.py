@@ -28,8 +28,8 @@ class TileIterator:
         self.__min_defective_area = min_defective_area
         self.__overlap = overlap
         self.__step_size = step_size
-        self.__good_name = good_name
-        self.__defective_name = defective_name
+        self._good_name = good_name
+        self._defective_name = defective_name
 
     def _get_tiles_whole_area(self,
                               image: np.array,
@@ -57,7 +57,7 @@ class TileIterator:
                 x_st = max(0, min(x_st, width - self.__tile_size[1]))
                 
                 tile = self.__create_tile(image, label, image_name, y_st, x_st)
-                category = self.__defective_name if tile.is_defective(self.__min_defective_area) else self.__good_name
+                category = self._defective_name if tile.is_defective(self.__min_defective_area) else self._good_name
                 tile_dict[category].append(tile)
 
         return dict(tile_dict)
@@ -94,7 +94,7 @@ class TileIterator:
                 y_st = max(0, min(y_st, image.shape[0] - self.__tile_size[0]))
 
                 tile = self.__create_tile(image, label, image_name, y_st, x_st)
-                category = self.__defective_name if tile.is_defective(self.__min_defective_area) else self.__good_name
+                category = self._defective_name if tile.is_defective(self.__min_defective_area) else self._good_name
                 tile_dict[category].append(tile)
 
         return dict(tile_dict)

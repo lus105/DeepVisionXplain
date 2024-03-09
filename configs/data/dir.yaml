@@ -16,3 +16,4 @@ preprocessor:
   overlap: 10
   step_size: 10
   iterate_over_defective_areas: true
+  save_every_second_good_tile: true
