@@ -42,7 +42,7 @@ conda activate DeepVisionXplain
 
 ## How to run
 
-Train model with default configuration (check if environment is properly set up)
+Train model with default configuration (check if environment is properly set up):
 
 ```bash
 # train on CPU
@@ -50,6 +50,24 @@ python src/train.py trainer=cpu
 
 # train on GPU
 python src/train.py trainer=gpu
+```
+
+Train cnn/vit model:
+```bash
+# train cnn
+python src/train.py runs=cnn_train
+
+# train vit
+python src/train.py runs=vit_train
+```
+
+Train cnn/vit model with hparams search:
+```bash
+# train cnn
+python src/train.py hparams_search=cnn_optuna runs=cnn_train
+
+# train vit
+python src/train.py hparams_search=vit_optuna runs=vit_train
 ```
 
 ## Resources
