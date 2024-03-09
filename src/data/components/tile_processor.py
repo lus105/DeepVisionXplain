@@ -95,7 +95,12 @@ class TilingProcessor(TileIterator):
         """
         for key, tile_list in tiles.items():
             for i,  tile in enumerate(tile_list):
-                if key == self._good_name and self.save_every_second_good_tile and i % 2 != 0:
+                
+                if (key == self._good_name and
+                'train' in tile_images_dir and
+                self.save_every_second_good_tile and
+                i % 2 != 0):
                     continue
+
                 tile.save_tile(os.path.join(tile_images_dir, key))
                 tile.save_label_tile(os.path.join(tile_labels_dir, key))
