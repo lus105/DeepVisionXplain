@@ -13,7 +13,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["cnn", "EfficientNetB3CAMMultihead"]
+tags: ["pcb", "mobilenet_v3_large", "downscaled"]
 
 seed: 12345
 
@@ -24,6 +24,9 @@ trainer:
   accelerator: gpu
 
 model:
+  net:
+    backbone: "mobilenet_v3_large"
+    return_nodes: { "features.13.block.0": "layerout" }
   optimizer:
     lr: 0.001
   compile: false
@@ -36,6 +39,6 @@ data:
 logger:
   wandb:
     tags: ${tags}
-    group: "cnn"
+    group: "pcb"
   aim:
-    experiment: "cnn"
+    experiment: "mobilenet_v3_large_pcb_downscaled"
