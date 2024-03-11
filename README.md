@@ -5,24 +5,6 @@ This repository aims to compare CNN (CAM) and ViT (attention rollout) explainabi
   <img src="res/vit_rollout.png" />
 </p>
 
-## Tasks
-
-In progress:
-
-- [ ] Implement CAM for CNN (single iteration).
-- [ ] Image splitting and patching preprocessing step.
-- [ ] Implement attention rollout for ViT (single iteration).
-
-To do:
-
-- [ ] Training both models on defect detection datasets.
-- [ ] Compare the results based on conventional and custom metrics.
-- [ ] Open source repo, paper?
-
-Done:
-
-
-
 ## Installation
 
 #### Conda
@@ -72,12 +54,8 @@ python src/train.py hparams_search=vit_optuna runs=vit_train
 
 ## Resources
 
-PCB, GID and BSData [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
+Defect detection [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
 
-## Experiments
-
-Experiments [log](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
-
-## Huggingface
+Experiment [logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
 
 Trained [models](https://huggingface.co/DeepVisionXplain).
