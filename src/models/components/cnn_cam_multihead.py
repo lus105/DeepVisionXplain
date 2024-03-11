@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.models import efficientnet_b3
+from torchvision.models import mobilenet_v3_large, efficientnet_v2_s
 from torchvision.models.feature_extraction import create_feature_extractor
 
 
@@ -23,6 +23,7 @@ class FeatureExtractor(nn.Module):
         self.out_name = nodes[0]
 
         self.model = create_feature_extractor(pretrained_model, return_nodes=return_nodes)
+        self.n_features = self._calculate_n_features()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Perform a single forward pass through the network.
@@ -33,11 +34,16 @@ class FeatureExtractor(nn.Module):
         features = self.model(input)
         return features[self.out_name]
 
+    def _calculate_n_features(self):
+        dummy_input = torch.randn(1, 3, 100, 100)
+        with torch.no_grad():
+            output = self.forward(dummy_input)
+        return output.shape[1]
 
 class BinaryClassificationHead(nn.Module):
     """Neural network head for binary classification.
 
-    It consists of a global average pooling layer followed by a sigmoid-activated fully connected
+    It consists of a global average pooling layer followed by a fully connected
     layer.
     """
 
@@ -65,24 +71,24 @@ class BinaryClassificationHead(nn.Module):
 class ClassActivationMapGenerator(nn.Module):
     """Generates Class Activation Maps (CAM) based on given features and weights."""
 
-    def __init__(self, sigmoid_fc: nn.Linear):
+    def __init__(self, fc: nn.Linear):
         """Initialize the `ClassActivationMapGenerator` module.
 
-        :param sigmoid_fc: A Linear layer (typically from a classifier) whose weights will be used
+        :param fc: A Linear layer (typically from a classifier) whose weights will be used
             to generate CAM.
         """
         super().__init__()
-        self.sigmoid_fc = sigmoid_fc
+        self.fc = fc
 
     def forward(self, input: torch.Tensor, features: torch.Tensor) -> torch.Tensor:
-        """Compute the Class Activation Maps using features and weights from the sigmoid_fc layer.
+        """Compute the Class Activation Maps using features and weights from the fc layer.
 
         :param input: Original input tensor to the entire model. Used for its size to resize the
             CAMs.
         :param features: Feature maps from which CAMs will be generated.
         :return: A tensor containing the Class Activation Maps of shape (B, H, W).
         """
-        weights = self.sigmoid_fc.weight.data.unsqueeze(-1).unsqueeze(-1)
+        weights = self.fc.weight.data.unsqueeze(-1).unsqueeze(-1)
         cam = torch.einsum("ijkl,ijkl->ikl", features, weights).unsqueeze(1)  # (B, 1, H, W)
 
         cam = F.interpolate(
@@ -94,30 +100,32 @@ class ClassActivationMapGenerator(nn.Module):
         return cam
 
 
-class EfficientNetB3CAMMultihead(nn.Module):
-    """Extends the EfficientNetB3 model to produce binary classification and optionally generate
+class CNNCAMMultihead(nn.Module):
+    """Extends the CNN model to produce binary classification and optionally generate
     Class Activation Maps (CAM)."""
 
     def __init__(
         self,
+        backbone: str = "mobilenet_v3_large",
         multi_head: bool = False,
         return_nodes: dict = {"features.5.1.block.2": "layerout"},
-        last_layer_features: int = 816,
         weights: str = "IMAGENET1K_V1",
     ):
-        """Initialize the `EfficientNetB3CAMMultihead` module.
+        """Initialize the `CNNCAMMultihead` module.
 
-        :param multi_head: If True, the forward method returns both sigmoid output and CAM.
-            Otherwise, it returns only the sigmoid output.
+        :param multi_head: If True, the forward method returns both output and CAM.
+            Otherwise, it returns only the output.
         :param return_nodes: Dictionary for the return nodes used in feature extraction.
         :param last_layer_features: The number of features in the last layer of the base network.
         :param weights: Pre-trained weights to be used with the efficientnet_b3 model.
         """
         super().__init__()
-
-        pretrained_model = efficientnet_b3(weights=weights)
+        if backbone == "mobilenet_v3_large":
+            pretrained_model = mobilenet_v3_large(wights=weights)
+        elif backbone == "efficientnet_v2_s":
+            pretrained_model = efficientnet_v2_s(weights=weights)
         self.feature_extractor = FeatureExtractor(pretrained_model, return_nodes=return_nodes)
-        self.output_layer = BinaryClassificationHead(last_layer_features=last_layer_features)
+        self.output_layer = BinaryClassificationHead(last_layer_features=self.feature_extractor.n_features)
         self.cam_generator = ClassActivationMapGenerator(self.output_layer.fc)
         self.multi_head = multi_head
 
@@ -125,18 +133,18 @@ class EfficientNetB3CAMMultihead(nn.Module):
         """Perform a forward pass through the network.
 
         :param input: The input tensor of shape (batch_size, channels, height, width).
-        :return: A tensor containing the sigmoid output, and optionally the Class Activation Map if
+        :return: A tensor containing the output, and optionally the Class Activation Map if
             multi_head is True.
         """
         features = self.feature_extractor(input)
-        sigmoid_output = self.output_layer(features)
+        output = self.output_layer(features)
 
         if not self.multi_head:
-            return sigmoid_output
+            return output
         else:
             cam = self.cam_generator(input, features)
-            return sigmoid_output, cam
+            return output, cam
 
 
 if __name__ == "__main__":
-    _ = EfficientNetB3CAMMultihead()
+    _ = CNNCAMMultihead()
