@@ -52,6 +52,19 @@ python src/train.py hparams_search=cnn_optuna runs=cnn_train
 python src/train.py hparams_search=vit_optuna runs=vit_train
 ```
 
+## Experiments
+
+Two cnn models were trained for experimentation.
+
+full size: efficientnet_v2_s. features.7 -> [1, 1280, 7, 7]
+
+downscaled: efficientnet_v2_s. features.6.0.block.0 -> [1, 960, 14, 14]
+
+full size: mobilenet_v3_large. features.16 -> [1, 960, 7, 7]
+
+downscaled: mobilenet_v3_large. features.13.block.0 -> [1, 672, 14, 14]
+
+
 ## Resources
 
 Defect detection [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
