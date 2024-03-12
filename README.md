@@ -55,7 +55,7 @@ python src/train.py hparams_search=vit_optuna runs=vit_train
 ## Experiments
 
 Two cnn models were trained for experimentation.
-
+```bash
 full size: efficientnet_v2_s. features.7 -> [1, 1280, 7, 7]
 
 downscaled: efficientnet_v2_s. features.6.0.block.0 -> [1, 960, 14, 14]
@@ -63,7 +63,7 @@ downscaled: efficientnet_v2_s. features.6.0.block.0 -> [1, 960, 14, 14]
 full size: mobilenet_v3_large. features.16 -> [1, 960, 7, 7]
 
 downscaled: mobilenet_v3_large. features.13.block.0 -> [1, 672, 14, 14]
-
+```
 
 ## Resources
 
