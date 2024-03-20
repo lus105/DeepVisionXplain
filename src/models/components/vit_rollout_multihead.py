@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import timm
+import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
 class Vit(nn.Module):
@@ -62,7 +63,7 @@ class AttentionRollout():
         self.discard_ratio = discard_ratio
         self.head_fusion = head_fusion
 
-    def __call__(self, attentions: list[torch.Tensor]) -> torch.Tensor:
+    def __call__(self, input: torch.Tensor, attentions: list[torch.Tensor]) -> torch.Tensor:
         device = attentions[0].device
         batch_size, num_heads, height, width = attentions[0].shape
         # Create eye matrix the same shape as the attention matrix for each item in the batch
@@ -96,6 +97,14 @@ class AttentionRollout():
         masks = masks.view(batch_size, mask_width, mask_width)
         masks = masks / masks.view(batch_size, -1).max(dim=1).values.view(batch_size, 1, 1)
 
+        masks = masks.unsqueeze(1)
+
+        masks = F.interpolate(
+            masks, size=input.size()[2:], mode="bilinear", align_corners=False
+        ).squeeze(
+            1
+        )
+
         return masks
 
 
@@ -128,7 +137,7 @@ class VitRolloutMultihead(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         attn_drop_tensors, classification_out =  self.model(input)
         if self.visualize:
-            attn_mask = self.attention_rollout(attn_drop_tensors)
+            attn_mask = self.attention_rollout(input, attn_drop_tensors)
             return classification_out, attn_mask
         else:
             return classification_out
