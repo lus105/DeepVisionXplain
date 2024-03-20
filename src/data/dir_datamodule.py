@@ -8,6 +8,7 @@ from torchvision.transforms import transforms
 
 from src.data.components.data_splitter import DatasetSplitter
 from src.data.components.tile_processor import TilingProcessor
+from src.data.components.image_label_dataset import ImageLabelDataset
 
 from src.utils import RankedLogger
 
@@ -26,6 +27,7 @@ class DirDataModule(LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         preprocessor: TilingProcessor = None,
+        use_custom_dataset: bool = False,
     ) -> None:
         """Initialize a `DirDataModule`.
 
@@ -100,12 +102,32 @@ class DirDataModule(LightningDataModule):
 
         Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
         """
-        if hasattr(self, 'updated_dirs'):
-            self.data_train = ImageFolder(self.updated_dirs['train'], transform=self.train_transforms)
-            self.data_test = ImageFolder(self.updated_dirs['test'], transform=self.val_test_transforms)
-            self.data_val = ImageFolder(self.updated_dirs['val'], transform=self.val_test_transforms)
-        else:
+        if not hasattr(self, 'updated_dirs'):
             raise ValueError("Data directories are not prepared or updated paths are missing.")
+    
+        dataset_class = ImageLabelDataset if self.hparams.use_custom_dataset else ImageFolder
+        transform_map = {
+            'train': self.train_transforms,
+            'val': self.val_test_transforms,
+            'test': self.val_test_transforms
+        }
+        
+        for subset in ['train', 'val', 'test']:
+            dir_path = self.updated_dirs[subset]
+            if self.hparams.use_custom_dataset:
+                # For ImageLabelDataset, specify img_dir and label_dir
+                self.__dict__[f"data_{subset}"] = dataset_class(
+                    img_dir=dir_path,
+                    label_dir=os.path.join(os.path.dirname(dir_path), self.hparams.label_subdir),
+                    transform=transform_map[subset],
+                    label_transform=transform_map[subset]
+                )
+            else:
+                # For ImageFolder, there's no separate label_dir
+                self.__dict__[f"data_{subset}"] = dataset_class(
+                    root=dir_path,
+                    transform=transform_map[subset],
+                )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
