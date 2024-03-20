@@ -13,6 +13,7 @@ class TrainingLitModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
+        segmentation_test: bool,
     ) -> None:
         """Initialize a `CnnLitModule`.
 
