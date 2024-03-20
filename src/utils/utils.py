@@ -1,5 +1,6 @@
 import os
 import warnings
+import torch
 from importlib.util import find_spec
 from typing import Any, Callable, Dict, Optional, Tuple
 
@@ -131,3 +132,10 @@ def find_file_path(searched_dir: str, extension: str = '.ckpt') -> str:
             if file.endswith(extension):
                 return os.path.join(root, file)
     return ""
+
+def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
+    checkpoint_path = find_file_path(ckpt_path)
+    checkpoint = torch.load(checkpoint_path)
+    model_weights = {k[4:]: v for k, v in checkpoint["state_dict"].items() if k.startswith(remove_prefix)}
+    
+    return model_weights
