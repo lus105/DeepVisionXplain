@@ -9,6 +9,7 @@ defaults:
   - extras: default
   - hydra: default
   - trainer: default
+  - callbacks: rich_progress_bar
 
   # testing runs
   - runs: null
