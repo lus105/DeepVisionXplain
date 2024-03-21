@@ -63,7 +63,7 @@ def test(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     metric_dict = trainer.callback_metrics
 
-    return metric_dict
+    return metric_dict, object_dict
 
 
 @hydra.main(version_base="1.3", config_path="../configs", config_name="test_segmentation.yaml")
