@@ -4,7 +4,11 @@ import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
-from torchmetrics.classification import BinaryAccuracy
+from torchmetrics.classification import (
+    BinaryAccuracy,
+    BinaryF1Score,
+    BinaryPrecision,
+    BinaryRecall)
 
 class TrainingLitModule(LightningModule):
     def __init__(
@@ -37,6 +41,10 @@ class TrainingLitModule(LightningModule):
         self.val_acc = Accuracy(task="binary", threshold=0.5)
         self.test_acc = Accuracy(task="binary", threshold=0.5)
         self.seg_bin_acc = BinaryAccuracy(threshold=0.5)
+        self.seg_bin_f1 = BinaryF1Score(threshold=0.5)
+        self.seg_bin_precision = BinaryPrecision(threshold=0.5)
+        self.seg_bin_recall = BinaryRecall(threshold=0.5)
+        self.seg_metrics = [self.seg_bin_acc, self.seg_bin_f1, self.seg_bin_precision, self.seg_bin_recall]
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -100,11 +108,13 @@ class TrainingLitModule(LightningModule):
                 # thresholding cam_segmentation to get binary mask
                 cam_segmentation = (cam_segmentation > 0.5).float()
                 # Placeholder function to calculate segmentation metric, implement accordingly
-                self.seg_bin_acc(cam_segmentation, y[i].squeeze(0))
+                for metric in self.seg_metrics:
+                    metric(cam_segmentation, y[i].squeeze(0))
             else:
                 # Use a blank image for segmentation metric calculation if pred is 0
                 blank_image = torch.zeros_like(cam[i])
-                self.seg_bin_acc(blank_image, y[i].squeeze(0))
+                for metric in self.seg_metrics:
+                    metric(blank_image, y[i].squeeze(0))
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -173,7 +183,8 @@ class TrainingLitModule(LightningModule):
 
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
-        self.log("test/seg_bin_acc", self.seg_bin_acc.compute(), sync_dist=True, prog_bar=True)
+        for metric in self.seg_metrics:
+            self.log(f"test/{metric.name}", metric.compute(), sync_dist=True, prog_bar=True)
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
