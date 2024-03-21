@@ -184,7 +184,7 @@ class TrainingLitModule(LightningModule):
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
         for metric in self.seg_metrics:
-            self.log(f"test/{metric.name}", metric.compute(), sync_dist=True, prog_bar=True)
+            self.log(f"test/{metric._get_name()}", metric.compute(), sync_dist=True, prog_bar=True)
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
