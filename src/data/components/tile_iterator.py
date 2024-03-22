@@ -1,4 +1,5 @@
 import math
+import cv2
 import numpy as np
 from collections import defaultdict
 
@@ -10,6 +11,7 @@ class TileIterator:
                  tile_height: int = 128,
                  min_defective_area: float = 0.1,
                  overlap: int = 64,
+                 step_size: int = 10,
                  good_name: str = "0",
                  defective_name: str = "1"):
         """
@@ -25,13 +27,14 @@ class TileIterator:
         self.__tile_size = (tile_width, tile_height)
         self.__min_defective_area = min_defective_area
         self.__overlap = overlap
-        self.__good_name = good_name
-        self.__defective_name = defective_name
+        self.__step_size = step_size
+        self._good_name = good_name
+        self._defective_name = defective_name
 
-    def _get_tiles(self,
-                  image: np.array,
-                  label: np.array,
-                  image_name: str) -> dict[str, list[Tile]]:
+    def _get_tiles_whole_area(self,
+                              image: np.array,
+                              label: np.array,
+                              image_name: str) -> dict[str, list[Tile]]:
         """
         Generate and classify tiles from the given image as 'good' or 'defective'.
 
@@ -54,7 +57,44 @@ class TileIterator:
                 x_st = max(0, min(x_st, width - self.__tile_size[1]))
                 
                 tile = self.__create_tile(image, label, image_name, y_st, x_st)
-                category = self.__defective_name if tile.is_defective(self.__min_defective_area) else self.__good_name
+                category = self._defective_name if tile.is_defective(self.__min_defective_area) else self._good_name
+                tile_dict[category].append(tile)
+
+        return dict(tile_dict)
+    
+    def _get_tiles_defective_area(self,
+                                  image: np.array,
+                                  label: np.array,
+                                  image_name: str) -> dict[str, list]:
+        """
+        Generate tiles with their centers over contour points of defective areas, iterating with a defined step size.
+
+        :param image: Image to be tiled.
+        :param label: Label mask for defective areas.
+        :param image_name: Name of the image.
+        :return: Dictionary of tiles categorized as 'good' or 'defective'.
+        """
+        _, thresh = cv2.threshold(label, 1, 255, cv2.THRESH_BINARY)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        tile_dict = defaultdict(list)
+
+        for contour in contours:
+            # Simplify the contour to reduce the number of points if needed
+            for i in range(0, len(contour), self.__step_size):
+                center_point = contour[i][0]
+                center_x, center_y = center_point[0], center_point[1]
+
+                # Calculate the top-left corner of the tile
+                x_st = center_x - self.__tile_size[1] // 2
+                y_st = center_y - self.__tile_size[0] // 2
+
+                # Ensure the tile is within image boundaries
+                x_st = max(0, min(x_st, image.shape[1] - self.__tile_size[1]))
+                y_st = max(0, min(y_st, image.shape[0] - self.__tile_size[0]))
+
+                tile = self.__create_tile(image, label, image_name, y_st, x_st)
+                category = self._defective_name if tile.is_defective(self.__min_defective_area) else self._good_name
                 tile_dict[category].append(tile)
 
         return dict(tile_dict)

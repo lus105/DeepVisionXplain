@@ -1,11 +1,11 @@
 # @package _global_
 
 # to execute this experiment run:
-# python src/train.py runs=cnn_train
+# python src/train.py runs=vit_train
 
 defaults:
   - override /data: dir
-  - override /model: cnn
+  - override /model: vit
   - override /callbacks: default
   - override /trainer: default
   - override /logger: many_loggers
@@ -13,32 +13,28 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["pcb", "mobilenet_v3_large", "downscaled"]
+tags: ["vit", "VitRolloutMultihead"]
 
 seed: 12345
 
 trainer:
   min_epochs: 10
   max_epochs: 20
-  gradient_clip_val: 0.5
   accelerator: gpu
 
 model:
-  net:
-    backbone: "mobilenet_v3_large"
-    return_nodes: { "features.13.block.0": "layerout" }
   optimizer:
-    lr: 0.001
+    lr: 5e-5
   compile: false
 
 data:
-  batch_size: 8
+  batch_size: 64
   num_workers: 4
-  data_dir: ${oc.env:gears_data_path}
+  data_dir: ${oc.env:pcb_data_path}
 
 logger:
   wandb:
     tags: ${tags}
-    group: "pcb"
+    group: "vit"
   aim:
-    experiment: "mobilenet_v3_large_pcb_downscaled"
+    experiment: "vit"

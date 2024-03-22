@@ -5,24 +5,6 @@ This repository aims to compare CNN (CAM) and ViT (attention rollout) explainabi
   <img src="res/vit_rollout.png" />
 </p>
 
-## Tasks
-
-In progress:
-
-- [ ] Implement CAM for CNN (single iteration).
-- [ ] Image splitting and patching preprocessing step.
-- [ ] Implement attention rollout for ViT (single iteration).
-
-To do:
-
-- [ ] Training both models on defect detection datasets.
-- [ ] Compare the results based on conventional and custom metrics.
-- [ ] Open source repo, paper?
-
-Done:
-
-
-
 ## Installation
 
 #### Conda
@@ -42,7 +24,7 @@ conda activate DeepVisionXplain
 
 ## How to run
 
-Train model with default configuration (check if environment is properly set up)
+Train model with default configuration (check if environment is properly set up):
 
 ```bash
 # train on CPU
@@ -52,14 +34,41 @@ python src/train.py trainer=cpu
 python src/train.py trainer=gpu
 ```
 
-## Resources
+Train cnn/vit model:
+```bash
+# train cnn
+python src/train.py runs=cnn_train
 
-PCB, GID and BSData [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
+# train vit
+python src/train.py runs=vit_train
+```
+
+Train cnn/vit model with hparams search:
+```bash
+# train cnn
+python src/train.py hparams_search=cnn_optuna runs=cnn_train
+
+# train vit
+python src/train.py hparams_search=vit_optuna runs=vit_train
+```
 
 ## Experiments
 
-Experiments [log](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
+Two cnn models were trained for experimentation.
+```bash
+full size: efficientnet_v2_s. features.7 -> [1, 1280, 7, 7]
 
-## Huggingface
+downscaled: efficientnet_v2_s. features.6.0.block.0 -> [1, 960, 14, 14]
+
+full size: mobilenet_v3_large. features.16 -> [1, 960, 7, 7]
+
+downscaled: mobilenet_v3_large. features.13.block.0 -> [1, 672, 14, 14]
+```
+
+## Resources
+
+Defect detection [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
+
+Experiment [logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
 
 Trained [models](https://huggingface.co/DeepVisionXplain).

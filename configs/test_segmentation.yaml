@@ -1,0 +1,20 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - data: dir
+  - model: cnn
+  - logger: csv
+  - paths: default
+  - extras: default
+  - hydra: default
+  - trainer: default
+  - callbacks: rich_progress_bar
+
+  # testing runs
+  - runs: null
+
+task_name: "test"
+
+# passing checkpoint path is necessary for evaluation
+ckpt_path: " "

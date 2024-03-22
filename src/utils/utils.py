@@ -1,4 +1,6 @@
+import os
 import warnings
+import torch
 from importlib.util import find_spec
 from typing import Any, Callable, Dict, Optional, Tuple
 
@@ -117,3 +119,23 @@ def get_metric_value(metric_dict: Dict[str, Any], metric_name: Optional[str]) ->
     log.info(f"Retrieved metric value! <{metric_name}={metric_value}>")
 
     return metric_value
+
+def find_file_path(searched_dir: str, extension: str = '.ckpt') -> str:
+    """Finds file path in the given directory.
+
+    :param searched_dir: The directory where to search for the file.
+    :param extension: The extension of the file.
+    :return: The  path to found file.
+    """
+    for root, dirs, files in os.walk(searched_dir):
+        for file in files:
+            if file.endswith(extension):
+                return os.path.join(root, file)
+    return ""
+
+def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
+    checkpoint_path = find_file_path(ckpt_path)
+    checkpoint = torch.load(checkpoint_path)
+    model_weights = {k[4:]: v for k, v in checkpoint["state_dict"].items() if k.startswith(remove_prefix)}
+    
+    return model_weights

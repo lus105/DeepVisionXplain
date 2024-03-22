@@ -4,15 +4,20 @@ import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
+from torchmetrics.classification import (
+    BinaryAccuracy,
+    BinaryF1Score,
+    BinaryPrecision,
+    BinaryRecall)
 
-
-class CnnLitModule(LightningModule):
+class TrainingLitModule(LightningModule):
     def __init__(
         self,
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
+        segmentation_test: bool,
     ) -> None:
         """Initialize a `CnnLitModule`.
 
@@ -35,6 +40,11 @@ class CnnLitModule(LightningModule):
         self.train_acc = Accuracy(task="binary", threshold=0.5)
         self.val_acc = Accuracy(task="binary", threshold=0.5)
         self.test_acc = Accuracy(task="binary", threshold=0.5)
+        self.seg_bin_acc = BinaryAccuracy(threshold=0.5)
+        self.seg_bin_f1 = BinaryF1Score(threshold=0.5)
+        self.seg_bin_precision = BinaryPrecision(threshold=0.5)
+        self.seg_bin_recall = BinaryRecall(threshold=0.5)
+        self.seg_metrics = [self.seg_bin_acc, self.seg_bin_f1, self.seg_bin_precision, self.seg_bin_recall]
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -74,10 +84,37 @@ class CnnLitModule(LightningModule):
         """
         x, y = batch
         y = y.view(-1, 1).float()
-        logits = self.forward(x)
+        logits = torch.sigmoid(self.forward(x))
         loss = self.criterion(logits, y)
         preds = (logits > 0.5).float()
         return loss, preds, y
+    
+    def model_step_segmentation_test(
+        self, batch
+    ) -> None:
+        x, y = batch
+        out, cam = self.forward(x)
+        logit_out = torch.sigmoid(out)
+        preds = (logit_out > 0.5).float()
+        
+        segmentation_metrics = []
+
+        for i, pred in enumerate(preds):
+            if pred == 1:
+                # Use cam[i] for segmentation metric calculation if pred is 1
+                cam_segmentation = cam[i]
+                # convert cam values to range [0, 1]
+                cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (cam_segmentation.max() - cam_segmentation.min())
+                # thresholding cam_segmentation to get binary mask
+                cam_segmentation = (cam_segmentation > 0.5).float()
+                # Placeholder function to calculate segmentation metric, implement accordingly
+                for metric in self.seg_metrics:
+                    metric(cam_segmentation, y[i].squeeze(0))
+            else:
+                # Use a blank image for segmentation metric calculation if pred is 0
+                blank_image = torch.zeros_like(cam[i])
+                for metric in self.seg_metrics:
+                    metric(blank_image, y[i].squeeze(0))
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -134,17 +171,20 @@ class CnnLitModule(LightningModule):
             labels.
         :param batch_idx: The index of the current batch.
         """
-        loss, preds, targets = self.model_step(batch)
-
-        # update and log metrics
-        self.test_loss(loss)
-        self.test_acc(preds, targets)
-        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
+        if self.hparams.segmentation_test:
+            loss = self.model_step_segmentation_test(batch)
+        else:
+            loss, preds, targets = self.model_step(batch)
+            # update and log metrics
+            self.test_loss(loss)
+            self.test_acc(preds, targets)
+            self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
+            self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
-        pass
+        for metric in self.seg_metrics:
+            self.log(f"test/{metric._get_name()}", metric.compute(), sync_dist=True, prog_bar=True)
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
@@ -183,4 +223,4 @@ class CnnLitModule(LightningModule):
 
 
 if __name__ == "__main__":
-    _ = CnnLitModule(None, None, None, None)
+    _ = TrainingLitModule(None, None, None, None)
