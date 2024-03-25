@@ -8,7 +8,10 @@ from torchmetrics.classification import (
     BinaryAccuracy,
     BinaryF1Score,
     BinaryPrecision,
-    BinaryRecall)
+    BinaryRecall,
+    BinaryJaccardIndex)
+
+from src.utils import save_images
 
 class TrainingLitModule(LightningModule):
     def __init__(
@@ -17,7 +20,8 @@ class TrainingLitModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
-        segmentation_test: bool,
+        segmentation_test: bool = False,
+        save_images: bool = False,
     ) -> None:
         """Initialize a `CnnLitModule`.
 
@@ -44,7 +48,14 @@ class TrainingLitModule(LightningModule):
         self.seg_bin_f1 = BinaryF1Score(threshold=0.5)
         self.seg_bin_precision = BinaryPrecision(threshold=0.5)
         self.seg_bin_recall = BinaryRecall(threshold=0.5)
-        self.seg_metrics = [self.seg_bin_acc, self.seg_bin_f1, self.seg_bin_precision, self.seg_bin_recall]
+        self.seg_bin_jaccard = BinaryJaccardIndex(threshold=0.5)
+        self.seg_metrics = [self.seg_bin_acc,
+                            self.seg_bin_f1,
+                            self.seg_bin_precision,
+                            self.seg_bin_recall,
+                            self.seg_bin_jaccard]
+        self.save_images = save_images
+        self.counter = 0
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -96,8 +107,6 @@ class TrainingLitModule(LightningModule):
         out, cam = self.forward(x)
         logit_out = torch.sigmoid(out)
         preds = (logit_out > 0.5).float()
-        
-        segmentation_metrics = []
 
         for i, pred in enumerate(preds):
             if pred == 1:
@@ -105,16 +114,25 @@ class TrainingLitModule(LightningModule):
                 cam_segmentation = cam[i]
                 # convert cam values to range [0, 1]
                 cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (cam_segmentation.max() - cam_segmentation.min())
+
+                # save images for visualization
+                if self.save_images:
+                    save_images(x[i], cam_segmentation, y[i].squeeze(0), f"{self._trainer.default_root_dir}/images/img_{self.counter}.png")
+
                 # thresholding cam_segmentation to get binary mask
                 cam_segmentation = (cam_segmentation > 0.5).float()
+
                 # Placeholder function to calculate segmentation metric, implement accordingly
                 for metric in self.seg_metrics:
                     metric(cam_segmentation, y[i].squeeze(0))
+
+                self.counter += 1
             else:
                 # Use a blank image for segmentation metric calculation if pred is 0
                 blank_image = torch.zeros_like(cam[i])
                 for metric in self.seg_metrics:
                     metric(blank_image, y[i].squeeze(0))
+                self.counter += 1
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
