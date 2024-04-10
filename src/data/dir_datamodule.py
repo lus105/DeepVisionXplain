@@ -5,6 +5,7 @@ from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
+from torchsampler import ImbalancedDatasetSampler
 
 from src.data.components.data_splitter import DatasetSplitter
 from src.data.components.tile_processor import TilingProcessor
@@ -134,7 +135,7 @@ class DirDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
-        return self._default_dataloader(self.data_train, shuffle=True)
+        return self._default_dataloader(self.data_train, shuffle=False, oversample=True)
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.
@@ -174,13 +175,14 @@ class DirDataModule(LightningDataModule):
         """
         pass
 
-    def _default_dataloader(self, dataset: Dataset, shuffle: bool = False) -> DataLoader[Any]:
+    def _default_dataloader(self, dataset: Dataset, shuffle: bool = False, oversample: bool = False) -> DataLoader[Any]:
         """Create and return a dataloader.
 
         :param dataset: The dataset to use.
         """
         return DataLoader(
             dataset=dataset,
+            sampler= ImbalancedDatasetSampler(dataset) if oversample else None,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
