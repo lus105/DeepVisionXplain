@@ -13,6 +13,7 @@ model:
     multi_head: true
     return_nodes: { "features.16": "layerout" }
   segmentation_test: true
+  save_images: true
 
 data:
   data_dir: ${oc.env:pcb_data_path}
