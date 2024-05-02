@@ -29,6 +29,7 @@ class DirDataModule(LightningDataModule):
         pin_memory: bool = False,
         preprocessor: TilingProcessor = None,
         use_custom_dataset: bool = False,
+        oversample: bool = False,
     ) -> None:
         """Initialize a `DirDataModule`.
 
@@ -135,7 +136,7 @@ class DirDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
-        return self._default_dataloader(self.data_train, shuffle=False, oversample=True)
+        return self._default_dataloader(self.data_train, shuffle=False, oversample=self.hparams.oversample)
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.

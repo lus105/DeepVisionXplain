@@ -18,3 +18,4 @@ preprocessor:
   iterate_over_defective_areas: true
   save_every_second_good_tile: true
 use_custom_dataset: false
+oversample: false
