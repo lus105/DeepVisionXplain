@@ -10,7 +10,7 @@ from torchmetrics.classification import (
     BinaryPrecision,
     BinaryRecall,
     BinaryJaccardIndex)
-from src.models.components.metrics import PointingGameAccuracy
+from .components.metrics import PointingGameAccuracy
 
 from src.utils import save_images
 
