@@ -10,6 +10,7 @@ from torchmetrics.classification import (
     BinaryPrecision,
     BinaryRecall,
     BinaryJaccardIndex)
+from .components.metrics import PointingGameAccuracy
 
 from src.utils import save_images
 
@@ -49,11 +50,13 @@ class TrainingLitModule(LightningModule):
         self.seg_bin_precision = BinaryPrecision(threshold=0.5)
         self.seg_bin_recall = BinaryRecall(threshold=0.5)
         self.seg_bin_jaccard = BinaryJaccardIndex(threshold=0.5)
+        self.pointing_game_acc = PointingGameAccuracy()
         self.seg_metrics = [self.seg_bin_acc,
                             self.seg_bin_f1,
                             self.seg_bin_precision,
                             self.seg_bin_recall,
-                            self.seg_bin_jaccard]
+                            self.seg_bin_jaccard,
+                            self.pointing_game_acc]
         self.save_images = save_images
         self.counter = 0
 
@@ -201,8 +204,9 @@ class TrainingLitModule(LightningModule):
 
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
-        for metric in self.seg_metrics:
-            self.log(f"test/{metric._get_name()}", metric.compute(), sync_dist=True, prog_bar=True)
+        if self.hparams.segmentation_test:
+            for metric in self.seg_metrics:
+                self.log(f"test/{metric._get_name()}", metric.compute(), sync_dist=True, prog_bar=True)
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,

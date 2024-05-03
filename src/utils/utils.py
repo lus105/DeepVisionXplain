@@ -157,6 +157,11 @@ def save_images(image: torch.Tensor, cam: torch.Tensor, label: torch.Tensor, pat
     label = cv2.cvtColor(label, cv2.COLOR_GRAY2RGB)
     label = (label * 255).astype(np.uint8)
 
+    # Thresholded cam
+    cam_thresholded = np.where(cam > 0.5, 1, 0)
+    cam_thresholded = (cam_thresholded * 255).astype(np.uint8)
+    cam_thresholded = cv2.cvtColor(cam_thresholded, cv2.COLOR_GRAY2RGB)
+
     # Normalize CAM for applying colormap
     cam_normalized = cv2.normalize(cam, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     # Apply the JET colormap
@@ -165,5 +170,5 @@ def save_images(image: torch.Tensor, cam: torch.Tensor, label: torch.Tensor, pat
     alpha = 0.5  # Transparency for the CAM overlay; adjust as needed
     blended_image = cv2.addWeighted(image, 1 - alpha, cam_colored, alpha, 0)
 
-    img_concated = cv2.hconcat([image, label, cam_colored, blended_image])
+    img_concated = cv2.hconcat([image, label, cam_colored, blended_image, cam_thresholded])
     cv2.imwrite(path, img_concated)
