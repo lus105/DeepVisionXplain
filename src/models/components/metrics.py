@@ -29,6 +29,7 @@ class PointingGameAccuracy(Metric):
         
         # Skip if no white regions are detected
         if num_features == 0:
+            self.total += 1
             return
 
         # Find the largest connected component
