@@ -8,20 +8,11 @@ channels:
 
 dependencies:
   - python=3.11
-  - pytorch=2.*
-  - torchvision=0.*
+  - pytorch
+  - torchvision
   - pytorch-cuda=11.8
-  - lightning=2.*
-  - torchmetrics=1.*
-  - hydra-core=1.*
-  - rich=13.*
-  - pre-commit=3.*
-  - pytest=7.*
-  - wandb=0.*
-  - opencv=4.*
-  - matplotlib=3.*
-  - scikit-learn=1.*
-
+  - lightning
+  - torchmetrics
 
   - pip>=23
   - pip:
@@ -34,3 +25,11 @@ dependencies:
       - onnxruntime
       - torchinfo
       - torchsampler
+      - hydra-core
+      - rich
+      - pre-commit
+      - pytest
+      - wandb
+      - opencv
+      - matplotlib
+      - scikit-learn
