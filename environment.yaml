@@ -30,6 +30,6 @@ dependencies:
       - pre-commit
       - pytest
       - wandb
-      - opencv
+      - opencv-python
       - matplotlib
       - scikit-learn
