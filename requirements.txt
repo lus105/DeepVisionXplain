@@ -13,13 +13,13 @@ hydra-colorlog
 hydra-optuna-sweeper
 
 # --------- loggers --------- #
-#wandb
+wandb
 
 # --------- others --------- #
-rootutils       # standardizing the project root setup
-pre-commit      # hooks for applying linters on commit
-rich            # beautiful text formatting in terminal
-pytest          # tests
+rootutils
+pre-commit
+rich
+pytest
 opencv-python
 matplotlib
 scikit-learn
