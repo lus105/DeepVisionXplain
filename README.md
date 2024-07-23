@@ -72,3 +72,11 @@ Defect detection [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c
 Experiment [logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
 
 Trained [models](https://huggingface.co/DeepVisionXplain).
+
+## Development
+
+To reformat all files in the project use command:
+
+```bash
+pre-commit run -a
+```
