@@ -22,7 +22,9 @@ class FeatureExtractor(nn.Module):
         nodes = list(return_nodes.values())
         self.out_name = nodes[0]
 
-        self.model = create_feature_extractor(pretrained_model, return_nodes=return_nodes)
+        self.model = create_feature_extractor(
+            pretrained_model, return_nodes=return_nodes
+        )
         self.n_features = self._calculate_n_features()
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -39,6 +41,7 @@ class FeatureExtractor(nn.Module):
         with torch.no_grad():
             output = self.forward(dummy_input)
         return output.shape[1]
+
 
 class BinaryClassificationHead(nn.Module):
     """Neural network head for binary classification.
@@ -89,13 +92,13 @@ class ClassActivationMapGenerator(nn.Module):
         :return: A tensor containing the Class Activation Maps of shape (B, H, W).
         """
         weights = self.fc.weight.data.unsqueeze(-1).unsqueeze(-1)
-        cam = torch.einsum("ijkl,ijkl->ikl", features, weights).unsqueeze(1)  # (B, 1, H, W)
+        cam = torch.einsum("ijkl,ijkl->ikl", features, weights).unsqueeze(
+            1
+        )  # (B, 1, H, W)
 
         cam = F.interpolate(
             cam, size=input.size()[2:], mode="bilinear", align_corners=False
-        ).squeeze(
-            1
-        )  # (B, H, W)
+        ).squeeze(1)  # (B, H, W)
 
         return cam
 
@@ -124,8 +127,12 @@ class CNNCAMMultihead(nn.Module):
             pretrained_model = mobilenet_v3_large(wights=weights)
         elif backbone == "efficientnet_v2_s":
             pretrained_model = efficientnet_v2_s(weights=weights)
-        self.feature_extractor = FeatureExtractor(pretrained_model, return_nodes=return_nodes)
-        self.output_layer = BinaryClassificationHead(last_layer_features=self.feature_extractor.n_features)
+        self.feature_extractor = FeatureExtractor(
+            pretrained_model, return_nodes=return_nodes
+        )
+        self.output_layer = BinaryClassificationHead(
+            last_layer_features=self.feature_extractor.n_features
+        )
         self.cam_generator = ClassActivationMapGenerator(self.output_layer.fc)
         self.multi_head = multi_head
 

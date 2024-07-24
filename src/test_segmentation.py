@@ -6,8 +6,6 @@ from lightning import LightningDataModule, LightningModule, Trainer, Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
-
 from src.utils import (
     RankedLogger,
     extras,
@@ -15,10 +13,12 @@ from src.utils import (
     instantiate_callbacks,
     log_hyperparameters,
     task_wrapper,
-    weight_load
+    weight_load,
 )
 
+rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 log = RankedLogger(__name__, rank_zero_only=True)
+
 
 @task_wrapper
 def test(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -42,7 +42,9 @@ def test(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     logger: List[Logger] = instantiate_loggers(cfg.get("logger"))
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
+    trainer: Trainer = hydra.utils.instantiate(
+        cfg.trainer, callbacks=callbacks, logger=logger
+    )
 
     object_dict = {
         "cfg": cfg,
@@ -66,7 +68,9 @@ def test(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     return metric_dict, object_dict
 
 
-@hydra.main(version_base="1.3", config_path="../configs", config_name="test_segmentation.yaml")
+@hydra.main(
+    version_base="1.3", config_path="../configs", config_name="test_segmentation.yaml"
+)
 def main(cfg: DictConfig) -> None:
     """Main entry point for segmentation testing.
 

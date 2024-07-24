@@ -9,10 +9,12 @@ from torchmetrics.classification import (
     BinaryF1Score,
     BinaryPrecision,
     BinaryRecall,
-    BinaryJaccardIndex)
+    BinaryJaccardIndex,
+)
 from .components.metrics import PointingGameAccuracy
 
 from src.utils import save_images
+
 
 class TrainingLitModule(LightningModule):
     def __init__(
@@ -51,12 +53,14 @@ class TrainingLitModule(LightningModule):
         self.seg_bin_recall = BinaryRecall(threshold=0.5)
         self.seg_bin_jaccard = BinaryJaccardIndex(threshold=0.5)
         self.pointing_game_acc = PointingGameAccuracy()
-        self.seg_metrics = [self.seg_bin_acc,
-                            self.seg_bin_f1,
-                            self.seg_bin_precision,
-                            self.seg_bin_recall,
-                            self.seg_bin_jaccard,
-                            self.pointing_game_acc]
+        self.seg_metrics = [
+            self.seg_bin_acc,
+            self.seg_bin_f1,
+            self.seg_bin_precision,
+            self.seg_bin_recall,
+            self.seg_bin_jaccard,
+            self.pointing_game_acc,
+        ]
         self.save_images = save_images
         self.counter = 0
 
@@ -102,10 +106,8 @@ class TrainingLitModule(LightningModule):
         loss = self.criterion(logits, y)
         preds = (logits > 0.5).float()
         return loss, preds, y
-    
-    def model_step_segmentation_test(
-        self, batch
-    ) -> None:
+
+    def model_step_segmentation_test(self, batch) -> None:
         x, y = batch
         out, cam = self.forward(x)
         logit_out = torch.sigmoid(out)
@@ -116,11 +118,18 @@ class TrainingLitModule(LightningModule):
                 # Use cam[i] for segmentation metric calculation if pred is 1
                 cam_segmentation = cam[i]
                 # convert cam values to range [0, 1]
-                cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (cam_segmentation.max() - cam_segmentation.min())
+                cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (
+                    cam_segmentation.max() - cam_segmentation.min()
+                )
 
                 # save images for visualization
                 if self.save_images:
-                    save_images(x[i], cam_segmentation, y[i].squeeze(0), f"{self._trainer.default_root_dir}/images/img_{self.counter}.png")
+                    save_images(
+                        x[i],
+                        cam_segmentation,
+                        y[i].squeeze(0),
+                        f"{self._trainer.default_root_dir}/images/img_{self.counter}.png",
+                    )
 
                 # thresholding cam_segmentation to get binary mask
                 cam_segmentation = (cam_segmentation > 0.5).float()
@@ -152,8 +161,12 @@ class TrainingLitModule(LightningModule):
         # update and log metrics
         self.train_loss(loss)
         self.train_acc(preds, targets)
-        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True
+        )
+        self.log(
+            "train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True
+        )
 
         # return loss or backpropagation will fail
         return loss
@@ -162,7 +175,9 @@ class TrainingLitModule(LightningModule):
         "Lightning hook that is called when a training epoch ends."
         pass
 
-    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+    def validation_step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+    ) -> None:
         """Perform a single validation step on a batch of data from the validation set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -183,9 +198,13 @@ class TrainingLitModule(LightningModule):
         self.val_acc_best(acc)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+        self.log(
+            "val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True
+        )
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+    def test_step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+    ) -> None:
         """Perform a single test step on a batch of data from the test set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -199,14 +218,23 @@ class TrainingLitModule(LightningModule):
             # update and log metrics
             self.test_loss(loss)
             self.test_acc(preds, targets)
-            self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-            self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
+            self.log(
+                "test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True
+            )
+            self.log(
+                "test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True
+            )
 
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
         if self.hparams.segmentation_test:
             for metric in self.seg_metrics:
-                self.log(f"test/{metric._get_name()}", metric.compute(), sync_dist=True, prog_bar=True)
+                self.log(
+                    f"test/{metric._get_name()}",
+                    metric.compute(),
+                    sync_dist=True,
+                    prog_bar=True,
+                )
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,

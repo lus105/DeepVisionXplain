@@ -4,8 +4,9 @@ from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
-IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp']
-ANNOTATION_EXTENSIONS = ['.json', '.xml']
+IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".bmp"]
+ANNOTATION_EXTENSIONS = [".json", ".xml"]
+
 
 def get_file_name(path: str) -> str:
     """
@@ -21,6 +22,7 @@ def get_file_name(path: str) -> str:
     file_name, _ = os.path.splitext(file_name_with_ext)
     return file_name
 
+
 def get_file_extension(path: str) -> str:
     """
     Retrieves the file extension from a given file path.
@@ -33,6 +35,7 @@ def get_file_extension(path: str) -> str:
     """
     _, file_extension = os.path.splitext(path)
     return file_extension
+
 
 def find_annotation_file(directory: str, file_name: str):
     """
@@ -52,6 +55,7 @@ def find_annotation_file(directory: str, file_name: str):
             return file_path
     return None
 
+
 def clear_directory(directory_path):
     """
     Clear all files and subdirectories within a directory.
@@ -69,6 +73,7 @@ def clear_directory(directory_path):
             clear_directory(file_path)
             os.rmdir(file_path)
 
+
 def get_file_paths_rec(directory_path: str):
     """
     Returns a list of image paths from the given directory and its subdirectories.
@@ -80,12 +85,15 @@ def get_file_paths_rec(directory_path: str):
     - list: List of image paths. Supported image formats include JPG, JPEG, PNG, and BMP.
     """
     file_extensions = IMAGE_EXTENSIONS + ANNOTATION_EXTENSIONS
-    file_paths = [os.path.join(root, file) 
-                  for root, dirs, files in os.walk(directory_path) 
-                  for file in files 
-                  if os.path.splitext(file)[1].lower() in file_extensions]
-    
+    file_paths = [
+        os.path.join(root, file)
+        for root, dirs, files in os.walk(directory_path)
+        for file in files
+        if os.path.splitext(file)[1].lower() in file_extensions
+    ]
+
     return file_paths
+
 
 def save_files(file_paths, target_dir):
     """
@@ -98,9 +106,11 @@ def save_files(file_paths, target_dir):
     os.makedirs(target_dir, exist_ok=True)
 
     # Check if the directory is empty. If not, raise an exception.
-    if os.listdir(target_dir):  # This returns a non-empty list if the directory has contents.
+    if os.listdir(
+        target_dir
+    ):  # This returns a non-empty list if the directory has contents.
         log.warning(f"Directory {target_dir} is not empty. Skipping saving.")
         return
-    
+
     for f in file_paths:
         shutil.copy(f, target_dir)

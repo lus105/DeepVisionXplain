@@ -15,6 +15,7 @@ from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
+
 class DirDataModule(LightningDataModule):
     def __init__(
         self,
@@ -52,7 +53,7 @@ class DirDataModule(LightningDataModule):
             [
                 transforms.ToTensor(),
                 transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomVerticalFlip(p=0.5)
+                transforms.RandomVerticalFlip(p=0.5),
             ]
         )
         self.val_test_transforms = transforms.Compose([transforms.ToTensor()])
@@ -61,9 +62,11 @@ class DirDataModule(LightningDataModule):
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
 
-        self.data_splitter = DatasetSplitter(os.path.join(self.hparams.data_dir, self.hparams.image_subdir),
-                                             os.path.join(self.hparams.data_dir, self.hparams.label_subdir))
-        
+        self.data_splitter = DatasetSplitter(
+            os.path.join(self.hparams.data_dir, self.hparams.image_subdir),
+            os.path.join(self.hparams.data_dir, self.hparams.label_subdir),
+        )
+
         self.updated_dirs = {}
 
     @property
@@ -75,25 +78,29 @@ class DirDataModule(LightningDataModule):
         return 2
 
     def prepare_data(self) -> None:
-        """Prepare data.
-        """
+        """Prepare data."""
 
         log.info(f"Preparing data in {self.hparams.data_dir}...")
         # Define directories for train, test, and validation subsets.
-        subsets = ['train', 'test', 'val']
-        dirs = {subset: os.path.join(self.hparams.data_dir, getattr(self.hparams, f"{subset}_subdir")) for subset in subsets}
-        
-        log.info(f"Sptillting datasets...")
+        subsets = ["train", "test", "val"]
+        dirs = {
+            subset: os.path.join(
+                self.hparams.data_dir, getattr(self.hparams, f"{subset}_subdir")
+            )
+            for subset in subsets
+        }
+
+        log.info("Sptillting datasets...")
         # Save data splits.
         self.data_splitter.save_splits(
-            dirs['train'],
-            dirs['test'],
-            dirs['val'],
+            dirs["train"],
+            dirs["test"],
+            dirs["val"],
             self.hparams.image_subdir,
-            self.hparams.label_subdir
+            self.hparams.label_subdir,
         )
 
-        log.info(f"Preprocessing data...")
+        log.info("Preprocessing data...")
         # Preprocess data for each subset.
         self.updated_dirs = {}  # Initialize a dictionary to store updated paths
         for subset, dir in dirs.items():
@@ -104,25 +111,31 @@ class DirDataModule(LightningDataModule):
 
         Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
         """
-        if not hasattr(self, 'updated_dirs'):
-            raise ValueError("Data directories are not prepared or updated paths are missing.")
-    
-        dataset_class = ImageLabelDataset if self.hparams.use_custom_dataset else ImageFolder
+        if not hasattr(self, "updated_dirs"):
+            raise ValueError(
+                "Data directories are not prepared or updated paths are missing."
+            )
+
+        dataset_class = (
+            ImageLabelDataset if self.hparams.use_custom_dataset else ImageFolder
+        )
         transform_map = {
-            'train': self.train_transforms,
-            'val': self.val_test_transforms,
-            'test': self.val_test_transforms
+            "train": self.train_transforms,
+            "val": self.val_test_transforms,
+            "test": self.val_test_transforms,
         }
-        
-        for subset in ['train', 'val', 'test']:
+
+        for subset in ["train", "val", "test"]:
             dir_path = self.updated_dirs[subset]
             if self.hparams.use_custom_dataset:
                 # For ImageLabelDataset, specify img_dir and label_dir
                 self.__dict__[f"data_{subset}"] = dataset_class(
                     img_dir=dir_path,
-                    label_dir=os.path.join(os.path.dirname(dir_path), self.hparams.label_subdir),
+                    label_dir=os.path.join(
+                        os.path.dirname(dir_path), self.hparams.label_subdir
+                    ),
                     transform=transform_map[subset],
-                    label_transform=transform_map[subset]
+                    label_transform=transform_map[subset],
                 )
             else:
                 # For ImageFolder, there's no separate label_dir
@@ -136,7 +149,9 @@ class DirDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
-        return self._default_dataloader(self.data_train, shuffle=False, oversample=self.hparams.oversample)
+        return self._default_dataloader(
+            self.data_train, shuffle=False, oversample=self.hparams.oversample
+        )
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.
@@ -176,14 +191,16 @@ class DirDataModule(LightningDataModule):
         """
         pass
 
-    def _default_dataloader(self, dataset: Dataset, shuffle: bool = False, oversample: bool = False) -> DataLoader[Any]:
+    def _default_dataloader(
+        self, dataset: Dataset, shuffle: bool = False, oversample: bool = False
+    ) -> DataLoader[Any]:
         """Create and return a dataloader.
 
         :param dataset: The dataset to use.
         """
         return DataLoader(
             dataset=dataset,
-            sampler= ImbalancedDatasetSampler(dataset) if oversample else None,
+            sampler=ImbalancedDatasetSampler(dataset) if oversample else None,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
