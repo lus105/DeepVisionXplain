@@ -93,8 +93,8 @@ class AttentionRollout:
                 )
                 flat.scatter_(1, indices, 0)
 
-                I = torch.eye(height, device=device).expand_as(attention_heads_fused)
-                a = (attention_heads_fused + I) / 2
+                Iden = torch.eye(height, device=device).expand_as(attention_heads_fused)
+                a = (attention_heads_fused + Iden) / 2
                 a = a / a.sum(dim=-1, keepdim=True)
 
                 result = torch.bmm(a, result)
