@@ -3,12 +3,9 @@ import cv2
 import numpy as np
 from typing import Tuple
 
+
 class Tile:
-    def __init__(self,
-                 image: np.array,
-                 label: np.array,
-                 image_name: str,
-                 rect: tuple):
+    def __init__(self, image: np.array, label: np.array, image_name: str, rect: tuple):
         """
         Initialize a Tile object.
 
@@ -44,11 +41,11 @@ class Tile:
 
     def get_tile_name(self) -> str:
         """Generate and return the tile name."""
-        return f'{self.__image_name}_{self.__rect[0]}_{self.__rect[1]}.png'
+        return f"{self.__image_name}_{self.__rect[0]}_{self.__rect[1]}.png"
 
     def get_label_tile_name(self) -> str:
         """Generate and return the label tile name."""
-        return f'{self.__image_name}_{self.__rect[0]}_{self.__rect[1]}_mask.png'
+        return f"{self.__image_name}_{self.__rect[0]}_{self.__rect[1]}_mask.png"
 
     def get_tile_path(self, output_dir: str) -> str:
         """Return the full path for the tile image."""

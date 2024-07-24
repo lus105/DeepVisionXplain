@@ -3,13 +3,16 @@ from sklearn.model_selection import train_test_split
 
 from .helper_utils import save_files, get_file_paths_rec
 
+
 class DatasetSplitter:
-    def __init__(self,
-                 images_path : str,
-                 labels_path: str,
-                 test_size: float = 0.2,
-                 val_size: float =0.1,
-                 random_state: int = 42):
+    def __init__(
+        self,
+        images_path: str,
+        labels_path: str,
+        test_size: float = 0.2,
+        val_size: float = 0.1,
+        random_state: int = 42,
+    ):
         """
         Initialize a `DatasetSplitter`.
 
@@ -26,13 +29,12 @@ class DatasetSplitter:
         self.test_size = test_size
         self.val_size = val_size
         self.random_state = random_state
-        
 
     def __split_dataset(self):
         """
         Splits the dataset into training, testing, and optionally validation sets.
 
-        :return: A tuple containing lists of image and label paths for training, testing, and validation sets. 
+        :return: A tuple containing lists of image and label paths for training, testing, and validation sets.
                  If validation size is 0, it returns lists for training and testing sets only.
         """
 
@@ -41,38 +43,45 @@ class DatasetSplitter:
 
         # raise exeption if no images or labels found
         if len(images_paths) == 0:
-            raise Exception(f'No images found in {self.images_path}')
+            raise Exception(f"No images found in {self.images_path}")
 
         # raise exeption if images and labels don't match
         if len(images_paths) != len(labels_paths):
-            raise Exception(f'Number of images ({len(images_paths)}) does not match number of labels ({len(labels_paths)})')
-        
+            raise Exception(
+                f"Number of images ({len(images_paths)}) does not match number of labels ({len(labels_paths)})"
+            )
+
         # Splitting into train and test
-        img_train, img_test, lbl_train, lbl_test = train_test_split(images_paths,
-                                                                    labels_paths,
-                                                                    test_size=self.test_size,
-                                                                    random_state=self.random_state)
+        img_train, img_test, lbl_train, lbl_test = train_test_split(
+            images_paths,
+            labels_paths,
+            test_size=self.test_size,
+            random_state=self.random_state,
+        )
 
         # Further splitting train into train and validation
         if self.val_size > 0:
             # Adjust val size based on remaining dataset after test split
             val_size_adjusted = self.val_size / (1 - self.test_size)
-            img_train, img_val, lbl_train, lbl_val = train_test_split(img_train,
-                                                                      lbl_train,
-                                                                      test_size=val_size_adjusted,
-                                                                      random_state=self.random_state)
-            
+            img_train, img_val, lbl_train, lbl_val = train_test_split(
+                img_train,
+                lbl_train,
+                test_size=val_size_adjusted,
+                random_state=self.random_state,
+            )
+
             return img_train, lbl_train, img_test, lbl_test, img_val, lbl_val
         else:
             return img_train, lbl_train, img_test, lbl_test
 
-
-    def save_splits(self,
-                    train_dir: str,
-                    test_dir: str,
-                    val_dir: str = None,
-                    image_subdir: str = 'images',
-                    label_subdir: str = 'labels'):
+    def save_splits(
+        self,
+        train_dir: str,
+        test_dir: str,
+        val_dir: str = None,
+        image_subdir: str = "images",
+        label_subdir: str = "labels",
+    ):
         """
         Saves the dataset splits into specified directories.
 
