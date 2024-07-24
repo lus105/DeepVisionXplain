@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import warnings
 import torch
-from matplotlib import pyplot as plt
 from importlib.util import find_spec
 from typing import Any, Callable, Dict, Optional, Tuple
 
@@ -100,7 +99,9 @@ def task_wrapper(task_func: Callable) -> Callable:
     return wrap
 
 
-def get_metric_value(metric_dict: Dict[str, Any], metric_name: Optional[str]) -> Optional[float]:
+def get_metric_value(
+    metric_dict: Dict[str, Any], metric_name: Optional[str]
+) -> Optional[float]:
     """Safely retrieves value of the metric logged in LightningModule.
 
     :param metric_dict: A dict containing metric values.
@@ -123,7 +124,8 @@ def get_metric_value(metric_dict: Dict[str, Any], metric_name: Optional[str]) ->
 
     return metric_value
 
-def find_file_path(searched_dir: str, extension: str = '.ckpt') -> str:
+
+def find_file_path(searched_dir: str, extension: str = ".ckpt") -> str:
     """Finds file path in the given directory.
 
     :param searched_dir: The directory where to search for the file.
@@ -136,15 +138,22 @@ def find_file_path(searched_dir: str, extension: str = '.ckpt') -> str:
                 return os.path.join(root, file)
     return ""
 
+
 def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
     checkpoint_path = find_file_path(ckpt_path)
     checkpoint = torch.load(checkpoint_path)
-    model_weights = {k[4:]: v for k, v in checkpoint["state_dict"].items() if k.startswith(remove_prefix)}
-    
+    model_weights = {
+        k[4:]: v
+        for k, v in checkpoint["state_dict"].items()
+        if k.startswith(remove_prefix)
+    }
+
     return model_weights
 
-def save_images(image: torch.Tensor, cam: torch.Tensor, label: torch.Tensor, path: str) -> None:
 
+def save_images(
+    image: torch.Tensor, cam: torch.Tensor, label: torch.Tensor, path: str
+) -> None:
     # make path
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
@@ -163,12 +172,16 @@ def save_images(image: torch.Tensor, cam: torch.Tensor, label: torch.Tensor, pat
     cam_thresholded = cv2.cvtColor(cam_thresholded, cv2.COLOR_GRAY2RGB)
 
     # Normalize CAM for applying colormap
-    cam_normalized = cv2.normalize(cam, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    cam_normalized = cv2.normalize(
+        cam, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U
+    )
     # Apply the JET colormap
     cam_colored = cv2.applyColorMap(cam_normalized, cv2.COLORMAP_JET)
 
     alpha = 0.5  # Transparency for the CAM overlay; adjust as needed
     blended_image = cv2.addWeighted(image, 1 - alpha, cam_colored, alpha, 0)
 
-    img_concated = cv2.hconcat([image, label, cam_colored, blended_image, cam_thresholded])
+    img_concated = cv2.hconcat(
+        [image, label, cam_colored, blended_image, cam_thresholded]
+    )
     cv2.imwrite(path, img_concated)
