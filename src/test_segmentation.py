@@ -6,6 +6,8 @@ from lightning import LightningDataModule, LightningModule, Trainer, Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
+rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
 from src.utils import (
     RankedLogger,
     extras,
@@ -16,7 +18,6 @@ from src.utils import (
     weight_load,
 )
 
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 log = RankedLogger(__name__, rank_zero_only=True)
 
 

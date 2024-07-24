@@ -17,3 +17,4 @@ minversion = "6.0"
 testpaths = "tests/"
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
+"*" = ["E402"]
