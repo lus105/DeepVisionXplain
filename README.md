@@ -80,3 +80,16 @@ To reformat all files in the project use command:
 ```bash
 pre-commit run -a
 ```
+
+To run tests:
+
+```bash
+# run all tests
+pytest
+
+# run tests from specific file
+pytest tests/test_train.py
+
+# run all tests except the ones marked as slow
+pytest -k "not slow"
+```
