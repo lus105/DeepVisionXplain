@@ -9,10 +9,14 @@ defaults:
   - paths: default
   - extras: default
   - hydra: default
+  - callbacks: rich_progress_bar
 
-task_name: "eval"
+  # testing runs
+  - runs: null
+
+task_name: "eval" # eval or predict
 
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: ???
+ckpt_path: " " 
