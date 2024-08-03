@@ -37,19 +37,19 @@ python src/train.py trainer=gpu
 Train cnn/vit model:
 ```bash
 # train cnn
-python src/train.py runs=cnn_train
+python src/train.py runs=train_cnn
 
 # train vit
-python src/train.py runs=vit_train
+python src/train.py runs=train_vit
 ```
 
 Train cnn/vit model with hparams search:
 ```bash
 # train cnn
-python src/train.py hparams_search=cnn_optuna runs=cnn_train
+python src/train.py hparams_search=cnn_optuna runs=train_cnn
 
 # train vit
-python src/train.py hparams_search=vit_optuna runs=vit_train
+python src/train.py hparams_search=vit_optuna runs=train_vit
 ```
 
 ## Experiments
