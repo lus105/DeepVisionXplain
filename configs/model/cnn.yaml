@@ -1,5 +1,12 @@
 _target_: src.models.training_module.TrainingLitModule
 
+net:
+  _target_: src.models.components.cnn_cam_multihead.CNNCAMMultihead
+  backbone: mobilenet_v3_large
+  multi_head: false
+  return_nodes: { "features.16": "layerout" }
+  weights: "IMAGENET1K_V1"
+
 optimizer:
   _target_: torch.optim.Adam
   _partial_: true
@@ -13,12 +20,11 @@ scheduler:
   factor: 0.1
   patience: 10
 
-net:
-  _target_: src.models.components.cnn_cam_multihead.CNNCAMMultihead
-  backbone: mobilenet_v3_large
-  multi_head: false
-  return_nodes: { "features.16": "layerout" }
-  weights: "IMAGENET1K_V1"
+loss:
+  _target_: torch.nn.BCELoss
+
+# compile model for faster training with pytorch 2.0
+compile: false
 
   # --efficientnet_v2_s--
   # features.7 -> [1, 1280, 7, 7]
@@ -27,6 +33,3 @@ net:
   # --mobilenet_v3_large--
   # features.16 -> [1, 960, 7, 7]
   # features.13.block.0 -> [1, 672, 14, 14]
-
-# compile model for faster training with pytorch 2.0
-compile: false
