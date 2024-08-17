@@ -2,7 +2,7 @@ from typing import Any, Dict, Tuple
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric
+from torchmetrics import MaxMetric, MeanMetric, MetricCollection
 from torchmetrics.classification.accuracy import Accuracy
 from torchmetrics.classification import (
     BinaryAccuracy,
@@ -11,7 +11,6 @@ from torchmetrics.classification import (
     BinaryRecall,
     BinaryJaccardIndex,
 )
-from .components.metrics import PointingGameAccuracy
 
 from src.utils import save_images
 
@@ -22,15 +21,17 @@ class TrainingLitModule(LightningModule):
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        loss: torch.nn.modules.loss,
         compile: bool,
-        segmentation_test: bool = False,
-        save_images: bool = False,
     ) -> None:
-        """Initialize a `CnnLitModule`.
+        """Initialize lightning module
 
-        :param net: The model to train.
-        :param optimizer: The optimizer to use for training.
-        :param scheduler: The learning rate scheduler to use for training.
+        Args:
+            net (torch.nn.Module): model used.
+            optimizer (torch.optim.Optimizer): The optimizer to use for training.
+            scheduler (torch.optim.lr_scheduler): The learning rate scheduler to use for training.
+            loss (torch.nn.modules.loss): loss function.
+            compile (bool): compile model.
         """
         super().__init__()
 
@@ -38,30 +39,27 @@ class TrainingLitModule(LightningModule):
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
+        # model
         self.net = net
 
         # loss function
-        self.criterion = torch.nn.BCELoss()
+        self.criterion = loss
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task="binary", threshold=0.5)
-        self.val_acc = Accuracy(task="binary", threshold=0.5)
-        self.test_acc = Accuracy(task="binary", threshold=0.5)
-        self.seg_bin_acc = BinaryAccuracy(threshold=0.5)
-        self.seg_bin_f1 = BinaryF1Score(threshold=0.5)
-        self.seg_bin_precision = BinaryPrecision(threshold=0.5)
-        self.seg_bin_recall = BinaryRecall(threshold=0.5)
-        self.seg_bin_jaccard = BinaryJaccardIndex(threshold=0.5)
-        self.pointing_game_acc = PointingGameAccuracy()
-        self.seg_metrics = [
-            self.seg_bin_acc,
-            self.seg_bin_f1,
-            self.seg_bin_precision,
-            self.seg_bin_recall,
-            self.seg_bin_jaccard,
-            self.pointing_game_acc,
-        ]
-        self.save_images = save_images
+        self.train_acc = Accuracy(task="binary")
+        self.val_acc = Accuracy(task="binary")
+        self.test_acc = Accuracy(task="binary")
+
+        # segmentation metrics collection
+        self.seg_metrics = MetricCollection({
+            'accuracy': BinaryAccuracy(),
+            'f1_score': BinaryF1Score(),
+            'precision': BinaryPrecision(),
+            'recall': BinaryRecall(),
+            'jaccard': BinaryJaccardIndex(),
+        })
+
+        # counter for custom tracker
         self.counter = 0
 
         # for averaging loss across batches
@@ -72,16 +70,23 @@ class TrainingLitModule(LightningModule):
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
 
+        # flag for saving images during prediction
+        self.save_images = False
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
 
-        :param x: A tensor of images.
-        :return: A tensor of logits.
+        Args:
+            x (torch.Tensor): A tensor of images.
+
+        Returns:
+            torch.Tensor: A tensor of logits.
         """
         return self.net(x)
 
     def on_train_start(self) -> None:
-        """Lightning hook that is called when training begins."""
+        """Lightning hook that is called when training begins.
+        """
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
@@ -93,68 +98,35 @@ class TrainingLitModule(LightningModule):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Perform a single model step on a batch of data.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target labels.
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
 
-        :return: A tuple containing (in order):
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: A tuple containing (in order):
             - A tensor of losses.
             - A tensor of predictions.
             - A tensor of target labels.
         """
         x, y = batch
-        y = y.view(-1, 1).float()
         logits = torch.sigmoid(self.forward(x))
+        y = y.view(-1, 1).float()
         loss = self.criterion(logits, y)
         preds = (logits > 0.5).float()
         return loss, preds, y
-
-    def model_step_segmentation_test(self, batch) -> None:
-        x, y = batch
-        out, cam = self.forward(x)
-        logit_out = torch.sigmoid(out)
-        preds = (logit_out > 0.5).float()
-
-        for i, pred in enumerate(preds):
-            if pred == 1:
-                # Use cam[i] for segmentation metric calculation if pred is 1
-                cam_segmentation = cam[i]
-                # convert cam values to range [0, 1]
-                cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (
-                    cam_segmentation.max() - cam_segmentation.min()
-                )
-
-                # save images for visualization
-                if self.save_images:
-                    save_images(
-                        x[i],
-                        cam_segmentation,
-                        y[i].squeeze(0),
-                        f"{self._trainer.default_root_dir}/images/img_{self.counter}.png",
-                    )
-
-                # thresholding cam_segmentation to get binary mask
-                cam_segmentation = (cam_segmentation > 0.5).float()
-
-                # Placeholder function to calculate segmentation metric, implement accordingly
-                for metric in self.seg_metrics:
-                    metric(cam_segmentation, y[i].squeeze(0))
-
-                self.counter += 1
-            else:
-                # Use a blank image for segmentation metric calculation if pred is 0
-                blank_image = torch.zeros_like(cam[i])
-                for metric in self.seg_metrics:
-                    metric(blank_image, y[i].squeeze(0))
-                self.counter += 1
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> torch.Tensor:
         """Perform a single training step on a batch of data from the training set.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
-        :return: A tensor of losses between model predictions and targets.
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
+            batch_idx (int): The index of the current batch.
+
+        Returns:
+            torch.Tensor: A tensor of losses between model predictions and targets.
         """
         loss, preds, targets = self.model_step(batch)
 
@@ -171,18 +143,15 @@ class TrainingLitModule(LightningModule):
         # return loss or backpropagation will fail
         return loss
 
-    def on_train_epoch_end(self) -> None:
-        "Lightning hook that is called when a training epoch ends."
-        pass
-
     def validation_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
         """Perform a single validation step on a batch of data from the validation set.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
+            batch_idx (int): The index of the current batch.
         """
         loss, preds, targets = self.model_step(batch)
 
@@ -193,7 +162,8 @@ class TrainingLitModule(LightningModule):
         self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
-        "Lightning hook that is called when a validation epoch ends."
+        """Lightning hook that is called when a validation epoch ends.
+        """
         acc = self.val_acc.compute()  # get current val acc
         self.val_acc_best(acc)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
@@ -207,9 +177,10 @@ class TrainingLitModule(LightningModule):
     ) -> None:
         """Perform a single test step on a batch of data from the test set.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
+            batch_idx (int): The index of the current batch.
         """
         loss, preds, targets = self.model_step(batch)
         # update and log metrics
@@ -223,7 +194,8 @@ class TrainingLitModule(LightningModule):
         )
 
     def on_test_epoch_end(self) -> None:
-        """Lightning hook that is called when a test epoch ends."""
+        """Lightning hook that is called when a test epoch ends.
+        """
         self.log(
             "test/acc", self.test_acc.compute(), sync_dist=True, prog_bar=True
         )
@@ -231,21 +203,25 @@ class TrainingLitModule(LightningModule):
     def predict_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
+        """Perform a single predict step on a batch of data from the test set.
+
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
+            batch_idx (int): The index of the current batch.
+        """
         x, y = batch
         out, cam = self.forward(x)
-        logit_out = torch.sigmoid(out)
-        preds = (logit_out > 0.5).float()
+        logits = torch.sigmoid(out)
+        preds = (logits > 0.5).float()
 
         for i, pred in enumerate(preds):
+            cam_segmentation = cam[i] if pred == 1 else torch.zeros_like(cam[i])
+
             if pred == 1:
-                # Use cam[i] for segmentation metric calculation if pred is 1
-                cam_segmentation = cam[i]
-                # convert cam values to range [0, 1]
                 cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (
                     cam_segmentation.max() - cam_segmentation.min()
                 )
-
-                # save images for visualization
                 if self.save_images:
                     save_images(
                         x[i],
@@ -254,50 +230,36 @@ class TrainingLitModule(LightningModule):
                         f"{self._trainer.default_root_dir}/images/img_{self.counter}.png",
                     )
 
-                # thresholding cam_segmentation to get binary mask
-                cam_segmentation = (cam_segmentation > 0.5).float()
-
-                # Placeholder function to calculate segmentation metric, implement accordingly
-                for metric in self.seg_metrics:
-                    metric(cam_segmentation, y[i].squeeze(0))
-
-                self.counter += 1
-            else:
-                # Use a blank image for segmentation metric calculation if pred is 0
-                blank_image = torch.zeros_like(cam[i])
-                for metric in self.seg_metrics:
-                    metric(blank_image, y[i].squeeze(0))
-                self.counter += 1
+            cam_segmentation = (cam_segmentation > 0.5).float()
+            self.seg_metrics(cam_segmentation, y[i].squeeze(0))
+            self.counter += 1
 
     def on_predict_epoch_end(self) -> None:
-        for metric in self.seg_metrics:
-            self.log(
-                f"test/{metric._get_name()}",
-                metric.compute(),
-                sync_dist=True,
-                prog_bar=True,
-            )
+        """Lightning hook that is called when a predict epoch ends.
+        """
+        metrics_dict = self.seg_metrics.compute()
+        for metric_name, metric_value in metrics_dict.items():
+            print(f"test/{metric_name}: {metric_value}")
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
         test, or predict.
 
-        This is a good hook when you need to build models dynamically or adjust something about
-        them. This hook is called on every process when using DDP.
-
-        :param stage: Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
+        Args:
+            stage (str): Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
         """
         if self.hparams.compile and stage == "fit":
             self.net = torch.compile(self.net)
+        if stage == "predict":
+            self.save_images = self.trainer.datamodule.hparams.save_predict_images
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         Normally you'd need one. But in the case of GANs or similar you might have multiple.
 
-        Examples:
-            https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
-
-        :return: A dict containing the configured optimizers and learning-rate schedulers to be used for training.
+        Returns:
+            Dict[str, Any]: A dict containing the configured optimizers and
+            learning-rate schedulers to be used for training.
         """
         optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
         if self.hparams.scheduler is not None:
