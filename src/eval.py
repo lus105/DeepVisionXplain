@@ -23,14 +23,16 @@ log = RankedLogger(__name__, rank_zero_only=True)
 @task_wrapper
 def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Evaluates given checkpoint on a datamodule testset.
-
     This method is wrapped in optional @task_wrapper decorator, that controls the behavior during
     failure. Useful for multiruns, saving info about the crash, etc.
 
-    :param cfg: DictConfig configuration composed by Hydra.
-    :return: Tuple[dict, dict] with metrics and dict with all instantiated objects.
+    Args:
+        cfg (DictConfig): DictConfig configuration composed by Hydra.
+
+    Returns:
+        Tuple[Dict[str, Any], Dict[str, Any]]: metrics and dict with all instantiated objects.
     """
-    assert cfg.model.ckpt_path
+    assert cfg.model.ckpt_path, "The checkpoint path (cfg.model.ckpt_path) is not set!"
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
@@ -63,9 +65,9 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     log.info("Starting testing!")
 
-    if (cfg.task_name == "eval"):
+    if (cfg.task_name == "classification"):
         trainer.test(model=model, datamodule=datamodule)
-    elif (cfg.task_name == "predict"):
+    elif (cfg.task_name == "segmentation"):
         trainer.predict(model=model, datamodule=datamodule)
     else:
         log.error("Unknown mode.")
@@ -79,11 +81,11 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 def main(cfg: DictConfig) -> None:
     """Main entry point for evaluation.
 
-    :param cfg: DictConfig configuration composed by Hydra.
+    Args:
+        cfg (DictConfig): Configuration composed by Hydra.
     """
     # apply extra utilities
     extras(cfg)
-
     evaluate(cfg)
 
 

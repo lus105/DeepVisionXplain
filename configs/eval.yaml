@@ -12,6 +12,6 @@ defaults:
   - callbacks: rich_progress_bar
   - runs: null
 
-task_name: "eval" # eval or predict
+task_name: "classification" # classification or segmentation
 
 tags: ["dev"]

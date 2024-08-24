@@ -5,14 +5,13 @@ defaults:
   - override /model: cnn_effnet_v2_s_down
   - override /trainer: gpu
 
-tags: ["eval", "segmentation"]
+tags: ["eval", "classification"]
 
 model:
   net:
-    multi_head: true
+    multi_head: false
 
 data:
   data_dir: ${oc.env:pcb_data_path}
-  save_predict_images: true
 
-task_name: "segmentation"
+task_name: "classification"
