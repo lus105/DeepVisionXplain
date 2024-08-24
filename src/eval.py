@@ -15,7 +15,6 @@ from src.utils import (
     instantiate_callbacks,
     log_hyperparameters,
     task_wrapper,
-    weight_load,
 )
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -31,7 +30,7 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     :param cfg: DictConfig configuration composed by Hydra.
     :return: Tuple[dict, dict] with metrics and dict with all instantiated objects.
     """
-    assert cfg.ckpt_path
+    assert cfg.model.ckpt_path
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
@@ -63,10 +62,6 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log_hyperparameters(object_dict)
 
     log.info("Starting testing!")
-
-    # load weights
-    model_weights = weight_load(cfg.paths.trained_models + cfg.ckpt_path)
-    model.net.load_state_dict(model_weights)
 
     if (cfg.task_name == "eval"):
         trainer.test(model=model, datamodule=datamodule)
