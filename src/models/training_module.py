@@ -12,7 +12,7 @@ from torchmetrics.classification import (
     BinaryJaccardIndex,
 )
 
-from src.utils import save_images
+from .components.nn_utils import weight_load, save_images
 
 
 class TrainingLitModule(LightningModule):
@@ -23,6 +23,7 @@ class TrainingLitModule(LightningModule):
         scheduler: torch.optim.lr_scheduler,
         loss: torch.nn.modules.loss,
         compile: bool,
+        ckpt_path: str
     ) -> None:
         """Initialize lightning module
 
@@ -252,6 +253,9 @@ class TrainingLitModule(LightningModule):
             self.net = torch.compile(self.net)
         if stage == "predict":
             self.save_images = self.trainer.datamodule.hparams.save_predict_images
+        if self.hparams.ckpt_path:
+            model_weights = weight_load(self.hparams.ckpt_path)
+            self.net.load_state_dict(model_weights)
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
