@@ -1,19 +1,13 @@
 # @package _global_
 
-# to execute this experiment run:
-# python src/train.py runs=cnn_train
-
 defaults:
   - override /data: dir
-  - override /model: cnn
+  - override /model: cnn_effnet_v2_s_down
   - override /callbacks: default
   - override /trainer: default
   - override /logger: many_loggers
 
-# all parameters below will be merged with parameters from default configurations set above
-# this allows you to overwrite only specified parameters
-
-tags: ["pcb", "mobilenet_v3_large", "downscaled"]
+tags: ["train", "cnn"]
 
 seed: 12345
 
@@ -25,20 +19,16 @@ trainer:
 
 model:
   net:
-    backbone: "mobilenet_v3_large"
-    return_nodes: { "features.13.block.0": "layerout" }
-  optimizer:
-    lr: 0.001
-  compile: false
+    multi_head: false
 
 data:
   batch_size: 8
   num_workers: 4
-  data_dir: ${oc.env:gears_data_path}
+  data_dir: ${oc.env:pcb_data_path}
 
 logger:
   wandb:
     tags: ${tags}
     group: "pcb"
   aim:
-    experiment: "mobilenet_v3_large_pcb_downscaled"
+    experiment: "efficientnet_v2_s_pcb_downscaled"
