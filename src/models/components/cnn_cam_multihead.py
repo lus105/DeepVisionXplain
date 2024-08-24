@@ -6,21 +6,19 @@ from torchvision.models.feature_extraction import create_feature_extractor
 
 
 class FeatureExtractor(nn.Module):
-    """Initialize Feature extractor."""
-
-    def __init__(self, pretrained_model, return_nodes: dict) -> None:
+    def __init__(self, pretrained_model, return_node: str, out_name: str = "layerout") -> None:
         """Initialize a `FeatureExtractor` module.
 
         :param pretrained_model: model with pretrained weights.
-        :param return_nodes: node of the model that is considered as output.
+        :param return_node: node of the model that is considered as output.
         """
         super().__init__()
 
-        if not return_nodes:
+        if not return_node:
             raise ValueError("return_nodes must contain at least one node.")
 
-        nodes = list(return_nodes.values())
-        self.out_name = nodes[0]
+        self.out_name = out_name
+        return_nodes = {return_node: out_name}
 
         self.model = create_feature_extractor(
             pretrained_model, return_nodes=return_nodes
@@ -111,7 +109,7 @@ class CNNCAMMultihead(nn.Module):
         self,
         backbone: str = "mobilenet_v3_large",
         multi_head: bool = False,
-        return_nodes: dict = {"features.5.1.block.2": "layerout"},
+        return_node: str = "features.16",
         weights: str = "IMAGENET1K_V1",
     ):
         """Initialize the `CNNCAMMultihead` module.
@@ -124,11 +122,14 @@ class CNNCAMMultihead(nn.Module):
         """
         super().__init__()
         if backbone == "mobilenet_v3_large":
-            pretrained_model = mobilenet_v3_large(wights=weights)
+            pretrained_model = mobilenet_v3_large(weights=weights)
         elif backbone == "efficientnet_v2_s":
             pretrained_model = efficientnet_v2_s(weights=weights)
+        else:
+            raise ValueError("Model is not compatible.")
+        
         self.feature_extractor = FeatureExtractor(
-            pretrained_model, return_nodes=return_nodes
+            pretrained_model, return_node=return_node
         )
         self.output_layer = BinaryClassificationHead(
             last_layer_features=self.feature_extractor.n_features
@@ -154,4 +155,8 @@ class CNNCAMMultihead(nn.Module):
 
 
 if __name__ == "__main__":
-    _ = CNNCAMMultihead()
+    model = CNNCAMMultihead(multi_head=True)
+    model.eval()
+    dummy_input = torch.randn(10, 3, 640, 640)
+    with torch.no_grad():
+        out, cam = model(dummy_input)
