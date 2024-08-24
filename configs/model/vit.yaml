@@ -24,5 +24,4 @@ scheduler: null
 loss:
   _target_: torch.nn.BCELoss
 
-# compile model for faster training with pytorch 2.0
 compile: false

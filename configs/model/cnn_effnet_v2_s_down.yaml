@@ -1,0 +1,10 @@
+defaults:
+  - cnn
+  - _self_
+
+net:
+  backbone: efficientnet_v2_s
+  multi_head: true
+  return_node: "features.6.0.block.0"
+
+ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--efficientnet_v2_s_downscaled_pcb
