@@ -5,5 +5,3 @@ defaults:
 net:
   backbone: efficientnet_v2_s
   return_node: "features.7"
-
-ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--efficientnet_v2_s_full_pcb

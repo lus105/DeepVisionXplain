@@ -5,5 +5,3 @@ defaults:
 net:
   backbone: mobilenet_v3_large
   return_node: "features.16"
-
-ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--mobilenet_v3_large_full_pcb
