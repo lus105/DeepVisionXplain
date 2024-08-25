@@ -2,7 +2,7 @@ _target_: src.models.training_module.TrainingLitModule
 
 net:
   _target_: src.models.components.vit_rollout_multihead.VitRolloutMultihead
-  model_name: "vit_tiny_patch16_224.augreg_in21k_ft_in1k"
+  model_name: ???
   pretrained: True
   weight_path: null
   output_size: 1
@@ -11,7 +11,7 @@ net:
   img_size: 224
   discard_ratio: 0.2
   head_fusion: "mean"
-  visualize: False
+  multi_head: False
 
 optimizer:
   _target_: torch.optim.AdamW
@@ -25,3 +25,5 @@ loss:
   _target_: torch.nn.BCELoss
 
 compile: false
+
+ckpt_path: ???

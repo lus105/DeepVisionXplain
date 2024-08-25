@@ -128,7 +128,7 @@ class VitRolloutMultihead(nn.Module):
         img_size: int = 224,
         discard_ratio: int = 0.2,
         head_fusion: str = "mean",
-        visualize: bool = False,
+        multi_head: bool = False,
     ) -> None:
         super().__init__()
         self.model = Vit(
@@ -143,11 +143,11 @@ class VitRolloutMultihead(nn.Module):
         self.attention_rollout = AttentionRollout(
             discard_ratio=discard_ratio, head_fusion=head_fusion
         )
-        self.visualize = visualize
+        self.multi_head = multi_head
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         attn_drop_tensors, classification_out = self.model(input)
-        if self.visualize:
+        if self.multi_head:
             attn_mask = self.attention_rollout(input, attn_drop_tensors)
             return classification_out, attn_mask
         else:
