@@ -29,8 +29,8 @@ class DirDataModule(LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         preprocessor: TilingProcessor = None,
-        use_custom_dataset: bool = False,
         oversample: bool = False,
+        save_predict_images: bool = False,
     ) -> None:
         """Initialize a `DirDataModule`.
 
@@ -61,6 +61,7 @@ class DirDataModule(LightningDataModule):
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
+        self.data_predict: Optional[Dataset] = None
 
         self.data_splitter = DatasetSplitter(
             os.path.join(self.hparams.data_dir, self.hparams.image_subdir),
@@ -116,9 +117,6 @@ class DirDataModule(LightningDataModule):
                 "Data directories are not prepared or updated paths are missing."
             )
 
-        dataset_class = (
-            ImageLabelDataset if self.hparams.use_custom_dataset else ImageFolder
-        )
         transform_map = {
             "train": self.train_transforms,
             "val": self.val_test_transforms,
@@ -127,22 +125,21 @@ class DirDataModule(LightningDataModule):
 
         for subset in ["train", "val", "test"]:
             dir_path = self.updated_dirs[subset]
-            if self.hparams.use_custom_dataset:
-                # For ImageLabelDataset, specify img_dir and label_dir
-                self.__dict__[f"data_{subset}"] = dataset_class(
-                    img_dir=dir_path,
-                    label_dir=os.path.join(
-                        os.path.dirname(dir_path), self.hparams.label_subdir
-                    ),
-                    transform=transform_map[subset],
-                    label_transform=transform_map[subset],
-                )
-            else:
-                # For ImageFolder, there's no separate label_dir
-                self.__dict__[f"data_{subset}"] = dataset_class(
-                    root=dir_path,
-                    transform=transform_map[subset],
-                )
+            # For ImageFolder, there's no separate label_dir
+            self.__dict__[f"data_{subset}"] = ImageFolder(
+                root=dir_path,
+                transform=transform_map[subset],
+            )
+
+        # For ImageLabelDataset, specify img_dir and label_dir
+        self.data_predict = ImageLabelDataset(
+            img_dir=self.updated_dirs["test"],
+            label_dir=os.path.join(
+                os.path.dirname(self.updated_dirs["test"]), self.hparams.label_subdir
+            ),
+            transform=self.val_test_transforms,
+            label_transform=self.val_test_transforms,
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
@@ -166,6 +163,13 @@ class DirDataModule(LightningDataModule):
         :return: The test dataloader.
         """
         return self._default_dataloader(self.data_test, shuffle=False)
+    
+    def predict_dataloader(self) -> DataLoader[Any]:
+        """Create and return the predict dataloader.
+
+        :return: The predict dataloader.
+        """
+        return self._default_dataloader(self.data_predict, shuffle=False)
 
     def teardown(self, stage: Optional[str] = None) -> None:
         """Lightning hook for cleaning up after `trainer.fit()`, `trainer.validate()`,
