@@ -2,17 +2,16 @@
 
 defaults:
   - _self_
-  - data: mnist # choose datamodule with `test_dataloader()` for evaluation
+  - data: mnist
   - model: mnist
   - logger: null
   - trainer: default
   - paths: default
   - extras: default
   - hydra: default
+  - callbacks: rich_progress_bar
+  - runs: null
 
-task_name: "eval"
+task_name: "classification" # classification or segmentation
 
 tags: ["dev"]
-
-# passing checkpoint path is necessary for evaluation
-ckpt_path: ???

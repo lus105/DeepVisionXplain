@@ -6,7 +6,7 @@ test_subdir: "test/"
 image_subdir: "images/"
 label_subdir: "labels/"
 batch_size: 64
-num_workers: 0
+num_workers: 3
 pin_memory: false
 preprocessor:
   _target_: src.data.components.tile_processor.TilingProcessor
@@ -17,5 +17,5 @@ preprocessor:
   step_size: 10
   iterate_over_defective_areas: true
   save_every_second_good_tile: true
-use_custom_dataset: false
 oversample: false
+save_predict_images: false

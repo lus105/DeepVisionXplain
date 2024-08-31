@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - override /data: dir
+  - override /model: cnn_effnet_v2_s_down
+  - override /trainer: gpu
+
+tags: ["eval", "segmentation"]
+
+model:
+  net:
+    multi_head: true
+  ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--efficientnet_v2_s_downscaled_pcb
+
+data:
+  data_dir: ${oc.env:pcb_data_path}
+  save_predict_images: true
+
+task_name: "segmentation"

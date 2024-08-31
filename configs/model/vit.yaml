@@ -1,16 +1,8 @@
 _target_: src.models.training_module.TrainingLitModule
 
-optimizer:
-  _target_: torch.optim.AdamW
-  _partial_: true
-  lr: 5e-5
-  weight_decay: 0.0
-
-scheduler: null
-
 net:
   _target_: src.models.components.vit_rollout_multihead.VitRolloutMultihead
-  model_name: "vit_tiny_patch16_224.augreg_in21k_ft_in1k"
+  model_name: ???
   pretrained: True
   weight_path: null
   output_size: 1
@@ -19,9 +11,19 @@ net:
   img_size: 224
   discard_ratio: 0.2
   head_fusion: "mean"
-  visualize: False
+  multi_head: False
 
-# compile model for faster training with pytorch 2.0
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: true
+  lr: 5e-5
+  weight_decay: 0.0
+
+scheduler: null
+
+loss:
+  _target_: torch.nn.BCELoss
+
 compile: false
 
-segmentation_test: false
+ckpt_path: ???
