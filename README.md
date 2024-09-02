@@ -1,29 +1,28 @@
 ## Project Description
 
-This repository aims to compare CNN (CAM) and ViT (attention rollout) explainability output.
+Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). [Research project](https://epubl.ktu.edu/object/elaba:198846619/).
+
 <p align="center">
   <img src="res/vit_rollout.png" />
 </p>
 
 ## Installation
-
 #### Conda
 
 ```bash
 # clone project
 git clone https://github.com/lus105/DeepVisionXplain.git
+# change directory
 cd DeepVisionXplain
 # update conda
 conda update -n base conda
 # create conda environment and install dependencies
 conda env create -f environment.yaml -n DeepVisionXplain
-
 # activate conda environment
 conda activate DeepVisionXplain
 ```
 
 ## How to run
-
 Train model with default configuration (check if environment is properly set up):
 
 ```bash
@@ -52,7 +51,10 @@ python src/train.py hparams_search=cnn_optuna runs=train_cnn
 python src/train.py hparams_search=vit_optuna runs=train_vit
 ```
 
-## Experiments
+## Training environment
+
+
+## Experiments/Results
 
 Two cnn models were trained for experimentation.
 ```bash
