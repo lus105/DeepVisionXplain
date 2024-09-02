@@ -5,6 +5,7 @@ from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 
+from .components.nn_utils import weight_load
 
 class MNISTLitModule(LightningModule):
     """Example of a `LightningModule` for MNIST classification.
@@ -45,6 +46,7 @@ class MNISTLitModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
+        ckpt_path: str
     ) -> None:
         """Initialize a `MNISTLitModule`.
 
@@ -200,6 +202,10 @@ class MNISTLitModule(LightningModule):
         """
         if self.hparams.compile and stage == "fit":
             self.net = torch.compile(self.net)
+        if self.hparams.ckpt_path:
+            model_weights = weight_load(self.hparams.ckpt_path)
+            self.net.load_state_dict(model_weights)
+
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.

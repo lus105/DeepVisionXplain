@@ -5,8 +5,9 @@ import cv2
 from src.utils.utils import find_file_path
 
 def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
-    checkpoint_path = find_file_path(ckpt_path)
-    checkpoint = torch.load(checkpoint_path)
+    if not ckpt_path.endswith(".ckpt"):
+        ckpt_path = find_file_path(ckpt_path)
+    checkpoint = torch.load(ckpt_path)
     model_weights = {
         k[4:]: v
         for k, v in checkpoint["state_dict"].items()

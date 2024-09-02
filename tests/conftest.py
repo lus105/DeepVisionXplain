@@ -44,7 +44,7 @@ def cfg_eval_global() -> DictConfig:
     """
     with initialize(version_base="1.3", config_path="../configs"):
         cfg = compose(
-            config_name="eval.yaml", return_hydra_config=True, overrides=["ckpt_path=."]
+            config_name="eval.yaml", return_hydra_config=True, overrides=["model.ckpt_path=."]
         )
 
         # set defaults for all tests

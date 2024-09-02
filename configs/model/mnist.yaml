@@ -22,3 +22,5 @@ scheduler:
   patience: 10
 
 compile: false
+
+ckpt_path: ""
