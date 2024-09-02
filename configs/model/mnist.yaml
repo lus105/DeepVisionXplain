@@ -21,7 +21,4 @@ scheduler:
   factor: 0.1
   patience: 10
 
-loss:
-  _target_: torch.nn.BCELoss
-
 compile: false
