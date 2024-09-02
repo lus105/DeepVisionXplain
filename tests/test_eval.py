@@ -32,7 +32,7 @@ def test_train_eval(
     assert "last.ckpt" in os.listdir(tmp_path / "checkpoints")
 
     with open_dict(cfg_eval):
-        cfg_eval.ckpt_path = str(tmp_path / "checkpoints" / "last.ckpt")
+        cfg_eval.model.ckpt_path = str(tmp_path / "checkpoints" / "last.ckpt")
 
     HydraConfig().set_config(cfg_eval)
     test_metric_dict, _ = evaluate(cfg_eval)
