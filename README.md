@@ -44,8 +44,10 @@ python src/train.py trainer=cpu
 python src/train.py trainer=gpu
 ```
 
+## Model Training Environment
+
 <details>
-  <summary><font size="6"><b>Model Training Environment</b></font></summary>
+  <summary><font size="5"><b>More information</b></font></summary>
 
 #### Environment Description
 The setup is designed to streamline experimentation, foster modularity, and simplify tracking and reproducibility:
@@ -107,10 +109,10 @@ pytest -k "not slow"
 ```
 </details>
 
-----
+## Model Explainability
 
 <details>
-  <summary><font size="6"><b>Model Explainability</b></font></summary>
+  <summary><font size="5"><b>More information</b></font></summary>
 
 
 Train cnn/vit model:
