@@ -116,12 +116,12 @@ pytest -k "not slow"
 
 #### Modified CNN architecture
 <p align="center">
-  <img src="res/cnn_cam.svg" width="350"/>
+  <img src="res/cnn_cam.svg" width="450"/>
 </p>
 
 #### Modified ViT architecture
 <p align="center">
-  <img src="res/vit_rollout.svg" width="500"/>
+  <img src="res/vit_rollout.svg" width="700"/>
 </p>
 
 Train cnn/vit model:
