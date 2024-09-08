@@ -19,8 +19,6 @@
 ## Project Description
 Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). Research project paper can be found [here](https://epubl.ktu.edu/object/elaba:198846619/).
 
-----
-
 
 
 ## Model training environment
@@ -55,9 +53,8 @@ The setup is designed to streamline experimentation, foster modularity, and simp
 ✅ Hyperparameter search integration.
 
 #### Workflow steps:
-
 <p align="center">
-  <img src="res/workflow_diagram.png" width="300"/>
+  <img src="res/workflow_diagram.svg" width="300"/>
 </p>
 
 #### Working principle:
@@ -80,8 +77,6 @@ pytest tests/test_train.py
 # run all tests except the ones marked as slow
 pytest -k "not slow"
 ```
-
-----
 
 ## Model Explainability
 Train cnn/vit model:
