@@ -114,6 +114,15 @@ pytest -k "not slow"
 <details>
   <summary><font size="5"><b>More information</b></font></summary>
 
+#### Modified CNN architecture
+<p align="center">
+  <img src="res/cnn_cam.svg" width="350"/>
+</p>
+
+#### Modified ViT architecture
+<p align="center">
+  <img src="res/vit_rollout.svg" width="500"/>
+</p>
 
 Train cnn/vit model:
 ```bash
@@ -149,3 +158,9 @@ Trained [models](https://huggingface.co/DeepVisionXplain).
 Research [paper](https://epubl.ktu.edu/object/elaba:198846619/).
 
 </details>
+
+## References
+Project inspired by:
+* [ashleve/lightning-hydra-template](https://github.com/ashleve/lightning-hydra-template)
+* [jacobgil/vit-explain](https://github.com/jacobgil/vit-explain)
+* [rytiss/DL-defect-classification-with-CAM-output](https://github.com/rytisss/DL-defect-classification-with-CAM-output)
