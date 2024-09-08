@@ -15,13 +15,13 @@
 </div>
 
 
-
 ## Project Description
 Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). Research project paper can be found [here](https://epubl.ktu.edu/object/elaba:198846619/).
 
+<p align="center">
+  <img src="res/explainability.svg" width="250"/>
+</p>
 
-
-## Model training environment
 #### Conda installation
 ```bash
 # clone project
@@ -43,6 +43,10 @@ python src/train.py trainer=cpu
 # train on GPU (mnist dataset)
 python src/train.py trainer=gpu
 ```
+
+<details>
+  <summary><font size="5"><b>Model Training Environment</b></font></summary>
+
 #### Environment Description
 The setup is designed to streamline experimentation, foster modularity, and simplify tracking and reproducibility:
 
@@ -70,17 +74,17 @@ The diagram shows how Hydra loads all configuration files and combines them into
 
  This section represents the operational part of the project. Scripts train.py and eval.py are required for training and evaluatging the model. DictConfig: The combined configuration object passed to these scripts, guiding the instantiation of the subsequent components.
 
-  – LightningDataModule: manages data loading and processing specific to training, validation, testing and predicting phases.
+  * LightningDataModule: manages data loading and processing specific to training, validation, testing and predicting phases.
 
-  – LightningModule (model): defines the model, including the computation that transforms inputs into outputs, loss computation, and metrics.
+  * LightningModule (model): defines the model, including the computation that transforms inputs into outputs, loss computation, and metrics.
 
-  –	Callbacks: provide a way to insert custom logic into the training loop, such as model checkpointing, early stopping, etc.
+  *	Callbacks: provide a way to insert custom logic into the training loop, such as model checkpointing, early stopping, etc.
 
-  – Logger: handles the logging of training, testing, and validation metrics for monitoring progress.
+  * Logger: handles the logging of training, testing, and validation metrics for monitoring progress.
 
-  –	Trainer: the central object in PyTorch Lightning that orchestrates the training process, leveraging all the other components.
+  *	Trainer: the central object in PyTorch Lightning that orchestrates the training process, leveraging all the other components.
 
-  –	The trainer uses the model, data module, logger, and callbacks to execute the training/evaluating process through the trainer.fit/test/predict methods, integrating all the configuration settings specified through Hydra.
+  *	The trainer uses the model, data module, logger, and callbacks to execute the training/evaluating process through the trainer.fit/test/predict methods, integrating all the configuration settings specified through Hydra.
 
 #### Workflow steps:
 <p align="center">
@@ -101,8 +105,12 @@ pytest tests/test_train.py
 # run all tests except the ones marked as slow
 pytest -k "not slow"
 ```
+</details>
 
-## Model Explainability
+<details>
+  <summary><font size="5"><b>Model Explainability</b></font></summary>
+
+
 Train cnn/vit model:
 ```bash
 # train cnn
@@ -135,3 +143,5 @@ Experiment [logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
 Trained [models](https://huggingface.co/DeepVisionXplain).
 
 Research [paper](https://epubl.ktu.edu/object/elaba:198846619/).
+
+</details>
