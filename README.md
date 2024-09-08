@@ -19,7 +19,7 @@
 Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). Research project paper can be found [here](https://epubl.ktu.edu/object/elaba:198846619/).
 
 <p align="center">
-  <img src="res/explainability.svg" width="250"/>
+  <img src="res/explainability.png" width="250"/>
 </p>
 
 #### Conda installation
@@ -45,7 +45,7 @@ python src/train.py trainer=gpu
 ```
 
 <details>
-  <summary><font size="5"><b>Model Training Environment</b></font></summary>
+  <summary><font size="6"><b>Model Training Environment</b></font></summary>
 
 #### Environment Description
 The setup is designed to streamline experimentation, foster modularity, and simplify tracking and reproducibility:
@@ -107,8 +107,10 @@ pytest -k "not slow"
 ```
 </details>
 
+----
+
 <details>
-  <summary><font size="5"><b>Model Explainability</b></font></summary>
+  <summary><font size="6"><b>Model Explainability</b></font></summary>
 
 
 Train cnn/vit model:
