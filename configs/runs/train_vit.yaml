@@ -23,9 +23,12 @@ trainer:
   accelerator: gpu
 
 model:
+  net:
+    multi_head: false
   optimizer:
     lr: 5e-5
   compile: false
+  ckpt_path: None
 
 data:
   batch_size: 64
