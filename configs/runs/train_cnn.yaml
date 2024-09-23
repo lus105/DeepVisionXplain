@@ -20,7 +20,7 @@ trainer:
 model:
   net:
     multi_head: false
-  ckpt_path: None
+  ckpt_path: null
 
 data:
   batch_size: 8

@@ -28,7 +28,7 @@ model:
   optimizer:
     lr: 5e-5
   compile: false
-  ckpt_path: None
+  ckpt_path: null
 
 data:
   batch_size: 64
