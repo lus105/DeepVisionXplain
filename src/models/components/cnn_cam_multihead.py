@@ -190,10 +190,16 @@ class CNNCAMMultihead(nn.Module):
         else:
             return output
 
-
-if __name__ == "__main__":
+def test_model():
+    """Tests forward pass and prints out shapes
+    """
     model = CNNCAMMultihead(multi_head=True)
     model.eval()
-    dummy_input = torch.randn(10, 3, 640, 640)
+    dummy_input = torch.randn(10, 3, 224, 224)
     with torch.no_grad():
         out, cam = model(dummy_input)
+    print("Output shape: ", out.shape)
+    print("Explainability output shape: ", cam.shape)   
+
+if __name__ == "__main__":
+    test_model()
