@@ -9,6 +9,7 @@
 [![pytorch](https://img.shields.io/badge/PyTorch_2.0+-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/get-started/locally/)
 [![lightning](https://img.shields.io/badge/-Lightning_2.0+-792ee5?logo=pytorchlightning&logoColor=white)](https://pytorchlightning.ai/)
 [![hydra](https://img.shields.io/badge/Config-Hydra_1.3-89b8cd)](https://hydra.cc/)
+
 [![wandb](https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-gradient.svg)](https://wandb.ai/site)
 
 ----
@@ -139,6 +140,12 @@ python src/train.py hparams_search=cnn_optuna runs=train_cnn
 # train vit
 python src/train.py hparams_search=vit_optuna runs=train_vit
 ```
+
+Run explainability segmentation evaluation for all models:
+```bash
+scripts\eval_segmentation.bat
+```
+
 Two cnn models were trained for experimentation.
 ```bash
 full size: efficientnet_v2_s. features.7 -> [1, 1280, 7, 7]

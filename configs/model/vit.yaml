@@ -4,7 +4,6 @@ net:
   _target_: src.models.components.vit_rollout_multihead.VitRolloutMultihead
   model_name: ???
   pretrained: True
-  weight_path: null
   output_size: 1
   return_nodes: "attn_drop"
   head_name: "head"
