@@ -138,6 +138,9 @@ python src/train.py hparams_search=cnn_optuna runs=train_cnn
 
 # train vit
 python src/train.py hparams_search=vit_optuna runs=train_vit
+
+# Run explainability segmentation evaluation for all models
+scripts\eval_segmentation.bat
 ```
 Two cnn models were trained for experimentation.
 ```bash
