@@ -1,10 +1,16 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import torch
+import rootutils
 import torch.nn as nn
 import timm
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
+rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
+from src.utils import RankedLogger
+
+log = RankedLogger(__name__, rank_zero_only=True)
 
 class Vit(nn.Module):
     def __init__(
@@ -56,13 +62,18 @@ class Vit(nn.Module):
         Returns:
             nn.Module: Constructed model (Vit).
         """
-        model = timm.create_model(
-            self.model_name,
-            pretrained=self.pretrained,
-            num_classes=self.output_size,
-            img_size=self.img_size,
-        )
-        return model
+        try:
+            model = timm.create_model(
+                self.model_name,
+                pretrained=self.pretrained,
+                num_classes=self.output_size,
+                img_size=self.img_size,
+            )
+            log.info(f"Model '{self.model_name}' created successfully.")
+            return model
+        except Exception as e:
+            log.exception(f"Error creating model '{self.model_name}': {e}")
+            raise
 
     def __create_feature_extractor(self) -> nn.Module:
         """Creates feature extractor.
@@ -70,8 +81,13 @@ class Vit(nn.Module):
         Returns:
             nn.Module: Feature extractor.
         """
-        for block in self.model.blocks:
-            block.attn.fused_attn = False
+        if hasattr(self.model, 'blocks'):
+            for block in self.model.blocks:
+                if hasattr(block.attn, 'fused_attn'):
+                    block.attn.fused_attn = False
+        else:
+            log.error("The model does not have 'blocks' attribute.")
+            raise AttributeError("Model does not have 'blocks' attribute.")
 
         feature_layer_names = []
         for name, _ in self.model.named_modules():
@@ -81,10 +97,14 @@ class Vit(nn.Module):
         # add classification output
         feature_layer_names.append(self.head_name)
 
-        feature_extractor = create_feature_extractor(
-            self.model, return_nodes=feature_layer_names
-        )
-        return feature_extractor
+        try:
+            feature_extractor = create_feature_extractor(
+                self.model, return_nodes=feature_layer_names
+            )
+            return feature_extractor
+        except Exception as e:
+            log.exception(f"Error creating feature extractor: {e}")
+            raise
 
 
 class AttentionRollout:
@@ -95,6 +115,11 @@ class AttentionRollout:
             discard_ratio (float, optional): Percentage of attentions to drop. Defaults to 0.2.
             head_fusion (str, optional): Head fusion mode. Defaults to "mean".
         """
+        if not 0.0 <= discard_ratio < 1.0:
+            raise ValueError("discard_ratio must be in [0.0, 1.0).")
+        if head_fusion not in {"mean", "max", "min"}:
+            raise ValueError("head_fusion must be one of 'mean', 'max', or 'min'.")
+        
         self.discard_ratio = discard_ratio
         self.head_fusion = head_fusion
 
@@ -155,8 +180,8 @@ class AttentionRollout:
 
         # Look at the total attention between the class token and the image patches for each in the batch
         map = result[:, 0, 1:]
-        mask_width = int((height - 1) ** 0.5)
-        map = map.view(batch_size, mask_width, mask_width)
+        map_width = int((height - 1) ** 0.5)
+        map = map.view(batch_size, map_width, map_width)
 
         # Normalize
         map = map / map.view(batch_size, -1).max(dim=1).values.view(
@@ -175,7 +200,7 @@ class AttentionRollout:
 class VitRolloutMultihead(nn.Module):
     def __init__(
         self,
-        model_name: str = "vit_tiny_patch16_224.augreg_in21k_ft_in1k",
+        model_name: str,
         pretrained: bool = True,
         output_size: int = 1,
         return_nodes: str = "attn_drop",
@@ -193,8 +218,8 @@ class VitRolloutMultihead(nn.Module):
             output_size (int, optional): Number of classes. Defaults to 1.
             return_nodes (str, optional): Part of the model for Rollout calculation. Defaults to "attn_drop".
             head_name (str, optional): Classification head name. Defaults to "head".
-            img_size (float, optional): Input image size. Defaults to 224.
-            discard_ratio (int, optional): Percentage of attentions to drop. Defaults to 0.2.
+            img_size (int, optional): Input image size. Defaults to 224.
+            discard_ratio (float, optional): Percentage of attentions to drop. Defaults to 0.2.
             head_fusion (str, optional): Head fusion mode. Defaults to "mean".
             multi_head (bool, optional): If True, the forward method returns both output and explainability output. Defaults to False.
         """
@@ -212,33 +237,35 @@ class VitRolloutMultihead(nn.Module):
         )
         self.multi_head = multi_head
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
 
         Args:
             input (torch.Tensor): The input tensor of shape (batch_size, channels, height, width).
 
         Returns:
-            torch.Tensor: A tensor containing the output, and optionally the Attention Rollout Map if
-            multi_head is True.
+            Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]: A tensor containing the output,
+              and optionally the Attention Rollout Map if multi_head is True.
         """
         attn_drop_tensors, classification_out = self.model(input)
         if self.multi_head:
-            attn_mask = self.attention_rollout(input.size(), attn_drop_tensors)
-            return classification_out, attn_mask
+            map = self.attention_rollout(input.size(), attn_drop_tensors)
+            return classification_out, map
         else:
             return classification_out
 
-def test_model():
+def test_model() -> None:
     """Tests forward pass and prints out shapes
     """
-    model = VitRolloutMultihead(multi_head=True)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = VitRolloutMultihead(model_name = "vit_tiny_patch16_224.augreg_in21k_ft_in1k", multi_head=True)
+    model = model.to(device)
     model.eval()
-    dummy_input = torch.randn(10, 3, 224, 224)
+    dummy_input = torch.randn(10, 3, 224, 224).to(device)
     with torch.no_grad():
-        out, cam = model(dummy_input)
+        out, map = model(dummy_input)
     print("Output shape: ", out.shape)
-    print("Explainability output shape: ", cam.shape)
+    print("Explainability output shape: ", map.shape)
 
 if __name__ == "__main__":
     test_model()

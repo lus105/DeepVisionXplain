@@ -1,10 +1,16 @@
-from typing import Tuple
+from typing import Tuple, Union
+import rootutils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
 from torchvision.models.feature_extraction import create_feature_extractor
 
+rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
+from src.utils import RankedLogger
+
+log = RankedLogger(__name__, rank_zero_only=True)
 
 class FeatureExtractor(nn.Module):
     def __init__(self, pretrained_model: nn.Module, return_node: str, out_name: str = "layerout") -> None:
@@ -19,17 +25,21 @@ class FeatureExtractor(nn.Module):
             ValueError: if no return nodes are specified
         """
         super().__init__()
+        try:
+            if not return_node:
+                log.error("No return_node provided to FeatureExtractor")
+                raise ValueError("return_nodes must contain at least one node.")
 
-        if not return_node:
-            raise ValueError("return_nodes must contain at least one node.")
+            self.out_name = out_name
+            return_nodes = {return_node: out_name}
 
-        self.out_name = out_name
-        return_nodes = {return_node: out_name}
-
-        self.model = create_feature_extractor(
-            pretrained_model, return_nodes=return_nodes
-        )
-        self.n_features = self._calculate_n_features()
+            self.model = create_feature_extractor(
+                pretrained_model, return_nodes=return_nodes
+            )
+            self.n_features = self._calculate_n_features()
+        except Exception as e:
+            log.exception("Failed to initialize FeatureExtractor")
+            raise e
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Perform a single forward pass through the network.
@@ -129,7 +139,7 @@ class CNNCAMMultihead(nn.Module):
 
     def __init__(
         self,
-        backbone: str = "mobilenet_v3_large",
+        backbone: str,
         multi_head: bool = False,
         return_node: str = "features.16",
         weights: str = "IMAGENET1K_V1",
@@ -153,15 +163,13 @@ class CNNCAMMultihead(nn.Module):
         try:
             model_constructor = getattr(models, backbone)
         except AttributeError:
+            log.exception(f"Backbone '{backbone}' is not available in torchvision.models.")
             raise ValueError(
                 f"Backbone '{backbone}' is not available in torchvision.models."
             )
         
         # Load the model with specified weights
-        if weights is not None:
-            pretrained_model = model_constructor(weights=weights)
-        else:
-            pretrained_model = model_constructor(pretrained=True)
+        pretrained_model = model_constructor(weights=weights)
         
         self.feature_extractor = FeatureExtractor(
             pretrained_model, return_node=return_node
@@ -171,15 +179,15 @@ class CNNCAMMultihead(nn.Module):
         )
         self.cam_generator = ClassActivationMapGenerator(self.output_layer.fc)
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
 
         Args:
             input (torch.Tensor): The input tensor of shape (batch_size, channels, height, width).
 
         Returns:
-            torch.Tensor: A tensor containing the output, and optionally the Class Activation Map if
-            multi_head is True.
+            Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]: A tensor containing the output,
+              and optionally the Class Activation Map if multi_head is True.
         """
         features = self.feature_extractor(input)
         output = self.output_layer(features)
@@ -190,12 +198,14 @@ class CNNCAMMultihead(nn.Module):
         else:
             return output
 
-def test_model():
+def test_model() -> None:
     """Tests forward pass and prints out shapes
     """
-    model = CNNCAMMultihead(multi_head=True)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = CNNCAMMultihead(backbone = "mobilenet_v3_large", multi_head=True)
+    model = model.to(device)
     model.eval()
-    dummy_input = torch.randn(10, 3, 224, 224)
+    dummy_input = torch.randn(10, 3, 224, 224).to(device)
     with torch.no_grad():
         out, cam = model(dummy_input)
     print("Output shape: ", out.shape)
