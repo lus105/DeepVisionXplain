@@ -247,12 +247,14 @@ class VitRolloutMultihead(nn.Module):
             Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]: A tensor containing the output,
               and optionally the Attention Rollout Map if multi_head is True.
         """
-        attn_drop_tensors, classification_out = self.model(input)
+        attn_drop_tensors, output = self.model(input)
+        output = torch.sigmoid(output)
+
         if self.multi_head:
             map = self.attention_rollout(input.size(), attn_drop_tensors)
-            return classification_out, map
+            return output, map
         else:
-            return classification_out
+            return output
 
 def test_model() -> None:
     """Tests forward pass and prints out shapes

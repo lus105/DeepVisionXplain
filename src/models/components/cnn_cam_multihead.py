@@ -191,6 +191,7 @@ class CNNCAMMultihead(nn.Module):
         """
         features = self.feature_extractor(input)
         output = self.output_layer(features)
+        output = torch.sigmoid(output)
 
         if self.multi_head:
             cam = self.cam_generator(input.size(), features)
