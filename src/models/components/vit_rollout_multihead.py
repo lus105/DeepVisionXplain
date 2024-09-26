@@ -260,8 +260,7 @@ def test_model() -> None:
     """Tests forward pass and prints out shapes
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = VitRolloutMultihead(model_name = "vit_tiny_patch16_224.augreg_in21k_ft_in1k", multi_head=True)
-    model = model.to(device)
+    model = VitRolloutMultihead(model_name = "vit_tiny_patch16_224.augreg_in21k_ft_in1k", multi_head=True).to(device)
     model.eval()
     dummy_input = torch.randn(10, 3, 224, 224).to(device)
     with torch.no_grad():
