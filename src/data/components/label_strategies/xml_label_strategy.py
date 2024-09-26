@@ -4,8 +4,17 @@ import xml.etree.ElementTree as ET
 from .label_strategy import LabelStrategy
 
 
-class XmlLabelStrategy(LabelStrategy):
+class XmlBboxLabelStrategy(LabelStrategy):
     def process_label(self, label_path: str, image_shape: tuple) -> np.array:
+        """Converts xml bbox information into grayscale image.
+
+        Args:
+            label_path (str): _description_
+            image_shape (tuple): Corresponding image shape.
+
+        Returns:
+            np.array: The processed label data as image.
+        """
         # Parse the XML file
         tree = ET.parse(label_path)
         root = tree.getroot()

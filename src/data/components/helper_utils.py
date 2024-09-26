@@ -5,7 +5,8 @@ from src.utils import RankedLogger
 log = RankedLogger(__name__, rank_zero_only=True)
 
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".bmp"]
-ANNOTATION_EXTENSIONS = [".json", ".xml"]
+XML_EXTENSION = ".xml"
+JSON_EXTENSION = ".json"
 
 
 def get_file_name(path: str) -> str:
@@ -48,7 +49,7 @@ def find_annotation_file(directory: str, file_name: str):
     Returns:
     - str or None: The path of the found file with the specified base name, or None if not found.
     """
-    file_extensions = IMAGE_EXTENSIONS + ANNOTATION_EXTENSIONS
+    file_extensions = IMAGE_EXTENSIONS + XML_EXTENSION + JSON_EXTENSION
     for extension in file_extensions:
         file_path = os.path.join(directory, file_name + extension)
         if os.path.isfile(file_path):
@@ -84,7 +85,7 @@ def get_file_paths_rec(directory_path: str):
     Returns:
     - list: List of image paths. Supported image formats include JPG, JPEG, PNG, and BMP.
     """
-    file_extensions = IMAGE_EXTENSIONS + ANNOTATION_EXTENSIONS
+    file_extensions = IMAGE_EXTENSIONS + XML_EXTENSION + JSON_EXTENSION
     file_paths = [
         os.path.join(root, file)
         for root, dirs, files in os.walk(directory_path)
