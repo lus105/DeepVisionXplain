@@ -1,13 +1,14 @@
 _target_: src.data.dir_datamodule.DirDataModule
-data_dir: "data/"
-train_subdir: "train/"
-val_subdir: "val/"
-test_subdir: "test/"
-image_subdir: "images/"
-label_subdir: "labels/"
+data_dir: ${paths.data_dir}
+train_subdir: ${paths.train_subdir}
+val_subdir: ${paths.val_subdir}
+test_subdir: ${paths.test_subdir}
+image_subdir: ${paths.image_subdir}
+label_subdir: ${paths.label_subdir}
 batch_size: 64
 num_workers: 3
 pin_memory: false
+
 preprocessor:
   _target_: src.data.components.tile_processor.TilingProcessor
   tile_width: 224
@@ -17,5 +18,19 @@ preprocessor:
   step_size: 10
   iterate_over_defective_areas: true
   save_every_second_good_tile: true
-oversample: false
+
+train_transforms:
+  _target_: torchvision.transforms.Compose
+  transforms:
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.RandomHorizontalFlip
+      p: 0.5
+    - _target_: torchvision.transforms.RandomVerticalFlip
+      p: 0.5
+
+val_test_transforms:
+  _target_: torchvision.transforms.Compose
+  transforms:
+    - _target_: torchvision.transforms.ToTensor
+
 save_predict_images: false

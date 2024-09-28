@@ -24,7 +24,6 @@ dependencies:
       - onnx
       - onnxruntime
       - torchinfo
-      - torchsampler
       - hydra-core
       - rich
       - pre-commit

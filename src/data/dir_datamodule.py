@@ -4,8 +4,7 @@ from typing import Any, Dict, Optional
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
-from torchvision.transforms import transforms
-from torchsampler import ImbalancedDatasetSampler
+from torchvision.transforms import Compose
 
 from src.data.components.data_splitter import DatasetSplitter
 from src.data.components.tile_processor import TilingProcessor
@@ -29,34 +28,30 @@ class DirDataModule(LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         preprocessor: TilingProcessor = None,
-        oversample: bool = False,
+        train_transforms: Compose = None,
+        val_test_transforms: Compose = None,
         save_predict_images: bool = False,
     ) -> None:
         """Initialize a `DirDataModule`.
 
-        :param data_dir: The data directory. Defaults to `"data/"`.
-        :param train_dir: Train subdirectory. Defaults to `"train/"`.
-        :param val_dir: Val subdirectory. Defaults to `"val/"`.
-        :param test_dir: Test subdirectory. Defaults to `"test/"`.
-        :param batch_size: The batch size. Defaults to `64`.
-        :param num_workers: The number of workers. Defaults to `0`.
-        :param pin_memory: Whether to pin memory. Defaults to `False`.
+        Args:
+            data_dir (str, optional): The data directory. Defaults to "data/".
+            train_subdir (str, optional): Train subdirectory. Defaults to "train/".
+            val_subdir (str, optional): Val subdirectory. Defaults to "val/".
+            test_subdir (str, optional): Test subdirectory. Defaults to "test/".
+            image_subdir (str, optional): Image subdirectory. Defaults to "images/".
+            label_subdir (str, optional): Label subdirectory. Defaults to "labels/".
+            batch_size (int, optional): Batch size. Defaults to 64.
+            num_workers (int, optional): Number of workers. Defaults to 0.
+            pin_memory (bool, optional): Whether to pin memory. Defaults to False.
+            preprocessor (TilingProcessor, optional): Image tiling processor. Defaults to None.
+            save_predict_images (bool, optional): Save images in predict mode? Defaults to False.
+            train_transforms (Compose, optional): Train split transformations.
+            val_test_transform (Compose, optional): Validation and test split transformations.
         """
         super().__init__()
 
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
-
-        # data transformations
-        self.train_transforms = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomVerticalFlip(p=0.5),
-            ]
-        )
-        self.val_test_transforms = transforms.Compose([transforms.ToTensor()])
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -64,8 +59,8 @@ class DirDataModule(LightningDataModule):
         self.data_predict: Optional[Dataset] = None
 
         self.data_splitter = DatasetSplitter(
-            os.path.join(self.hparams.data_dir, self.hparams.image_subdir),
-            os.path.join(self.hparams.data_dir, self.hparams.label_subdir),
+            os.path.join(data_dir, image_subdir),
+            os.path.join(data_dir, label_subdir),
         )
 
         self.updated_dirs = {}
@@ -74,7 +69,8 @@ class DirDataModule(LightningDataModule):
     def num_classes(self) -> int:
         """Get the number of classes.
 
-        :return: The number of classes (2).
+        Returns:
+            int: The number of classes (2).
         """
         return 2
 
@@ -118,9 +114,9 @@ class DirDataModule(LightningDataModule):
             )
 
         transform_map = {
-            "train": self.train_transforms,
-            "val": self.val_test_transforms,
-            "test": self.val_test_transforms,
+            "train": self.hparams.train_transforms,
+            "val": self.hparams.val_test_transforms,
+            "test": self.hparams.val_test_transforms,
         }
 
         for subset in ["train", "val", "test"]:
@@ -137,8 +133,8 @@ class DirDataModule(LightningDataModule):
             label_dir=os.path.join(
                 os.path.dirname(self.updated_dirs["test"]), self.hparams.label_subdir
             ),
-            transform=self.val_test_transforms,
-            label_transform=self.val_test_transforms,
+            transform=self.hparams.val_test_transforms,
+            label_transform=self.hparams.val_test_transforms,
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -146,9 +142,7 @@ class DirDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
-        return self._default_dataloader(
-            self.data_train, shuffle=False, oversample=self.hparams.oversample
-        )
+        return self._default_dataloader(self.data_train, shuffle=False)
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.
@@ -196,15 +190,13 @@ class DirDataModule(LightningDataModule):
         pass
 
     def _default_dataloader(
-        self, dataset: Dataset, shuffle: bool = False, oversample: bool = False
-    ) -> DataLoader[Any]:
+        self, dataset: Dataset, shuffle: bool = False) -> DataLoader[Any]:
         """Create and return a dataloader.
 
         :param dataset: The dataset to use.
         """
         return DataLoader(
             dataset=dataset,
-            sampler=ImbalancedDatasetSampler(dataset) if oversample else None,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
