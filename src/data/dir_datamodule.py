@@ -202,7 +202,3 @@ class DirDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=shuffle,
         )
-
-
-if __name__ == "__main__":
-    _ = DirDataModule()
