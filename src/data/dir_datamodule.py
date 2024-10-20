@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose
 
-from src.data.components.data_splitter import DatasetSplitter
+from src.data.components.data_splitter import split_dataset
 from src.data.components.tile_processor import TilingProcessor
 from src.data.components.image_label_dataset import ImageLabelDataset
 
@@ -19,11 +19,8 @@ class DirDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        train_subdir: str = "train/",
-        val_subdir: str = "val/",
-        test_subdir: str = "test/",
-        image_subdir: str = "images/",
-        label_subdir: str = "labels/",
+        split_ratio: list = [0.7, 0.2, 0.1],
+        splitting_random_state: int = 42,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -36,11 +33,8 @@ class DirDataModule(LightningDataModule):
 
         Args:
             data_dir (str, optional): The data directory. Defaults to "data/".
-            train_subdir (str, optional): Train subdirectory. Defaults to "train/".
-            val_subdir (str, optional): Val subdirectory. Defaults to "val/".
-            test_subdir (str, optional): Test subdirectory. Defaults to "test/".
-            image_subdir (str, optional): Image subdirectory. Defaults to "images/".
-            label_subdir (str, optional): Label subdirectory. Defaults to "labels/".
+            split_ratio (list, optional): Dataset split ratio (train, test, val).
+            random_state (int, optional): Data splitting random state.
             batch_size (int, optional): Batch size. Defaults to 64.
             num_workers (int, optional): Number of workers. Defaults to 0.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
@@ -58,13 +52,6 @@ class DirDataModule(LightningDataModule):
         self.data_test: Optional[Dataset] = None
         self.data_predict: Optional[Dataset] = None
 
-        self.data_splitter = DatasetSplitter(
-            os.path.join(data_dir, image_subdir),
-            os.path.join(data_dir, label_subdir),
-        )
-
-        self.updated_dirs = {}
-
     @property
     def num_classes(self) -> int:
         """Get the number of classes.
@@ -78,30 +65,14 @@ class DirDataModule(LightningDataModule):
         """Prepare data."""
 
         log.info(f"Preparing data in {self.hparams.data_dir}...")
-        # Define directories for train, test, and validation subsets.
-        subsets = ["train", "test", "val"]
-        dirs = {
-            subset: os.path.join(
-                self.hparams.data_dir, getattr(self.hparams, f"{subset}_subdir")
-            )
-            for subset in subsets
-        }
 
         log.info("Sptillting datasets...")
-        # Save data splits.
-        self.data_splitter.save_splits(
-            dirs["train"],
-            dirs["test"],
-            dirs["val"],
-            self.hparams.image_subdir,
-            self.hparams.label_subdir,
-        )
+        split_dataset(self.hparams.data_dir,
+                      self.hparams.split_ratio,
+                      self.hparams.splitting_random_state)
 
         log.info("Preprocessing data...")
-        # Preprocess data for each subset.
-        self.updated_dirs = {}  # Initialize a dictionary to store updated paths
-        for subset, dir in dirs.items():
-            self.updated_dirs[subset] = self.hparams.preprocessor.process(dir)
+        self.hparams.preprocessor.process()
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data.

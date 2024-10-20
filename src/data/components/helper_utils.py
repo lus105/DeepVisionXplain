@@ -9,6 +9,50 @@ XML_EXTENSION = ".xml"
 JSON_EXTENSION = ".json"
 
 
+def get_file_paths_rec(root_path: str, file_extensions: list = None) -> list:
+    """Returns a list of file paths from the given directory and its subdirectories.
+
+    Args:
+        root_path (str): Path to the root directory.
+        file_extensions (list, optional): List of file extensions to filter by. Defaults to None.
+
+    Returns:
+        list: List of file paths matching the specified extensions.
+    """
+    if not os.path.exists(root_path):
+        log.warning(f"Directory does not exist: {root_path}")
+        return []
+
+    if file_extensions is None:
+        log.warning("No extensions provided!")
+        return []
+
+    file_paths = [
+        os.path.join(root, file)
+        for root, dirs, files in os.walk(root_path)
+        for file in files
+        if os.path.splitext(file)[1].lower() in file_extensions
+    ]
+
+    return file_paths
+
+def save_files(file_paths: list, target_dir: str):
+    """Copies files from the provided list of file paths to a target directory.
+
+    Args:
+        file_paths (list): A list of file paths to be copied.
+        target_dir (str): The destination directory where files will be copied to.
+    """
+    os.makedirs(target_dir, exist_ok=True)
+
+    # Check if the directory is empty. If not, raise an exception.
+    if os.listdir(target_dir):
+        log.warning(f"Directory {target_dir} is not empty. Skipping saving.")
+        return
+
+    for f in file_paths:
+        shutil.copy(f, target_dir)
+
 def get_file_name(path: str) -> str:
     """
     Extracts the file name from a given file path, excluding the extension.
@@ -73,45 +117,3 @@ def clear_directory(directory_path):
         elif os.path.isdir(file_path):
             clear_directory(file_path)
             os.rmdir(file_path)
-
-
-def get_file_paths_rec(directory_path: str):
-    """
-    Returns a list of image paths from the given directory and its subdirectories.
-
-    Args:
-    - directory_path (str): Path to the root directory.
-
-    Returns:
-    - list: List of image paths. Supported image formats include JPG, JPEG, PNG, and BMP.
-    """
-    file_extensions = IMAGE_EXTENSIONS + XML_EXTENSION + JSON_EXTENSION
-    file_paths = [
-        os.path.join(root, file)
-        for root, dirs, files in os.walk(directory_path)
-        for file in files
-        if os.path.splitext(file)[1].lower() in file_extensions
-    ]
-
-    return file_paths
-
-
-def save_files(file_paths, target_dir):
-    """
-    Copies files from the provided list of file paths to a target directory.
-
-    Args:
-    - file_paths (list): A list of file paths to be copied.
-    - target_dir (str): The destination directory where files will be copied to.
-    """
-    os.makedirs(target_dir, exist_ok=True)
-
-    # Check if the directory is empty. If not, raise an exception.
-    if os.listdir(
-        target_dir
-    ):  # This returns a non-empty list if the directory has contents.
-        log.warning(f"Directory {target_dir} is not empty. Skipping saving.")
-        return
-
-    for f in file_paths:
-        shutil.copy(f, target_dir)

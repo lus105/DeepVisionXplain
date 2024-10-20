@@ -19,10 +19,3 @@ work_dir: ${hydra:runtime.cwd}
 
 # trained models directory
 trained_models: ${paths.root_dir}/trained_models/
-
-# dataset subdirectory structure
-train_subdir: "train/"
-val_subdir: "val/"
-test_subdir: "test/"
-image_subdir: "images/"
-label_subdir: "labels/"

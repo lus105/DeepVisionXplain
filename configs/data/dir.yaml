@@ -1,10 +1,7 @@
 _target_: src.data.dir_datamodule.DirDataModule
 data_dir: ${paths.data_dir}
-train_subdir: ${paths.train_subdir}
-val_subdir: ${paths.val_subdir}
-test_subdir: ${paths.test_subdir}
-image_subdir: ${paths.image_subdir}
-label_subdir: ${paths.label_subdir}
+split_ratio: [0.7, 0.2, 0.1]
+splitting_random_state: 42
 batch_size: 64
 num_workers: 3
 pin_memory: false

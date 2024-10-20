@@ -1,106 +1,90 @@
-import os
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 
-from .helper_utils import save_files, get_file_paths_rec
+from .helper_utils import (save_files,
+                           get_file_paths_rec,
+                           IMAGE_EXTENSIONS,
+                           XML_EXTENSION,
+                           JSON_EXTENSION)
 
 
-class DatasetSplitter:
-    def __init__(
-        self,
-        images_path: str,
-        labels_path: str,
-        test_size: float = 0.2,
-        val_size: float = 0.1,
-        random_state: int = 42,
-    ):
-        """
-        Initialize a `DatasetSplitter`.
+def split_dataset(data_path: str,
+                  split_ratio: list[float, float, float],
+                  random_state: int = 42,
+                  train_subdir: str = "train",
+                  test_subdir: str = "test",
+                  val_subdir: str = "val",
+                  image_subdir: str = "images",
+                  label_subdir: str = "labels",
+                  ) -> None:
+    """Splits a dataset into training, testing, and validation sets and saves them
+    into respective directories.
 
-        :param images_path: Path to the directory containing images.
-        :param labels_path: Path to the directory containing labels.
-        :param test_size: Proportion of the dataset to include in the test split. Defaults to `0.2`.
-        :param val_size: Proportion of the dataset to include in the validation split. Defaults to `0.1`.
-        :param random_state: Controls the shuffling applied to the data before applying the split. Defaults to `42`.
-        :param image_subdir: Subdirectory name for storing images. Defaults to `'images'`.
-        :param label_subdir: Subdirectory name for storing labels. Defaults to `'labels'`.
-        """
-        self.images_path = images_path
-        self.labels_path = labels_path
-        self.test_size = test_size
-        self.val_size = val_size
-        self.random_state = random_state
+    Args:
+        data_path (str): Path to the root dataset directory.
+        split_ratio (list of float): Ratios for [train, test, val]. Must sum to 1.
+        random_state (int, optional): Seed for reproducibility. Defaults to 42.
+        train_subdir (str, optional): Directory name for training data. Defaults to "train".
+        test_subdir (str, optional): Directory name for testing data. Defaults to "test".
+        val_subdir (str, optional): Directory name for validation data. Defaults to "val".
+        image_subdir (str, optional): Subdirectory name where images are stored. Defaults to "images".
+        label_subdir (str, optional): Subdirectory name where labels are stored. Defaults to "labels".
 
-    def __split_dataset(self):
-        """
-        Splits the dataset into training, testing, and optionally validation sets.
+    Raises:
+        ValueError: If `split_ratio` does doesn't sum to 1.
+        FileNotFoundError: If no images are found in the specified image directory.
+        ValueError: If the number of images and labels do not match.
+    """
+    train_size, test_size, val_size = split_ratio
 
-        :return: A tuple containing lists of image and label paths for training, testing, and validation sets.
-                 If validation size is 0, it returns lists for training and testing sets only.
-        """
+    total = sum(split_ratio)
+    if not abs(total - 1.0) < 1e-6:
+        raise ValueError("split_ratio must sum to 1.0")
 
-        images_paths = get_file_paths_rec(self.images_path)
-        labels_paths = get_file_paths_rec(self.labels_path)
+    data_path = Path(data_path)
+    image_path = data_path / image_subdir
+    label_path = data_path / label_subdir
 
-        # raise exeption if no images or labels found
-        if len(images_paths) == 0:
-            raise Exception(f"No images found in {self.images_path}")
+    train_path = data_path / train_subdir
+    test_path = data_path / test_subdir
+    val_path = data_path / val_subdir
 
-        # raise exeption if images and labels don't match
-        if len(images_paths) != len(labels_paths):
-            raise Exception(
-                f"Number of images ({len(images_paths)}) does not match number of labels ({len(labels_paths)})"
-            )
+    images_paths = get_file_paths_rec(image_path, file_extensions=IMAGE_EXTENSIONS)
+    labels_paths = get_file_paths_rec(label_path, file_extensions=[XML_EXTENSION, JSON_EXTENSION])
 
-        # Splitting into train and test
-        img_train, img_test, lbl_train, lbl_test = train_test_split(
-            images_paths,
-            labels_paths,
-            test_size=self.test_size,
-            random_state=self.random_state,
+    if not images_paths:
+        raise FileNotFoundError(f"No images found in {image_path}")
+
+    if len(images_paths) != len(labels_paths):
+        raise ValueError(
+            f"Number of images ({len(images_paths)}) does not match number of labels ({len(labels_paths)})"
         )
+    
+    # Splitting into train and test
+    img_train, img_test, lbl_train, lbl_test = train_test_split(
+        images_paths,
+        labels_paths,
+        test_size=test_size,
+        random_state=random_state,
+    )
 
-        # Further splitting train into train and validation
-        if self.val_size > 0:
-            # Adjust val size based on remaining dataset after test split
-            val_size_adjusted = self.val_size / (1 - self.test_size)
-            img_train, img_val, lbl_train, lbl_val = train_test_split(
-                img_train,
-                lbl_train,
-                test_size=val_size_adjusted,
-                random_state=self.random_state,
-            )
+    # Further splitting train into train and validation
+    if val_size > 0:
+        # Adjust val size based on remaining dataset after test split
+        val_size_adjusted = val_size / (1 - test_size)
+        img_train, img_val, lbl_train, lbl_val = train_test_split(
+            img_train,
+            lbl_train,
+            test_size=val_size_adjusted,
+            random_state=random_state,
+        )
+    
+    save_files(img_train, train_path / image_subdir)
+    save_files(lbl_train, train_path / label_subdir)
 
-            return img_train, lbl_train, img_test, lbl_test, img_val, lbl_val
-        else:
-            return img_train, lbl_train, img_test, lbl_test
+    save_files(img_test, test_path / image_subdir)
+    save_files(lbl_test, test_path / label_subdir)
 
-    def save_splits(
-        self,
-        train_dir: str,
-        test_dir: str,
-        val_dir: str = None,
-        image_subdir: str = "images",
-        label_subdir: str = "labels",
-    ):
-        """
-        Saves the dataset splits into specified directories.
-
-        :param train_dir: Directory to save the training set.
-        :param test_dir: Directory to save the testing set.
-        :param val_dir: Optional directory to save the validation set. If None, validation set is not saved.
-        """
-        img_train, lbl_train, img_test, lbl_test, *val_split = self.__split_dataset()
-
-        # Define a helper function for saving files
-        def save_data(image_set, label_set, directory):
-            save_files(image_set, os.path.join(directory, image_subdir))
-            save_files(label_set, os.path.join(directory, label_subdir))
-
-        # Save training and testing data
-        save_data(img_train, lbl_train, train_dir)
-        save_data(img_test, lbl_test, test_dir)
-
-        # Save validation data if provided
-        if val_dir and val_split:
-            img_val, lbl_val = val_split
-            save_data(img_val, lbl_val, val_dir)
+    if img_val and lbl_val:
+        save_files(img_test, val_path / image_subdir)
+        save_files(lbl_test, val_path / label_subdir)
