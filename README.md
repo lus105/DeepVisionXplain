@@ -11,9 +11,7 @@
 [![hydra](https://img.shields.io/badge/Config-Hydra_1.3-89b8cd)](https://hydra.cc/)
 [![wandb](https://img.shields.io/badge/Logging-WandB-89b8cd)](https://wandb.ai/site)
 
-----
 </div>
-
 
 ## Project Description
 Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). Research project paper can be found [here](https://epubl.ktu.edu/object/elaba:198846619/).
