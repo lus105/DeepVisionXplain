@@ -14,7 +14,7 @@
 </div>
 
 ## Project Description
-Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). Research project paper can be found [here](https://epubl.ktu.edu/object/elaba:198846619/).
+Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout).
 
 <p align="center">
   <img src="docs/res/explainability.png" width="250"/>
@@ -57,7 +57,6 @@ python src/train.py trainer=gpu
 
 ## References
 
-Project inspired by:
 * [ashleve/lightning-hydra-template](https://github.com/ashleve/lightning-hydra-template)
 * [jacobgil/vit-explain](https://github.com/jacobgil/vit-explain)
 * [rytiss/DL-defect-classification-with-CAM-output](https://github.com/rytisss/DL-defect-classification-with-CAM-output)
