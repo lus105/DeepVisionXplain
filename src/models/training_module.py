@@ -25,24 +25,23 @@ class TrainingLitModule(LightningModule):
         compile: bool,
         ckpt_path: str
     ) -> None:
-        """Initialize lightning module
+        """Initialize lightning module.
 
         Args:
-            net (torch.nn.Module): model used.
+            net (torch.nn.Module): Model used.
             optimizer (torch.optim.Optimizer): The optimizer to use for training.
             scheduler (torch.optim.lr_scheduler): The learning rate scheduler to use for training.
-            loss (torch.nn.modules.loss): loss function.
-            compile (bool): compile model.
+            loss (torch.nn.modules.loss): Loss function.
+            compile (bool): Compile model.
+            ckpt_path (string): Model chekpoint path.
         """
         super().__init__()
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
-
         # model
         self.net = net
-
         # loss function
         self.criterion = loss
 
@@ -50,7 +49,12 @@ class TrainingLitModule(LightningModule):
         self.train_acc = Accuracy(task="binary")
         self.val_acc = Accuracy(task="binary")
         self.test_acc = Accuracy(task="binary")
-
+        # for tracking best so far validation accuracy
+        self.val_acc_best = MaxMetric()
+        # for averaging loss across batches
+        self.train_loss = MeanMetric()
+        self.val_loss = MeanMetric()
+        self.test_loss = MeanMetric()
         # segmentation metrics collection
         self.seg_metrics = MetricCollection({
             'accuracy': BinaryAccuracy(),
@@ -59,20 +63,6 @@ class TrainingLitModule(LightningModule):
             'recall': BinaryRecall(),
             'jaccard': BinaryJaccardIndex(),
         })
-
-        # counter for custom tracker
-        self.counter = 0
-
-        # for averaging loss across batches
-        self.train_loss = MeanMetric()
-        self.val_loss = MeanMetric()
-        self.test_loss = MeanMetric()
-
-        # for tracking best so far validation accuracy
-        self.val_acc_best = MaxMetric()
-
-        # flag for saving images during prediction
-        self.save_images = False
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -110,7 +100,7 @@ class TrainingLitModule(LightningModule):
             - A tensor of target labels.
         """
         x, y = batch
-        logits = torch.sigmoid(self.forward(x))
+        logits = self.forward(x)
         y = y.view(-1, 1).float()
         loss = self.criterion(logits, y)
         preds = (logits > 0.5).float()
@@ -212,28 +202,28 @@ class TrainingLitModule(LightningModule):
             batch_idx (int): The index of the current batch.
         """
         x, y = batch
-        out, cam = self.forward(x)
-        logits = torch.sigmoid(out)
-        preds = (logits > 0.5).float()
+        out, map = self.forward(x)
+        preds = (out > 0.5).float()
 
         for i, pred in enumerate(preds):
-            cam_segmentation = cam[i] if pred == 1 else torch.zeros_like(cam[i])
-
+            image = x[i]
+            label = y[i].squeeze(0)
+            map_segmentation = map[i] if pred == 1 else torch.zeros_like(map[i])
             if pred == 1:
-                cam_segmentation = (cam_segmentation - cam_segmentation.min()) / (
-                    cam_segmentation.max() - cam_segmentation.min()
+                map_segmentation = (map_segmentation - map_segmentation.min()) / (
+                    map_segmentation.max() - map_segmentation.min()
                 )
-                if self.save_images:
+                if self.trainer.datamodule.hparams.save_predict_images:
+                    filename = f"img_batch_{batch_idx}_sample_{i}.png"
                     save_images(
-                        x[i],
-                        cam_segmentation,
-                        y[i].squeeze(0),
-                        f"{self._trainer.default_root_dir}/images/img_{self.counter}.png",
+                        image,
+                        map_segmentation,
+                        label,
+                        f"{self.trainer.default_root_dir}/images/{filename}",
                     )
 
-            cam_segmentation = (cam_segmentation > 0.5).float()
-            self.seg_metrics(cam_segmentation, y[i].squeeze(0))
-            self.counter += 1
+            map_segmentation = (map_segmentation > 0.5).float()
+            self.seg_metrics(map_segmentation, label)
 
     def on_predict_epoch_end(self) -> None:
         """Lightning hook that is called when a predict epoch ends.
@@ -251,8 +241,6 @@ class TrainingLitModule(LightningModule):
         """
         if self.hparams.compile and stage == "fit":
             self.net = torch.compile(self.net)
-        if stage == "predict":
-            self.save_images = self.trainer.datamodule.hparams.save_predict_images
         if self.hparams.ckpt_path:
             model_weights = weight_load(self.hparams.ckpt_path)
             self.net.load_state_dict(model_weights)
@@ -278,7 +266,3 @@ class TrainingLitModule(LightningModule):
                 },
             }
         return {"optimizer": optimizer}
-
-
-if __name__ == "__main__":
-    _ = TrainingLitModule(None, None, None, None)

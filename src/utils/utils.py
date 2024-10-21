@@ -13,12 +13,13 @@ log = pylogger.RankedLogger(__name__, rank_zero_only=True)
 def extras(cfg: DictConfig) -> None:
     """Applies optional utilities before the task is started.
 
-    Utilities:
+        Utilities:
         - Ignoring python warnings
         - Setting tags from command line
         - Rich config printing
 
-    :param cfg: A DictConfig object containing the config tree.
+    Args:
+        cfg (DictConfig): A DictConfig object containing the config tree.
     """
     # return if no `extras` config
     if not cfg.get("extras"):
@@ -58,9 +59,11 @@ def task_wrapper(task_func: Callable) -> Callable:
         return metric_dict, object_dict
     ```
 
-    :param task_func: The task function to be wrapped.
+    Args:
+        task_func (Callable): The task function to be wrapped.
 
-    :return: The wrapped task function.
+    Returns:
+        Callable: The wrapped task function.
     """
 
     def wrap(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -101,9 +104,12 @@ def get_metric_value(
 ) -> Optional[float]:
     """Safely retrieves value of the metric logged in LightningModule.
 
-    :param metric_dict: A dict containing metric values.
-    :param metric_name: If provided, the name of the metric to retrieve.
-    :return: If a metric name was provided, the value of the metric.
+    Args:
+        metric_dict (Dict[str, Any]): A dict containing metric values.
+        metric_name (Optional[str]): If provided, the name of the metric to retrieve.
+
+    Returns:
+        Optional[float]: If a metric name was provided, the value of the metric.
     """
     if not metric_name:
         log.info("Metric name is None! Skipping metric value retrieval...")
@@ -125,9 +131,12 @@ def get_metric_value(
 def find_file_path(searched_dir: str, extension: str = ".ckpt") -> str:
     """Finds file path in the given directory.
 
-    :param searched_dir: The directory where to search for the file.
-    :param extension: The extension of the file.
-    :return: The  path to found file.
+    Args:
+        searched_dir (str): The directory where to search for the file.
+        extension (str, optional): The extension of the file. Defaults to ".ckpt".
+
+    Returns:
+        str: The  path to found file.
     """
     for root, dirs, files in os.walk(searched_dir):
         for file in files:

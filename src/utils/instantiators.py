@@ -13,8 +13,11 @@ log = pylogger.RankedLogger(__name__, rank_zero_only=True)
 def instantiate_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
     """Instantiates callbacks from config.
 
-    :param callbacks_cfg: A DictConfig object containing callback configurations.
-    :return: A list of instantiated callbacks.
+    Args:
+        callbacks_cfg (DictConfig): A DictConfig object containing callback configurations.
+
+    Returns:
+        List[Callback]: A list of instantiated callbacks.
     """
     callbacks: List[Callback] = []
 
@@ -36,8 +39,11 @@ def instantiate_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
 def instantiate_loggers(logger_cfg: DictConfig) -> List[Logger]:
     """Instantiates loggers from config.
 
-    :param logger_cfg: A DictConfig object containing logger configurations.
-    :return: A list of instantiated loggers.
+    Args:
+        logger_cfg (DictConfig): A DictConfig object containing logger configurations.
+
+    Returns:
+        List[Logger]: A list of instantiated loggers.
     """
     logger: List[Logger] = []
 
