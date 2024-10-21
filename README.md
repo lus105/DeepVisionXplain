@@ -9,8 +9,7 @@
 [![pytorch](https://img.shields.io/badge/PyTorch_2.0+-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/get-started/locally/)
 [![lightning](https://img.shields.io/badge/-Lightning_2.0+-792ee5?logo=pytorchlightning&logoColor=white)](https://pytorchlightning.ai/)
 [![hydra](https://img.shields.io/badge/Config-Hydra_1.3-89b8cd)](https://hydra.cc/)
-
-[![wandb](https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-gradient.svg)](https://wandb.ai/site)
+[![wandb](https://img.shields.io/badge/Logging-WandB-89b8cd)](https://wandb.ai/site)
 
 ----
 </div>
@@ -54,11 +53,9 @@ python src/train.py trainer=gpu
 
 ## Resources
 
-Defect detection [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
-
-Experiment [logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
-
-Trained [models](https://huggingface.co/DeepVisionXplain).
+* Defect detection [datasets](https://drive.google.com/drive/folders/10yYU8yl3um0c1oq6-uVjHp5ORZWXi_tQ?usp=sharing).
+* Experiment [logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy).
+* Trained [models](https://huggingface.co/DeepVisionXplain).
 
 ## References
 
