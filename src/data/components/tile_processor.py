@@ -5,7 +5,7 @@ from tqdm import tqdm
 from .helper_utils import get_file_paths_rec, get_file_name, find_annotation_file
 
 from .tile_iterator import TileIterator
-from .label_strategies.label_strategy_factory import get_label_strategy
+from .label_parsing_strategies.label_strategy_factory import get_label_strategy
 
 from src.utils import RankedLogger
 
