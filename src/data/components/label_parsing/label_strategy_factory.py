@@ -1,4 +1,4 @@
-from src.data.components.helper_utils import IMAGE_EXTENSIONS, XML_EXTENSION
+from src.data.components.utils import IMAGE_EXTENSIONS, XML_EXTENSION
 from .label_strategy import LabelStrategy
 from .label_strategy_xml import XmlBboxLabelStrategy
 from .label_strategy_image import ImageLabelStrategy
