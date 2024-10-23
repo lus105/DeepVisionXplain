@@ -1,7 +1,7 @@
 from src.data.components.helper_utils import IMAGE_EXTENSIONS, XML_EXTENSION
 from .label_strategy import LabelStrategy
-from .xml_label_strategy import XmlBboxLabelStrategy
-from .image_label_strategy import ImageLabelStrategy
+from .label_strategy_xml import XmlBboxLabelStrategy
+from .label_strategy_image import ImageLabelStrategy
 
 
 def get_label_strategy(file_extension: str) -> LabelStrategy:
