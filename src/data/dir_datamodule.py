@@ -6,8 +6,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose
 
-from src.data.components.data_splitter import split_dataset
-from src.data.components.tile_processor import TilingProcessor
+from src.data.components.preprocessing.preproc_pipeline_manager import PreprocessingPipeline
 from src.data.components.image_label_dataset import ImageLabelDataset
 
 from src.utils import RankedLogger
@@ -19,12 +18,10 @@ class DirDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        split_ratio: list = [0.7, 0.2, 0.1],
-        splitting_random_state: int = 42,
+        preprocessing_pipeline: PreprocessingPipeline = None,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
-        preprocessor: TilingProcessor = None,
         train_transforms: Compose = None,
         val_test_transforms: Compose = None,
         save_predict_images: bool = False,
@@ -38,7 +35,6 @@ class DirDataModule(LightningDataModule):
             batch_size (int, optional): Batch size. Defaults to 64.
             num_workers (int, optional): Number of workers. Defaults to 0.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
-            preprocessor (TilingProcessor, optional): Image tiling processor. Defaults to None.
             save_predict_images (bool, optional): Save images in predict mode? Defaults to False.
             train_transforms (Compose, optional): Train split transformations.
             val_test_transform (Compose, optional): Validation and test split transformations.
@@ -66,13 +62,8 @@ class DirDataModule(LightningDataModule):
 
         log.info(f"Preparing data in {self.hparams.data_dir}...")
 
-        log.info("Sptillting datasets...")
-        split_dataset(self.hparams.data_dir,
-                      self.hparams.split_ratio,
-                      self.hparams.splitting_random_state)
-
-        log.info("Preprocessing data...")
-        self.hparams.preprocessor.process()
+        initial_data = {'data': self.hparams.data_dir}
+        final_data = self.hparams.preprocessing_pipeline.run(initial_data)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data.

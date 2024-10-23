@@ -1,20 +1,32 @@
 _target_: src.data.dir_datamodule.DirDataModule
 data_dir: ${paths.data_dir}
-split_ratio: [0.7, 0.2, 0.1]
-splitting_random_state: 42
+
+preprocessing_pipeline:
+  _target_: src.data.components.preprocessing.preproc_pipeline_manager.PreprocessingPipeline
+  steps:
+    - _target_: src.data.components.preprocessing.preproc_strategy_split.SplitStep
+      split_ratio: [0.7, 0.2, 0.1]
+      random_state: 42
+      train_subdir: "train"
+      test_subdir: "test"
+      val_subdir: "val"
+      image_subdir: "images"
+      label_subdir: "labels"
+    - _target_: src.data.components.preprocessing.preproc_strategy_tile.TilingStep
+      tile_width: 224
+      tile_height: 224
+      min_defective_area: 0.01
+      overlap: 10
+      step_size: 10
+      iterate_over_defective_areas: true
+      save_every_second_good_tile: true
+      images_dir: "images"
+      labels_dir: "labels"
+      tiles_dir: "tiles"
+      
 batch_size: 64
 num_workers: 3
 pin_memory: false
-
-preprocessor:
-  _target_: src.data.components.tile_processor.TilingProcessor
-  tile_width: 224
-  tile_height: 224
-  min_defective_area: 0.01
-  overlap: 10
-  step_size: 10
-  iterate_over_defective_areas: true
-  save_every_second_good_tile: true
 
 train_transforms:
   _target_: torchvision.transforms.Compose

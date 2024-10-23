@@ -7,7 +7,7 @@ from ..utils import (save_files,
                             XML_EXTENSION,
                             JSON_EXTENSION)
 
-class SplitDatasetStep(PreprocessingStep):
+class SplitStep(PreprocessingStep):
     def __init__(
         self,
         split_ratio,
