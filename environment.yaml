@@ -1,0 +1,34 @@
+name: DeepVisionXplain
+
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+  - nvidia
+
+dependencies:
+  - python=3.11
+  - pytorch
+  - torchvision
+  - pytorch-cuda=11.8
+  - lightning
+  - torchmetrics
+
+  - pip>=23
+  - pip:
+      - hydra-optuna-sweeper
+      - hydra-colorlog
+      - rootutils
+      - torch-summary
+      - timm
+      - onnx
+      - onnxruntime
+      - torchinfo
+      - hydra-core
+      - rich
+      - pre-commit
+      - pytest
+      - wandb
+      - opencv-python
+      - matplotlib
+      - scikit-learn
