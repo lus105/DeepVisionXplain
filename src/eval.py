@@ -6,7 +6,7 @@ from lightning.pytorch import LightningDataModule, LightningModule, Trainer, Cal
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+rootutils.setup_root(__file__, indicator=[".git", "pyproject.toml"], pythonpath=True)
 
 from src.utils import (
     RankedLogger,
