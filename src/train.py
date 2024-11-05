@@ -1,9 +1,9 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import hydra
-import lightning as L
+import lightning.pytorch as L
 import rootutils
-from lightning import Callback, LightningDataModule, LightningModule, Trainer
+from lightning.pytorch import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
