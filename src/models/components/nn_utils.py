@@ -1,7 +1,4 @@
 import torch
-import os
-import numpy as np
-import cv2
 from src.utils import find_file_path
 
 def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
