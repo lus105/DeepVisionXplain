@@ -4,7 +4,17 @@ import subprocess
 from importlib.util import find_spec
 from typing import Any, Callable, Optional
 
-from omegaconf import DictConfig
+import hydra
+from lightning.pytorch import Callback
+from lightning.pytorch.loggers import Logger
+from omegaconf import DictConfig, OmegaConf
+from lightning_utilities.core.rank_zero import rank_zero_only
+import torch
+from pynvml import (
+    nvmlDeviceGetHandleByIndex,
+    nvmlDeviceGetMemoryInfo,
+    nvmlInit,
+)
 
 from src.utils import pylogger, rich_utils
 
@@ -174,3 +184,123 @@ def close_loggers() -> None:
         if wandb.run:
             log.info("Closing wandb!")
             wandb.finish()
+
+
+def instantiate_callbacks(callbacks_cfg: DictConfig) -> list[Callback]:
+    """Instantiates callbacks from config.
+
+    Args:
+        callbacks_cfg (DictConfig): A DictConfig object containing callback configurations.
+
+    Returns:
+        List[Callback]: A list of instantiated callbacks.
+    """
+    callbacks: list[Callback] = []
+
+    if not callbacks_cfg:
+        log.warning("No callback configs found! Skipping..")
+        return callbacks
+
+    if not isinstance(callbacks_cfg, DictConfig):
+        raise TypeError("Callbacks config must be a DictConfig!")
+
+    for _, cb_conf in callbacks_cfg.items():
+        if isinstance(cb_conf, DictConfig) and "_target_" in cb_conf:
+            log.info(f"Instantiating callback <{cb_conf._target_}>")
+            callbacks.append(hydra.utils.instantiate(cb_conf))
+
+    return callbacks
+
+
+def instantiate_loggers(logger_cfg: DictConfig) -> list[Logger]:
+    """Instantiates loggers from config.
+
+    Args:
+        logger_cfg (DictConfig): A DictConfig object containing logger configurations.
+
+    Returns:
+        List[Logger]: A list of instantiated loggers.
+    """
+    logger: list[Logger] = []
+
+    if not logger_cfg:
+        log.warning("No logger configs found! Skipping...")
+        return logger
+
+    if not isinstance(logger_cfg, DictConfig):
+        raise TypeError("Logger config must be a DictConfig!")
+
+    for _, lg_conf in logger_cfg.items():
+        if isinstance(lg_conf, DictConfig) and "_target_" in lg_conf:
+            log.info(f"Instantiating logger <{lg_conf._target_}>")
+            logger.append(hydra.utils.instantiate(lg_conf))
+
+    return logger
+
+
+@rank_zero_only
+def log_hyperparameters(object_dict: dict[str, Any]) -> None:
+    """Controls which config parts are saved by Lightning loggers. Additionally saves:
+        - Number of model parameters
+
+    Args:
+        object_dict (Dict[str, Any]): A dictionary containing the following objects:
+        - `"cfg"`: A DictConfig object containing the main config.
+        - `"model"`: The Lightning model.
+        - `"trainer"`: The Lightning trainer.
+    """
+    hparams = {}
+
+    cfg = OmegaConf.to_container(object_dict["cfg"])
+    model = object_dict["model"]
+    trainer = object_dict["trainer"]
+
+    if not trainer.logger:
+        log.warning("Logger not found! Skipping hyperparameter logging...")
+        return
+
+    hparams["model"] = cfg["model"]
+
+    # save number of model parameters
+    hparams["model/params/total"] = sum(p.numel() for p in model.parameters())
+    hparams["model/params/trainable"] = sum(
+        p.numel() for p in model.parameters() if p.requires_grad
+    )
+    hparams["model/params/non_trainable"] = sum(
+        p.numel() for p in model.parameters() if not p.requires_grad
+    )
+
+    hparams["data"] = cfg["data"]
+    hparams["trainer"] = cfg["trainer"]
+
+    hparams["callbacks"] = cfg.get("callbacks")
+    hparams["extras"] = cfg.get("extras")
+
+    hparams["task_name"] = cfg.get("task_name")
+    hparams["tags"] = cfg.get("tags")
+    hparams["ckpt_path"] = cfg.get("ckpt_path")
+    hparams["seed"] = cfg.get("seed")
+
+    # send hparams to all loggers
+    for logger in trainer.loggers:
+        logger.log_hyperparams(hparams)
+
+
+def log_gpu_memory_metadata() -> None:
+    """_Logging GPUs memory metadata (total, free and used) if it's available by
+    PYNVML.
+    """
+    gpus_num = torch.cuda.device_count()
+    if gpus_num == 0:
+        return
+    nvmlInit()
+    cards = (nvmlDeviceGetHandleByIndex(num) for num in range(gpus_num))
+    for i, card in enumerate(cards):
+        info = nvmlDeviceGetMemoryInfo(card)
+        div = 1023 ** 3
+        total_gb = info.total / div 
+        free_gb = info.free / div 
+        used_gb = info.used / div 
+        log.info(f"GPU memory info: card {i} : total : {total_gb:.2f} GB")
+        log.info(f"GPU memory info: card {i} : free  : {free_gb:.2f} GB")
+        log.info(f"GPU memory info: card {i} : used  : {used_gb:.2f} GB")

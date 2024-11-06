@@ -10,7 +10,6 @@ rootutils.setup_root(__file__, indicator=[".git", "pyproject.toml"], pythonpath=
 
 from src.utils import (
     RankedLogger,
-    extras,
     instantiate_loggers,
     instantiate_callbacks,
     log_hyperparameters,
