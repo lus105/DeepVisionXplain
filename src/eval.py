@@ -15,6 +15,7 @@ from src.utils import (
     instantiate_callbacks,
     log_hyperparameters,
     task_wrapper,
+    log_gpu_memory_metadata
 )
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -33,6 +34,8 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         Tuple[Dict[str, Any], Dict[str, Any]]: metrics and dict with all instantiated objects.
     """
     assert cfg.model.ckpt_path, "The checkpoint path (cfg.model.ckpt_path) is not set!"
+
+    log_gpu_memory_metadata()
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)

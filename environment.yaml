@@ -1,4 +1,4 @@
-name: DeepVisionXplain
+name: DeepTrainer
 
 channels:
   - pytorch
@@ -32,3 +32,4 @@ dependencies:
       - opencv-python
       - matplotlib
       - scikit-learn
+      - pynvml
