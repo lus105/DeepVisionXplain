@@ -1,7 +1,7 @@
 import torch
-from src.utils import find_file_path
+from pathlib import Path
 
-def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
+def weight_load(ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt") -> dict:
     """Model weight loading helper function.
 
     Args:
@@ -11,8 +11,10 @@ def weight_load(ckpt_path: str, remove_prefix: str = "net.") -> dict:
     Returns:
         dict: Model weights
     """
-    if not ckpt_path.endswith(".ckpt"):
-        ckpt_path = find_file_path(ckpt_path)
+    if not ckpt_path.endswith(ext):
+        searched_path = Path(ckpt_path)
+        ckpt_path = next(searched_path.rglob("*" + ext), "")
+
     checkpoint = torch.load(ckpt_path)
     model_weights = {
         k[len(remove_prefix):]: v

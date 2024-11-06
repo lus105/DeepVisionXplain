@@ -1,4 +1,3 @@
-import os
 import warnings
 import subprocess
 from importlib.util import find_spec
@@ -135,23 +134,6 @@ def get_metric_value(
     log.info(f"Retrieved metric value! <{metric_name}={metric_value}>")
 
     return metric_value
-
-
-def find_file_path(searched_dir: str, extension: str = ".ckpt") -> str:
-    """Finds file path in the given directory.
-
-    Args:
-        searched_dir (str): The directory where to search for the file.
-        extension (str, optional): The extension of the file. Defaults to ".ckpt".
-
-    Returns:
-        str: The  path to found file.
-    """
-    for root, dirs, files in os.walk(searched_dir):
-        for file in files:
-            if file.endswith(extension):
-                return os.path.join(root, file)
-    return ""
 
 
 def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
