@@ -206,6 +206,27 @@ class MNISTLitModule(LightningModule):
         """Lightning hook that is called when a test epoch ends."""
         pass
 
+    def predict_step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+    ) -> None:
+        """Perform a single predict step on a batch of data from the test set.
+
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
+            batch_idx (int): The index of the current batch.
+        """
+        loss, preds, targets = self.model_step(batch)
+
+        # update and log metrics
+        self.test_loss(loss)
+        self.test_acc(preds, targets)
+
+    def on_predict_epoch_end(self) -> None:
+        """Lightning hook that is called when a predict epoch ends.
+        """
+        pass
+
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
         test, or predict.

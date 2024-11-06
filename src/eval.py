@@ -10,7 +10,6 @@ rootutils.setup_root(__file__, indicator=[".git", "pyproject.toml"], pythonpath=
 
 from src.utils import (
     RankedLogger,
-    extras,
     instantiate_loggers,
     instantiate_callbacks,
     log_hyperparameters,
@@ -66,14 +65,14 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log.info("Logging hyperparameters!")
         log_hyperparameters(object_dict)
 
-    log.info("Starting testing!")
+    trainer.test(model=model, datamodule=datamodule)
 
-    if (cfg.task_name == "classification"):
-        trainer.test(model=model, datamodule=datamodule)
-    elif (cfg.task_name == "segmentation"):
+    if cfg.get("predict"):
+        log.info("Starting predicting!")
         trainer.predict(model=model, datamodule=datamodule)
     else:
-        log.error("Unknown mode.")
+        log.info("Starting testing!")
+        trainer.test(model=model, datamodule=datamodule)
 
     metric_dict = trainer.callback_metrics
 
