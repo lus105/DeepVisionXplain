@@ -70,6 +70,9 @@ def task_wrapper(task_func: Callable) -> Callable:
     def wrap(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         # execute the task
         try:
+            # apply extra utilities
+            extras(cfg)
+
             metric_dict, object_dict = task_func(cfg=cfg)
 
         # things to do if exception occurs
@@ -88,12 +91,7 @@ def task_wrapper(task_func: Callable) -> Callable:
             log.info(f"Output dir: {cfg.paths.output_dir}")
 
             # always close wandb run (even if exception occurs so multirun won't fail)
-            if find_spec("wandb"):  # check if wandb is installed
-                import wandb
-
-                if wandb.run:
-                    log.info("Closing wandb!")
-                    wandb.finish()
+            close_loggers()
 
         return metric_dict, object_dict
 
@@ -162,3 +160,17 @@ def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
         else:
             raise
     return f"> {cmd}\n\n{output}\n"
+
+
+def close_loggers() -> None:
+    """Makes sure all loggers closed properly (prevents logging failure during
+    multirun)."""
+
+    log.info("Closing loggers...")
+
+    if find_spec("wandb"):  # if wandb is installed
+        import wandb
+
+        if wandb.run:
+            log.info("Closing wandb!")
+            wandb.finish()

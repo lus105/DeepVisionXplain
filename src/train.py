@@ -105,9 +105,6 @@ def main(cfg: DictConfig) -> Optional[float]:
     Returns:
         Optional[float]: optimized metric value.
     """
-    # apply extra utilities
-    extras(cfg)
-
     # train the model
     metric_dict, _ = train(cfg)
 
