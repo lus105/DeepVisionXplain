@@ -1,4 +1,4 @@
-name: DeepVisionXplain
+name: DeepTrainer
 
 channels:
   - pytorch
