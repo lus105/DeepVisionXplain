@@ -87,8 +87,6 @@ def main(cfg: DictConfig) -> None:
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
     """
-    # apply extra utilities
-    extras(cfg)
     evaluate(cfg)
 
 
