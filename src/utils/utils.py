@@ -1,7 +1,8 @@
 import os
 import warnings
+import subprocess
 from importlib.util import find_spec
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Optional
 
 from omegaconf import DictConfig
 
@@ -66,7 +67,7 @@ def task_wrapper(task_func: Callable) -> Callable:
         Callable: The wrapped task function.
     """
 
-    def wrap(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    def wrap(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         # execute the task
         try:
             metric_dict, object_dict = task_func(cfg=cfg)
@@ -100,7 +101,7 @@ def task_wrapper(task_func: Callable) -> Callable:
 
 
 def get_metric_value(
-    metric_dict: Dict[str, Any], metric_name: Optional[str]
+    metric_dict: dict[str, Any], metric_name: Optional[str]
 ) -> Optional[float]:
     """Safely retrieves value of the metric logged in LightningModule.
 
@@ -143,3 +144,21 @@ def find_file_path(searched_dir: str, extension: str = ".ckpt") -> str:
             if file.endswith(extension):
                 return os.path.join(root, file)
     return ""
+
+
+def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
+    """Run shell command by subprocess."""
+    try:
+        output = subprocess.check_output(
+            cmd,
+            stderr=subprocess.STDOUT,
+            text=True,
+            shell=True,
+            **kwargs,
+        )
+    except subprocess.SubprocessError as exception:
+        if allow_fail:
+            output = f"{exception}\n\n{exception.output}"
+        else:
+            raise
+    return f"> {cmd}\n\n{output}\n"

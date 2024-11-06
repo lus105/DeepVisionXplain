@@ -1,5 +1,5 @@
 from pathlib import Path
-from subprocess import check_output, run  # nosec B404, B603, B607
+from subprocess import check_output, run
 
 import wandb
 from lightning.pytorch import Callback, Trainer
