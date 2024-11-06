@@ -62,11 +62,13 @@ class MNISTDataModule(LightningDataModule):
     ) -> None:
         """Initialize a `MNISTDataModule`.
 
-        :param data_dir: The data directory. Defaults to `"data/"`.
-        :param train_val_test_split: The train, validation and test split. Defaults to `(55_000, 5_000, 10_000)`.
-        :param batch_size: The batch size. Defaults to `64`.
-        :param num_workers: The number of workers. Defaults to `0`.
-        :param pin_memory: Whether to pin memory. Defaults to `False`.
+        Args:
+            data_dir (str, optional): The data directory. Defaults to "data/".
+            train_val_test_split (tuple[int, int, int], optional): The train, validation and test split.
+              Defaults to (55_000, 5_000, 10_000).
+            batch_size (int, optional): The batch size. Defaults to 64.
+            num_workers (int, optional): The number of workers. Defaults to 0.
+            pin_memory (bool, optional): Whether to pin memory. Defaults to False.
         """
         super().__init__()
 
@@ -89,7 +91,8 @@ class MNISTDataModule(LightningDataModule):
     def num_classes(self) -> int:
         """Get the number of classes.
 
-        :return: The number of MNIST classes (10).
+        Returns:
+            int: The number of MNIST classes (10).
         """
         return 10
 
@@ -112,7 +115,9 @@ class MNISTDataModule(LightningDataModule):
         `self.prepare_data()` and there is a barrier in between which ensures that all the processes proceed to
         `self.setup()` once the data is prepared and available for use.
 
-        :param stage: The stage to setup. Either `"fit"`, `"validate"`, `"test"`, or `"predict"`. Defaults to ``None``.
+        Args:
+            stage (Optional[str], optional): The stage to setup. Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
+              Defaults to None.
         """
         # Divide batch size by the number of devices.
         if self.trainer is not None:
@@ -142,7 +147,8 @@ class MNISTDataModule(LightningDataModule):
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
 
-        :return: The train dataloader.
+        Returns:
+            DataLoader[Any]: The train dataloader.
         """
         return DataLoader(
             dataset=self.data_train,
@@ -155,7 +161,8 @@ class MNISTDataModule(LightningDataModule):
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.
 
-        :return: The validation dataloader.
+        Returns:
+            DataLoader[Any]: The validation dataloader.
         """
         return DataLoader(
             dataset=self.data_val,
@@ -168,7 +175,8 @@ class MNISTDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Create and return the test dataloader.
 
-        :return: The test dataloader.
+        Returns:
+            DataLoader[Any]: The test dataloader.
         """
         return DataLoader(
             dataset=self.data_test,
@@ -179,9 +187,10 @@ class MNISTDataModule(LightningDataModule):
         )
     
     def predict_dataloader(self) -> DataLoader[Any]:
-        """Create and return the test dataloader.
+        """Create and return the predict dataloader.
 
-        :return: The test dataloader.
+        Returns:
+            DataLoader[Any]: The predict dataloader.
         """
         return DataLoader(
             dataset=self.data_test,
@@ -195,15 +204,17 @@ class MNISTDataModule(LightningDataModule):
         """Lightning hook for cleaning up after `trainer.fit()`, `trainer.validate()`,
         `trainer.test()`, and `trainer.predict()`.
 
-        :param stage: The stage being torn down. Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
-            Defaults to ``None``.
+        Args:
+            stage (Optional[str], optional): The stage being torn down. Either 
+            `"fit"`, `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
         pass
 
     def state_dict(self) -> dict[Any, Any]:
         """Called when saving a checkpoint. Implement to generate and save the datamodule state.
 
-        :return: A dictionary containing the datamodule state that you want to save.
+        Returns:
+            dict[Any, Any]: A dictionary containing the datamodule state that you want to save.
         """
         return {}
 
@@ -211,6 +222,7 @@ class MNISTDataModule(LightningDataModule):
         """Called when loading a checkpoint. Implement to reload datamodule state given datamodule
         `state_dict()`.
 
-        :param state_dict: The datamodule state returned by `self.state_dict()`.
+        Args:
+            state_dict (dict[str, Any]): The datamodule state returned by `self.state_dict()`.
         """
         pass
