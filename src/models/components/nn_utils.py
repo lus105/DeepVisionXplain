@@ -1,7 +1,10 @@
 import torch
 from pathlib import Path
 
-def weight_load(ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt") -> dict:
+
+def weight_load(
+    ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt"
+) -> dict:
     """Model weight loading helper function.
 
     Args:
@@ -18,7 +21,7 @@ def weight_load(ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt")
 
     checkpoint = torch.load(ckpt_path)
     model_weights = {
-        k[len(remove_prefix):]: v
+        k[len(remove_prefix) :]: v
         for k, v in checkpoint["state_dict"].items()
         if k.startswith(remove_prefix)
     }

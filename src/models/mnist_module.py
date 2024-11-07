@@ -7,6 +7,7 @@ from torchmetrics.classification.accuracy import Accuracy
 
 from .components.nn_utils import weight_load
 
+
 class MNISTLitModule(LightningModule):
     """Example of a `LightningModule` for MNIST classification.
 
@@ -46,7 +47,7 @@ class MNISTLitModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
-        ckpt_path: str
+        ckpt_path: str,
     ) -> None:
         """Initialize a `MNISTLitModule`.
 
@@ -93,8 +94,7 @@ class MNISTLitModule(LightningModule):
         return self.net(x)
 
     def on_train_start(self) -> None:
-        """Lightning hook that is called when training begins.
-        """
+        """Lightning hook that is called when training begins."""
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
@@ -223,8 +223,7 @@ class MNISTLitModule(LightningModule):
         self.test_acc(preds, targets)
 
     def on_predict_epoch_end(self) -> None:
-        """Lightning hook that is called when a predict epoch ends.
-        """
+        """Lightning hook that is called when a predict epoch ends."""
         pass
 
     def setup(self, stage: str) -> None:
@@ -239,7 +238,6 @@ class MNISTLitModule(LightningModule):
         if self.hparams.ckpt_path:
             model_weights = weight_load(self.hparams.ckpt_path)
             self.net.load_state_dict(model_weights)
-
 
     def configure_optimizers(self) -> dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.

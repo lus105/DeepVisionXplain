@@ -14,7 +14,7 @@ from src.utils import (
     instantiate_callbacks,
     log_hyperparameters,
     task_wrapper,
-    log_gpu_memory_metadata
+    log_gpu_memory_metadata,
 )
 
 log = RankedLogger(__name__, rank_zero_only=True)

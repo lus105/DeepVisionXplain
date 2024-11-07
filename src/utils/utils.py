@@ -141,14 +141,14 @@ def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
 
     Args:
         cmd (Any): The shell command to execute. Can be a string or a sequence of program arguments.
-        allow_fail (bool, optional): If set to True, the function will return the error output 
+        allow_fail (bool, optional): If set to True, the function will return the error output
             if the command fails. If False, it will raise an exception on failure. Defaults to True.
         **kwargs (Any): Additional keyword arguments passed to `subprocess.check_output`.
 
     Returns:
-        str: The output of the command. If `allow_fail` is True and the command fails, 
+        str: The output of the command. If `allow_fail` is True and the command fails,
         the output will contain the error message.
-    
+
     Raises:
         subprocess.SubprocessError: If `allow_fail` is False and the command fails.
     """
@@ -293,10 +293,10 @@ def log_gpu_memory_metadata() -> None:
     cards = (nvmlDeviceGetHandleByIndex(num) for num in range(gpus_num))
     for i, card in enumerate(cards):
         info = nvmlDeviceGetMemoryInfo(card)
-        div = 1023 ** 3
-        total_gb = info.total / div 
-        free_gb = info.free / div 
-        used_gb = info.used / div 
+        div = 1023**3
+        total_gb = info.total / div
+        free_gb = info.free / div
+        used_gb = info.used / div
         log.info(f"GPU memory info: card {i} : total : {total_gb:.2f} GB")
         log.info(f"GPU memory info: card {i} : free  : {free_gb:.2f} GB")
         log.info(f"GPU memory info: card {i} : used  : {used_gb:.2f} GB")

@@ -185,7 +185,7 @@ class MNISTDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
         )
-    
+
     def predict_dataloader(self) -> DataLoader[Any]:
         """Create and return the predict dataloader.
 
@@ -205,7 +205,7 @@ class MNISTDataModule(LightningDataModule):
         `trainer.test()`, and `trainer.predict()`.
 
         Args:
-            stage (Optional[str], optional): The stage being torn down. Either 
+            stage (Optional[str], optional): The stage being torn down. Either
             `"fit"`, `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
         pass
