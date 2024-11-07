@@ -33,3 +33,4 @@ dependencies:
       - matplotlib
       - scikit-learn
       - pynvml
+      - ruff

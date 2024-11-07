@@ -26,3 +26,4 @@ timm
 onnx
 onnxruntime
 pynvml
+ruff

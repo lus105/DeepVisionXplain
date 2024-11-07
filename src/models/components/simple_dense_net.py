@@ -16,7 +16,7 @@ class SimpleDenseNet(nn.Module):
         """Initialize a `SimpleDenseNet` module.
 
         Args:
-            input_size (int, optional): The number of input features.. Defaults to 784.
+            input_size (int, optional): The number of input features. Defaults to 784.
             lin1_size (int, optional): The number of output features of the first linear layer. Defaults to 256.
             lin2_size (int, optional): The number of output features of the second linear layer. Defaults to 256.
             lin3_size (int, optional): The number of output features of the third linear layer. Defaults to 256.

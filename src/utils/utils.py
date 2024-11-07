@@ -1,4 +1,3 @@
-import os
 import warnings
 import subprocess
 from importlib.util import find_spec
@@ -137,25 +136,22 @@ def get_metric_value(
     return metric_value
 
 
-def find_file_path(searched_dir: str, extension: str = ".ckpt") -> str:
-    """Finds file path in the given directory.
+def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
+    """Executes a shell command using subprocess and returns the output.
 
     Args:
-        searched_dir (str): The directory where to search for the file.
-        extension (str, optional): The extension of the file. Defaults to ".ckpt".
+        cmd (Any): The shell command to execute. Can be a string or a sequence of program arguments.
+        allow_fail (bool, optional): If set to True, the function will return the error output
+            if the command fails. If False, it will raise an exception on failure. Defaults to True.
+        **kwargs (Any): Additional keyword arguments passed to `subprocess.check_output`.
 
     Returns:
-        str: The  path to found file.
+        str: The output of the command. If `allow_fail` is True and the command fails,
+        the output will contain the error message.
+
+    Raises:
+        subprocess.SubprocessError: If `allow_fail` is False and the command fails.
     """
-    for root, dirs, files in os.walk(searched_dir):
-        for file in files:
-            if file.endswith(extension):
-                return os.path.join(root, file)
-    return ""
-
-
-def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
-    """Run shell command by subprocess."""
     try:
         output = subprocess.check_output(
             cmd,
@@ -174,8 +170,8 @@ def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
 
 def close_loggers() -> None:
     """Makes sure all loggers closed properly (prevents logging failure during
-    multirun)."""
-
+    multirun).
+    """
     log.info("Closing loggers...")
 
     if find_spec("wandb"):  # if wandb is installed
@@ -297,10 +293,10 @@ def log_gpu_memory_metadata() -> None:
     cards = (nvmlDeviceGetHandleByIndex(num) for num in range(gpus_num))
     for i, card in enumerate(cards):
         info = nvmlDeviceGetMemoryInfo(card)
-        div = 1023 ** 3
-        total_gb = info.total / div 
-        free_gb = info.free / div 
-        used_gb = info.used / div 
+        div = 1023**3
+        total_gb = info.total / div
+        free_gb = info.free / div
+        used_gb = info.used / div
         log.info(f"GPU memory info: card {i} : total : {total_gb:.2f} GB")
         log.info(f"GPU memory info: card {i} : free  : {free_gb:.2f} GB")
         log.info(f"GPU memory info: card {i} : used  : {used_gb:.2f} GB")
