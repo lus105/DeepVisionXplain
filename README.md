@@ -97,6 +97,7 @@ docker build -t deeptrainer \
 ```
 
 Run container:
+
 ```shell
 docker run \
 -it \
