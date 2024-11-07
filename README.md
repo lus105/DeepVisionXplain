@@ -62,8 +62,6 @@ python src/train.py trainer=gpu
   - [Custom config resolvers](#custom-config-resolvers)
   - [Simplify complex modules configuring](#simplify-complex-modules-configuring)
 - [Logs](#logs)
-- [Data](#data)
-- [Notebooks](#notebooks)
 - [Hyperparameters search](#hyperparameters-search)
 - [Docker](#docker)
 - [Tests](#tests)
@@ -141,7 +139,7 @@ This part of the diagram illustrates how configuration files (train.yaml, eval.y
 
 The diagram shows how Hydra loads all configuration files and combines them into a single configuration object (DictConfig). This unified configuration object simplifies the management of settings across different modules and aspects of the project, such as data handling, model specifics, callbacks, logging, and the training process.
 
-*Train/test Script*
+*Train/eval script*
 
  This section represents the operational part of the project. Scripts train.py and eval.py are required for training and evaluatging the model. DictConfig: The combined configuration object passed to these scripts, guiding the instantiation of the subsequent components.
 
