@@ -1,7 +1,7 @@
 <div align='center'>
 
 # DeepTrainer
-<img src="docs/res/logo.png" width="100" />
+<img src="docs/res/logo_base.png" width="100" />
 
 <strong>Versatile model training environment</strong>  
 
