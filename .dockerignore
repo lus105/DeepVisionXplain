@@ -1,0 +1,7 @@
+*
+!requirements.txt
+!src/
+!configs/
+!scripts/
+!tests/
+!pyproject.toml

@@ -1,0 +1,29 @@
+# --------- pytorch --------- #
+torch
+torchvision
+lightning
+torchmetrics
+torch-summary
+torchinfo
+
+# --------- hydra --------- #
+hydra-core
+hydra-colorlog
+hydra-optuna-sweeper
+
+# --------- loggers --------- #
+wandb
+
+# --------- others --------- #
+rootutils
+pre-commit
+rich
+pytest
+opencv-python
+matplotlib
+scikit-learn
+timm
+onnx
+onnxruntime
+pynvml
+ruff

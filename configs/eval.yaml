@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - data: mnist
+  - model: mnist
+  - logger: null
+  - trainer: default
+  - paths: default
+  - extras: default
+  - hydra: default
+  - callbacks: rich_progress_bar
+  - runs: null
+
+task_name: "eval"
+
+predict: False
+
+tags: ["dev"]
