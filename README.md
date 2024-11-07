@@ -83,6 +83,30 @@ The diagram shows how Hydra loads all configuration files and combines them into
   <img src="res/workflow_diagram.svg" width="350"/>
 </p>
 
+## Docker
+Build docker container:
+```shell
+docker build -t deeptrainer \
+--build-arg CUDA_VERSION=12.5.1 \
+--build-arg OS_VERSION=22.04 \
+--build-arg PYTHON_VERSION=3.11 \
+--build-arg USER_ID=$(id -u) \
+--build-arg GROUP_ID=$(id -g) \
+--build-arg NAME=$(whoami) \
+--build-arg WORKDIR_PATH=/test .
+```
+
+Run container:
+```shell
+docker run \
+-it \
+--rm \
+--gpus all \
+--name my_deeptrainer_container \
+-v host/data:/data \
+deeptrainer
+```
+
 ## Development
 
 Linting all files in the project:
