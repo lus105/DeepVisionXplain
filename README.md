@@ -86,9 +86,24 @@ The diagram shows how Hydra loads all configuration files and combines them into
 ## Development
 
 Linting all files in the project:
-```bash
-pre-commit run -a
+To run Ruff as a linter, try any of the following:
+
+```shell
+ruff check                          # Lint all files in the current directory (and any subdirectories).
+ruff check path/to/code/            # Lint all files in `/path/to/code` (and any subdirectories).
+ruff check path/to/code/*.py        # Lint all `.py` files in `/path/to/code`.
+ruff check path/to/code/to/file.py  # Lint `file.py`.
 ```
+
+Or, to run Ruff as a formatter:
+
+```shell
+ruff format                          # Format all files in the current directory (and any subdirectories).
+ruff format path/to/code/            # Format all files in `/path/to/code` (and any subdirectories).
+ruff format path/to/code/*.py        # Format all `.py` files in `/path/to/code`.
+ruff format path/to/code/to/file.py  # Format `file.py`.
+```
+
 Tests:
 ```bash
 # run all tests
