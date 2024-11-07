@@ -1,6 +1,0 @@
-defaults:
-  - vit
-  - _self_
-
-net:
-  model_name: deit_tiny_patch16_224.fb_in1k

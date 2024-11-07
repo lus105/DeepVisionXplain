@@ -1,7 +1,0 @@
-defaults:
-  - cnn
-  - _self_
-
-net:
-  backbone: efficientnet_v2_s
-  return_node: "features.6.0.block.0"
