@@ -7,9 +7,10 @@ def weight_load(ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt")
     Args:
         ckpt_path (str): Path of the weights.
         remove_prefix (str, optional): Remove prefix from keys. Defaults to "net.".
+        ext (str, optional): Checkpoint extension. Defaults to ".ckpt".
 
     Returns:
-        dict: Model weights
+        dict: Model weights.
     """
     if not ckpt_path.endswith(ext):
         searched_path = Path(ckpt_path)

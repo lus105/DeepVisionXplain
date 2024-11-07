@@ -137,7 +137,21 @@ def get_metric_value(
 
 
 def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
-    """Run shell command by subprocess."""
+    """Executes a shell command using subprocess and returns the output.
+
+    Args:
+        cmd (Any): The shell command to execute. Can be a string or a sequence of program arguments.
+        allow_fail (bool, optional): If set to True, the function will return the error output 
+            if the command fails. If False, it will raise an exception on failure. Defaults to True.
+        **kwargs (Any): Additional keyword arguments passed to `subprocess.check_output`.
+
+    Returns:
+        str: The output of the command. If `allow_fail` is True and the command fails, 
+        the output will contain the error message.
+    
+    Raises:
+        subprocess.SubprocessError: If `allow_fail` is False and the command fails.
+    """
     try:
         output = subprocess.check_output(
             cmd,
@@ -156,8 +170,8 @@ def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
 
 def close_loggers() -> None:
     """Makes sure all loggers closed properly (prevents logging failure during
-    multirun)."""
-
+    multirun).
+    """
     log.info("Closing loggers...")
 
     if find_spec("wandb"):  # if wandb is installed
