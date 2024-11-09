@@ -1,27 +1,27 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import hydra
 import rootutils
-from lightning import LightningDataModule, LightningModule, Trainer, Callback
+from lightning.pytorch import LightningDataModule, LightningModule, Trainer, Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+rootutils.setup_root(__file__, indicator=[".git", "pyproject.toml"], pythonpath=True)
 
 from src.utils import (
     RankedLogger,
-    extras,
     instantiate_loggers,
     instantiate_callbacks,
     log_hyperparameters,
     task_wrapper,
+    log_gpu_memory_metadata,
 )
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
 
 @task_wrapper
-def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def evaluate(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     """Evaluates given checkpoint on a datamodule testset.
     This method is wrapped in optional @task_wrapper decorator, that controls the behavior during
     failure. Useful for multiruns, saving info about the crash, etc.
@@ -34,6 +34,8 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     assert cfg.model.ckpt_path, "The checkpoint path (cfg.model.ckpt_path) is not set!"
 
+    log_gpu_memory_metadata()
+
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
@@ -41,10 +43,10 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
     log.info("Instantiating callbacks...")
-    callbacks: List[Callback] = instantiate_callbacks(cfg.get("callbacks"))
+    callbacks: list[Callback] = instantiate_callbacks(cfg.get("callbacks"))
 
     log.info("Instantiating loggers...")
-    logger: List[Logger] = instantiate_loggers(cfg.get("logger"))
+    logger: list[Logger] = instantiate_loggers(cfg.get("logger"))
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(
@@ -63,14 +65,14 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log.info("Logging hyperparameters!")
         log_hyperparameters(object_dict)
 
-    log.info("Starting testing!")
+    trainer.test(model=model, datamodule=datamodule)
 
-    if (cfg.task_name == "classification"):
-        trainer.test(model=model, datamodule=datamodule)
-    elif (cfg.task_name == "segmentation"):
+    if cfg.get("predict"):
+        log.info("Starting predicting!")
         trainer.predict(model=model, datamodule=datamodule)
     else:
-        log.error("Unknown mode.")
+        log.info("Starting testing!")
+        trainer.test(model=model, datamodule=datamodule)
 
     metric_dict = trainer.callback_metrics
 
@@ -84,8 +86,6 @@ def main(cfg: DictConfig) -> None:
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
     """
-    # apply extra utilities
-    extras(cfg)
     evaluate(cfg)
 
 

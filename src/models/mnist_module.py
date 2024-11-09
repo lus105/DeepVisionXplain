@@ -1,11 +1,12 @@
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import torch
-from lightning import LightningModule
+from lightning.pytorch import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 
 from .components.nn_utils import weight_load
+
 
 class MNISTLitModule(LightningModule):
     """Example of a `LightningModule` for MNIST classification.
@@ -46,7 +47,7 @@ class MNISTLitModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
-        ckpt_path: str
+        ckpt_path: str,
     ) -> None:
         """Initialize a `MNISTLitModule`.
 
@@ -93,8 +94,7 @@ class MNISTLitModule(LightningModule):
         return self.net(x)
 
     def on_train_start(self) -> None:
-        """Lightning hook that is called when training begins.
-        """
+        """Lightning hook that is called when training begins."""
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
@@ -102,8 +102,8 @@ class MNISTLitModule(LightningModule):
         self.val_acc_best.reset()
 
     def model_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        self, batch: tuple[torch.Tensor, torch.Tensor]
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Perform a single model step on a batch of data.
 
         Args:
@@ -123,7 +123,7 @@ class MNISTLitModule(LightningModule):
         return loss, preds, y
 
     def training_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> torch.Tensor:
         """Perform a single training step on a batch of data from the training set.
 
@@ -155,7 +155,7 @@ class MNISTLitModule(LightningModule):
         pass
 
     def validation_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
         """Perform a single validation step on a batch of data from the validation set.
 
@@ -183,7 +183,7 @@ class MNISTLitModule(LightningModule):
         )
 
     def test_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
         """Perform a single test step on a batch of data from the test set.
 
@@ -206,6 +206,26 @@ class MNISTLitModule(LightningModule):
         """Lightning hook that is called when a test epoch ends."""
         pass
 
+    def predict_step(
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
+    ) -> None:
+        """Perform a single predict step on a batch of data from the test set.
+
+        Args:
+            batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
+            containing the input tensor of images and target labels.
+            batch_idx (int): The index of the current batch.
+        """
+        loss, preds, targets = self.model_step(batch)
+
+        # update and log metrics
+        self.test_loss(loss)
+        self.test_acc(preds, targets)
+
+    def on_predict_epoch_end(self) -> None:
+        """Lightning hook that is called when a predict epoch ends."""
+        pass
+
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
         test, or predict.
@@ -219,8 +239,7 @@ class MNISTLitModule(LightningModule):
             model_weights = weight_load(self.hparams.ckpt_path)
             self.net.load_state_dict(model_weights)
 
-
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         Normally you'd need one. But in the case of GANs or similar you might have multiple.
 

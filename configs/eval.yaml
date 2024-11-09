@@ -10,8 +10,10 @@ defaults:
   - extras: default
   - hydra: default
   - callbacks: rich_progress_bar
-  - runs: null
+  - experiment: null
 
-task_name: "classification" # classification or segmentation
+task_name: "eval"
+
+predict: False
 
 tags: ["dev"]

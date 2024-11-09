@@ -1,4 +1,4 @@
-name: DeepVisionXplain
+name: DeepTrainer
 
 channels:
   - pytorch
@@ -10,7 +10,7 @@ dependencies:
   - python=3.11
   - pytorch
   - torchvision
-  - pytorch-cuda=11.8
+  - pytorch-cuda=12.4
   - lightning
   - torchmetrics
 
@@ -24,7 +24,6 @@ dependencies:
       - onnx
       - onnxruntime
       - torchinfo
-      - torchsampler
       - hydra-core
       - rich
       - pre-commit
@@ -33,3 +32,5 @@ dependencies:
       - opencv-python
       - matplotlib
       - scikit-learn
+      - pynvml
+      - ruff

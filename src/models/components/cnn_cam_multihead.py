@@ -203,8 +203,7 @@ def test_model() -> None:
     """Tests forward pass and prints out shapes
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = CNNCAMMultihead(backbone = "mobilenet_v3_large", multi_head=True)
-    model = model.to(device)
+    model = CNNCAMMultihead(backbone = "mobilenet_v3_large", multi_head=True).to(device)
     model.eval()
     dummy_input = torch.randn(10, 3, 224, 224).to(device)
     with torch.no_grad():

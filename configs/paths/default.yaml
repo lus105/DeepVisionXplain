@@ -17,5 +17,5 @@ output_dir: ${hydra:runtime.output_dir}
 # path to working directory
 work_dir: ${hydra:runtime.cwd}
 
-# tarined models directory
+# trained models directory
 trained_models: ${paths.root_dir}/trained_models/

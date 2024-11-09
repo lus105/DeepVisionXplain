@@ -42,3 +42,10 @@ def test_train_eval(
         abs(train_metric_dict["test/acc"].item() - test_metric_dict["test/acc"].item())
         < 0.001
     )
+
+    # predict
+    with open_dict(cfg_eval):
+        cfg_eval.predict = True
+
+    HydraConfig().set_config(cfg_eval)
+    evaluate(cfg_eval)
