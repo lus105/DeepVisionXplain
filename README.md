@@ -1,7 +1,7 @@
 <div align='center'>
 
 # DeepVisionXplain
-<img src="docs/res/logo.png" width="100" />
+<img src="docs/res/logo_xplain.png" width="100" />
 
 <strong>Versatile model training environment</strong>  
 <strong>Used as ViT and CNN explainability experimentation tool</strong>  
