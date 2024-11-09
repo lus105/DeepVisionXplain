@@ -53,17 +53,14 @@ python src/train.py trainer=gpu
   - [Training loop](#training-loop)
   - [Evaluation and prediction loops](#evaluation-and-prediction-loops)
   - [Callbacks](#callbacks)
-  - [Extensions](#extensions)
 - [Hydra configs](#hydra-configs)
   - [How to run pipeline with Hydra](#how-to-run-pipeline-with-hydra)
   - [Instantiating objects with Hydra](#instantiating-objects-with-hydra)
   - [Command line operations](#command-line-operations)
   - [Custom config resolvers](#custom-config-resolvers)
   - [Simplify complex modules configuring](#simplify-complex-modules-configuring)
-- [Logs](#logs)
 - [Hyperparameters search](#hyperparameters-search)
 - [Docker](#docker)
-- [Tests](#tests)
 - [Development](#development)
 - [References](#references)
 
@@ -243,34 +240,96 @@ See more details in [training loop](src/train.py) and [configs/train.yaml](confi
 See more details in [evaluation loop](src/eval.py) and [configs/eval.yaml](configs/eval.yaml).
 
 ### Callbacks
+PyTorch Lightning has a lot of [built-in callbacks](https://pytorch-lightning.readthedocs.io/en/stable/extensions/callbacks.html), which can be used just by adding them to callbacks config. See examples in [callbacks config](configs/callbacks) folder.
 
+By default, the template contains the following callbacks:
 
-### Extensions
-
+- Model Checkpoint
+- Early Stopping
+- Model Summary
+- Rich Progress Bar
 
 ## Hydra configs
+[Hydra](https://github.com/facebookresearch/hydra) + [OmegaConf](https://omegaconf.readthedocs.io/en/) provide a flexible and efficient configuration management system that allows to dynamically create a hierarchical configurations
+by composition and override it through config files and the command line.
 
+This powerful tools allow to create a simple and efficient way for managing and organizing the various configurations in one place, constructing complex configurations structure without any limits which can be essential in machine learning projects.
+
+All of that enable to easily switch between any parameters and try different configurations without having to manually update the code.
 
 ### How to run pipeline with Hydra
+A decorator `hydra.main` is supposed to be used to load Hydra config during launching of the pipeline. Here a config
+is being parser by Hydra grammar parser, merged, composed and passed to the pipeline main function.
 
+```python
+import hydra
+from omegaconf import DictConfig, OmegaConf
+from src.train import train
+
+
+@hydra.main(version_base="1.3", config_path=".", config_name="train.yaml")
+def main(cfg: DictConfig) -> None:
+    print(OmegaConf.to_yaml(cfg))
+    train(cfg)
+
+
+if __name__ == "__main__":
+    main()
+```
 
 ### Instantiating objects with Hydra
+For object instantiating from a config, it should contain `_target_` key with `class` or `function` name which
+would be instantiated with other parameters passed to config. Hydra provides `hydra.utils.instantiate()` (and its alias
+`hydra.utils.call()`) for instantiating objects and calling `class` or `function`. Prefer `instantiate` for creating
+objects and `call` for invoking functions.
+
+```yaml
+loss:
+  _target_: "torch.nn.CrossEntropyLoss"
+
+metric:
+  _target_: "torchmetrics.Accuracy"
+  task: "multiclass"
+  num_classes: 10
+  top_k: 1
+```
+
+Based on such config you could instantiate loss via `loss = hydra.utils.instantiate(config.loss)` and metric via
+`metric = hydra.utils.instantiate(config.metric)`.
 
 
 ### Command line operations
+It supports few operations from the command line as well:
 
+- Override existing config value by passing it as well
+- Add a new config value, which doesn't exist in the config, by using `+`
+- Override a config value if it's already in the config, or add it otherwise, by using `++`
 
-### Custom config resolvers
+```shell
+# train the model with the default config
+python src/train.py
 
+# train the model with the overridden parameter
+python src/train.py model.compile=true
 
-### Simplify complex modules configuring
-
-
-## Logs
+# train the model with the overridden parameter and add a new parameter
+python src/train.py model.compile=true ++model.model_repo="repository"
+```
 
 
 ## Hyperparameters search
+Hydra provides out-of-the-box hyperparameters sweepers: [Optuna, Nevergrad or Ax](https://hydra.cc/docs/plugins/optuna_sweeper/).
 
+You can define hyperparameters search by adding new config file to [configs/hparams_search](configs/hparams_search).
+See example of [hyperparameters search config](configs/hparams_search/mnist_optuna.yaml). With this method, there is no
+need to add extra code, everything is specified in a single configuration file. The only requirement is to return the
+optimized metric value from the launch file.
+
+Execute it with:
+```shell
+python src/train.py -m hparams_search=mnist_optuna
+```
+The `optimization_results.yaml` will be available under `logs/task_name/multirun` folder.
 
 ## Docker
 Build docker container:
@@ -296,8 +355,6 @@ docker run \
 -v host/data:/data \
 deeptrainer
 ```
-
-## Tests
 
 ## Development
 Linting all files in the project:
