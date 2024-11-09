@@ -57,8 +57,6 @@ python src/train.py trainer=gpu
   - [How to run pipeline with Hydra](#how-to-run-pipeline-with-hydra)
   - [Instantiating objects with Hydra](#instantiating-objects-with-hydra)
   - [Command line operations](#command-line-operations)
-  - [Custom config resolvers](#custom-config-resolvers)
-  - [Simplify complex modules configuring](#simplify-complex-modules-configuring)
 - [Hyperparameters search](#hyperparameters-search)
 - [Docker](#docker)
 - [Development](#development)
