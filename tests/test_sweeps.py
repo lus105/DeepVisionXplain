@@ -19,7 +19,7 @@ def test_experiments(tmp_path: Path) -> None:
         pythoncmd,
         startfile,
         "-m",
-        "experiment=glob(*)",
+        "experiment=example",
         "hydra.sweep.dir=" + str(tmp_path),
         "++trainer.fast_dev_run=true",
     ] + overrides
