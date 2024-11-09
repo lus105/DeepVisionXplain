@@ -47,7 +47,7 @@ python src/train.py trainer=gpu
 ## Table of contents
 - [Project structure](#project-structure)
 - [Workflow](#workflow)
-  - [Basic workflow](#basic-workflow)
+  - [Steps](#steps)
   - [LightningDataModule](#lightningdatamodule)
   - [LightningModule](#lightningmodule)
   - [Training loop](#training-loop)
@@ -58,14 +58,14 @@ python src/train.py trainer=gpu
   - [How to run pipeline with Hydra](#how-to-run-pipeline-with-hydra)
   - [Instantiating objects with Hydra](#instantiating-objects-with-hydra)
   - [Command line operations](#command-line-operations)
-  - [Additional out-of-the-box features](#additional-out-of-the-box-features)
   - [Custom config resolvers](#custom-config-resolvers)
   - [Simplify complex modules configuring](#simplify-complex-modules-configuring)
 - [Logs](#logs)
 - [Hyperparameters search](#hyperparameters-search)
 - [Docker](#docker)
 - [Tests](#tests)
-- [Continuous integration](#continuous-integration)
+- [Development](#development)
+- [References](#references)
 
 ## Project structure
 
@@ -155,10 +155,58 @@ The diagram shows how Hydra loads all configuration files and combines them into
 
   *	The trainer uses the model, data module, logger, and callbacks to execute the training/evaluating process through the trainer.fit/test/predict methods, integrating all the configuration settings specified through Hydra.
 
-#### Workflow steps:
+#### Steps:
 <p align="center">
-  <img src="res/workflow_diagram.svg" width="350"/>
+  <img src="docs/res/workflow_steps.png"/>
 </p>
+
+1. Write your PyTorch Lightning Module (see example in [data/mnist_datamodule.py](src/data/mnist_datamodule.py))
+2. Write your PyTorch Lightning DataModule (see examples in [models/mnist_module.py](src/models/mnist_module.py))
+3. Fill up your configs, in particularly create experiment/runs configs
+4. Run experiments:
+
+Run training with chosen experiment config:
+```shell
+python src/train.py experiment=experiment_name
+```
+Use hyperparameter search, for example by Optuna Sweeper via Hydra:
+```shell
+# using Hydra multirun mode
+python src/train.py -m hparams_search=mnist_optuna
+```
+Execute the runs with some config parameter manually:
+```shell
+python src/train.py -m logger=csv module.optimizer.weight_decay=0.,0.00001,0.0001
+```
+5. Run evaluation with different checkpoints or prediction on custom dataset for additional analysis
+
+### LightningDataModule
+
+### LightningModule
+
+### Training loop
+
+### Evaluation and prediction loops
+
+### Callbacks
+
+### Extensions
+
+## Hydra configs
+
+### How to run pipeline with Hydra
+
+### Instantiating objects with Hydra
+
+### Command line operations
+
+### Custom config resolvers
+
+### Simplify complex modules configuring
+
+## Logs
+
+## Hyperparameters search
 
 ## Docker
 Build docker container:
@@ -184,6 +232,8 @@ docker run \
 -v host/data:/data \
 deeptrainer
 ```
+
+## Tests
 
 ## Development
 
