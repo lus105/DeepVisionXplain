@@ -86,7 +86,6 @@ In this project, the directory structure looks like:
 │   ├── logger                  <- Logger configs
 │   ├── model                   <- Model configs
 │   ├── paths                   <- Project paths configs
-│   ├── runs                    <- Run configs (top level)
 │   ├── trainer                 <- Trainer configs
 │   │
 │   ├── eval.yaml               <- Main config for evaluation
