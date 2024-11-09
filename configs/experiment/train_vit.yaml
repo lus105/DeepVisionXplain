@@ -1,0 +1,43 @@
+# @package _global_
+
+# to execute this experiment run:
+# python src/train.py runs=vit_train
+
+defaults:
+  - override /data: dir
+  - override /model: vit
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: many_loggers
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["vit", "VitRolloutMultihead"]
+
+seed: 12345
+
+trainer:
+  min_epochs: 10
+  max_epochs: 20
+  accelerator: gpu
+
+model:
+  net:
+    multi_head: false
+  optimizer:
+    lr: 5e-5
+  compile: false
+  ckpt_path: null
+
+data:
+  batch_size: 64
+  num_workers: 4
+  data_dir: ${oc.env:pcb_data_path}
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: "vit"
+  aim:
+    experiment: "vit"
