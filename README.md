@@ -14,7 +14,7 @@
 
 ## Project Description
 Neural network training environment (including various MLOps tools).
-[PyTorch Lightning](https://github.com/Lightning-AI/lightning) and [Hydra](https://github.com/facebookresearch/hydra) serve as the foundation upon this template. This template is designed to streamline experimentation, foster modularity, and simplify tracking and reproducibility:
+[PyTorch Lightning](https://github.com/Lightning-AI/lightning) and [Hydra](https://github.com/facebookresearch/hydra) serve as the foundation upon this template. It is designed to streamline experimentation, foster modularity, and simplify tracking and reproducibility:
 
 ✅ Minimal boilerplate code (easily add new models, datasets, tasks, experiments, and different accelerator configurations).
 
@@ -28,13 +28,13 @@ Neural network training environment (including various MLOps tools).
 # clone project
 git clone https://github.com/lus105/DeepTrainer.git
 # change directory
-cd DeepVisionXplain
+cd DeepTrainer
 # update conda
 conda update -n base conda
 # create conda environment and install dependencies
-conda env create -f environment.yaml -n DeepVisionXplain
+conda env create -f environment.yaml -n DeepTrainer
 # activate conda environment
-conda activate DeepVisionXplain
+conda activate DeepTrainer
 ```
 Train mnist model with default configuration (check if environment is properly set up):
 ```bash
@@ -68,7 +68,6 @@ python src/train.py trainer=gpu
 - [References](#references)
 
 ## Project structure
-
 The structure of a machine learning project can vary depending on the specific requirements and goals of the project, as well as the tools and frameworks being used. However, here is a general outline of a common directory structure for a machine learning project:
 
 - `src/`
@@ -126,7 +125,6 @@ In this project, the directory structure looks like:
 ```
 
 ## Workflow
-
 <p align="center">
   <img src="docs/res/principle_diagram.png"/>
 </p>
@@ -155,7 +153,7 @@ The diagram shows how Hydra loads all configuration files and combines them into
 
   *	The trainer uses the model, data module, logger, and callbacks to execute the training/evaluating process through the trainer.fit/test/predict methods, integrating all the configuration settings specified through Hydra.
 
-#### Steps:
+### Steps:
 <p align="center">
   <img src="docs/res/workflow_steps.png"/>
 </p>
@@ -176,37 +174,103 @@ python src/train.py -m hparams_search=mnist_optuna
 ```
 Execute the runs with some config parameter manually:
 ```shell
-python src/train.py -m logger=csv module.optimizer.weight_decay=0.,0.00001,0.0001
+python src/train.py -m logger=csv model.optimizer.weight_decay=0.,0.00001,0.0001
 ```
 5. Run evaluation with different checkpoints or prediction on custom dataset for additional analysis
 
 ### LightningDataModule
 
+At the start, you need to create PyTorch Dataset for you task. It has to include `__getitem__` and `__len__` methods. See more details in [PyTorch documentation](https://pytorch.org/tutorials/beginner/basics/data_tutorial.html).
+Then, you need to create DataModule using [PyTorch Lightning DataModule API](https://pytorch-lightning.readthedocs.io/en/stable/data/datamodule.html#lightningdatamodule-api).
+By default, API has the following methods:
+
+- `prepare_data` (optional): perform data operations on CPU via a single process, like load and preprocess data, etc.
+- `setup` (optional): perform data operations on every GPU, like train/val/test splits, create datasets, etc.
+- `train_dataloader`: used to generate the training dataloader
+- `val_dataloader`: used to generate the validation dataloader
+- `test_dataloader`: used to generate the test dataloader
+- `predict_dataloader` (optional): used to generate the prediction dataloader
+
+See examples of `LightningDataModule` in [src/data](src/data) and [configs/data](configs/data).
+
 ### LightningModule
+Next, create LightningModule using [PyTorch Lightning LightningModule API](https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html).
+Minimum API has the following methods:
+
+- `forward`: use for inference only (separate from training_step)
+- `training_step`: the complete training loop
+- `validation_step`: the complete validation loop
+- `test_step`: the complete test loop
+- `predict_step`: the complete prediction loop
+- `configure_optimizers`: define optimizers and LR schedulers
+
+Also, you can override optional methods for each step to perform additional logic:
+
+- `training_step_end`: training step end operations
+- `training_epoch_end`: training epoch end operations
+- `validation_step_end`: validation step end operations
+- `validation_epoch_end`: validation epoch end operations
+- `test_step_end`: test step end operations
+- `test_epoch_end`: test epoch end operations
+
+See examples of `LightningModule` in [src/models](src/models) and [configs/model](configs/model).
 
 ### Training loop
+[Training loop](src/train.py) in the template contains the following stages:
+
+- LightningDataModule instantiating
+- LightningModule instantiating
+- Callbacks instantiating
+- Loggers instantiating
+- Trainer instantiating
+- Hyperparameteres logging
+- Training the model
+- Testing the best model
+
+See more details in [training loop](src/train.py) and [configs/train.yaml](configs/train.yaml).
 
 ### Evaluation and prediction loops
+[Evaluation loop](src/eval.py) in the template contains the following stages:
+
+- LightningDataModule instantiating
+- LightningModule instantiating
+- Callbacks instantiating
+- Loggers instantiating
+- Trainer instantiating
+- Hyperparameteres logging
+- Evaluating model or predicting
+
+See more details in [evaluation loop](src/eval.py) and [configs/eval.yaml](configs/eval.yaml).
 
 ### Callbacks
 
+
 ### Extensions
+
 
 ## Hydra configs
 
+
 ### How to run pipeline with Hydra
+
 
 ### Instantiating objects with Hydra
 
+
 ### Command line operations
+
 
 ### Custom config resolvers
 
+
 ### Simplify complex modules configuring
+
 
 ## Logs
 
+
 ## Hyperparameters search
+
 
 ## Docker
 Build docker container:
@@ -236,7 +300,6 @@ deeptrainer
 ## Tests
 
 ## Development
-
 Linting all files in the project:
 To run Ruff as a linter, try any of the following:
 
@@ -267,5 +330,4 @@ pytest -k "not slow"
 ```
 
 ## References
-
 * [ashleve/lightning-hydra-template](https://github.com/ashleve/lightning-hydra-template)
