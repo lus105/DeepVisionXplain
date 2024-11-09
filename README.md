@@ -3,8 +3,7 @@
 # DeepVisionXplain
 <img src="docs/res/logo_xplain.png" width="100" />
 
-<strong>Versatile model training environment</strong>  
-<strong>Used as ViT and CNN explainability experimentation tool</strong>  
+<strong>ViT and CNN explainability comparison</strong>  
 
 [![pytorch](https://img.shields.io/badge/PyTorch_2.0+-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/get-started/locally/)
 [![lightning](https://img.shields.io/badge/-Lightning_2.0+-792ee5?logo=pytorchlightning&logoColor=white)](https://pytorchlightning.ai/)
@@ -14,7 +13,7 @@
 </div>
 
 ## Project Description
-Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout).
+Neural network training environment (including various MLOps tools) designed to compare the explainability of CNNs (using Class Activation Maps) and ViTs (using attention rollout). Project is based on [DeepTrariner](https://github.com/lus105/DeepTrainer).
 
 <p align="center">
   <img src="docs/res/explainability.png" width="250"/>
@@ -44,10 +43,9 @@ python src/train.py trainer=gpu
 
 ## Docs
 
-1. [Model training environment](/docs/environment.md)
-2. [CNN explainability](/docs/cnn_explain.md)
-3. [ViT explainability](/docs/vit_explain.md)
-4. [Research paper](https://epubl.ktu.edu/object/elaba:198846619/)
+1. [CNN explainability](/docs/cnn_explain.md)
+2. [ViT explainability](/docs/vit_explain.md)
+3. [Research paper](https://epubl.ktu.edu/object/elaba:198846619/)
 
 ## Resources
 
