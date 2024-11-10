@@ -3,5 +3,5 @@ defaults:
   - _self_
 
 net:
-  backbone: efficientnet_v2_s
+  backbone: torchvision.models/efficientnet_v2_s
   return_node: "features.6.0.block.0"

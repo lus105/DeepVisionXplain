@@ -1,10 +1,10 @@
 from typing import Union
 import torch
 import torch.nn as nn
-import timm
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
+from nn_utils import create_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -60,7 +60,7 @@ class Vit(nn.Module):
             nn.Module: Constructed model (Vit).
         """
         try:
-            model = timm.create_model(
+            model = create_model(
                 self.model_name,
                 pretrained=self.pretrained,
                 num_classes=self.output_size,

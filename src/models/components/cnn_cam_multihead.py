@@ -2,9 +2,9 @@ from typing import Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision import models
 from torchvision.models.feature_extraction import create_feature_extractor
 
+from nn_utils import create_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -156,17 +156,7 @@ class CNNCAMMultihead(nn.Module):
         super().__init__()
         self.multi_head = multi_head
 
-        # Get the model constructor from torchvision.models
-        try:
-            model_constructor = getattr(models, backbone)
-        except AttributeError:
-            log.exception(f"Backbone '{backbone}' is not available in torchvision.models.")
-            raise ValueError(
-                f"Backbone '{backbone}' is not available in torchvision.models."
-            )
-        
-        # Load the model with specified weights
-        pretrained_model = model_constructor(weights=weights)
+        pretrained_model = create_model(backbone, weights=weights)
         
         self.feature_extractor = FeatureExtractor(
             pretrained_model, return_node=return_node

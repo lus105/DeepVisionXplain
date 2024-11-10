@@ -3,5 +3,5 @@ defaults:
   - _self_
 
 net:
-  backbone: mobilenet_v3_large
+  backbone: torchvision.models/mobilenet_v3_large
   return_node: "features.16"
