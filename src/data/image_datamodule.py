@@ -25,6 +25,7 @@ class ImageDataModule(LightningDataModule):
         train_transforms: Compose = None,
         val_test_transforms: Compose = None,
         save_predict_images: bool = False,
+        num_classes: int = 2,
     ) -> None:
         """Initialize a `DirDataModule`.
 
@@ -38,6 +39,7 @@ class ImageDataModule(LightningDataModule):
             train_transforms (Compose, optional): Train split transformations. Defaults to None.
             val_test_transforms (Compose, optional): Validation and test split transformations. Defaults to None.
             save_predict_images (bool, optional): Save images in predict mode? Defaults to False.
+            num_classes (int, optional): Number of classes in the dataset.
         """
         super().__init__()
 
@@ -57,7 +59,7 @@ class ImageDataModule(LightningDataModule):
         Returns:
             int: The number of classes (2).
         """
-        return 2
+        return self.hparams.num_classes
 
     def prepare_data(self) -> None:
         """Data preparation hook.

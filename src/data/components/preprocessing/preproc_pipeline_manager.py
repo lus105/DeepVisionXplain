@@ -14,7 +14,7 @@ class PreprocessingPipeline:
         
         Args:
             data (dict): Initial data dictionary.
-        
+            overwrite_data (bool): if true, pipeline overwrites already preprocessed data.
         Returns:
             dict: Final data dictionary after all processing steps.
         """

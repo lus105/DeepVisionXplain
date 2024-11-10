@@ -35,3 +35,4 @@ val_test_transforms:
     - _target_: torchvision.transforms.ToTensor
 
 save_predict_images: false
+num_classes: 2
