@@ -16,4 +16,4 @@ data:
   data_dir: ${oc.env:pcb_data_path}
   save_predict_images: true
 
-task_name: "segmentation"
+predict: True

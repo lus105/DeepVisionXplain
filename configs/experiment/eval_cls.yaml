@@ -14,5 +14,3 @@ model:
 
 data:
   data_dir: ${oc.env:pcb_data_path}
-
-task_name: "classification"
