@@ -32,7 +32,11 @@ class SplitStep(PreprocessingStep):
         data_path = Path(data['initial_data'])
         dataset_type = self._determine_dataset_type(data_path)
         data_frame = self._to_dataframe(data_path, dataset_type)
-        split = self._split_dataset(data_frame)
+        data_frame_splitted = self._split_dataset(data_frame)
+        base_path = data_path.parent
+        last_subdir = data_path.name
+        output_path = base_path / f"{last_subdir}_processed"
+        self._save_split(data_frame_splitted, output_path)
 
     def _determine_dataset_type(self, data_path: Path) -> DatasetType:
         def count_class_folders(path: Path) -> int:
@@ -142,7 +146,7 @@ class SplitStep(PreprocessingStep):
         df = pd.DataFrame(data)
         return df
 
-    def _split_dataset(self, df: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def _split_dataset(self, df: pd.DataFrame)-> pd.DataFrame:
         train_size, test_size, val_size = self.split_ratio
 
         # Ensure the DataFrame has a 'class' column for stratification
@@ -163,14 +167,52 @@ class SplitStep(PreprocessingStep):
         if train_count < num_classes:
             raise ValueError("Not enough samples to create stratified splits with the current split ratios and number of classes.")
 
-        # Perform the train/test split
+        # Perform the train split and assign 'train' to the 'split' column
         train_df, remaining_df = train_test_split(
             df, train_size=train_count, random_state=self.seed, stratify=df['class']
         )
+        train_df = train_df.copy()
+        split_cn = 'split'
+        train_df[split_cn] = self._train_subdir
 
         # Perform the test/validation split on the remaining data
         test_df, val_df = train_test_split(
             remaining_df, train_size=test_count, random_state=self.seed, stratify=remaining_df['class']
         )
+        test_df = test_df.copy()
+        test_df[split_cn] = self._test_subdir
+        val_df = val_df.copy()
+        val_df[split_cn] = self._val_subdir
 
-        return train_df, test_df, val_df
+        # Combine all splits into a single DataFrame
+        final_df = pd.concat([train_df, test_df, val_df], ignore_index=True)
+        
+        return final_df
+    
+    def _save_split(self, dataframe: pd.DataFrame, output_path: Path) -> None:
+        """Saves images and labels to separate directories based on the split and class.
+
+        Args:
+            dataframe (pd.DataFrame): DataFrame with columns `image_path`, `label_path`, `class`, and `split`.
+            output_dir (Path): The root directory where split folders (train, test, val) will be created.
+        """
+        for _, row in dataframe.iterrows():
+            split = row['split']
+            class_name = row['class']
+
+            # Define directories for images and labels within the split directory
+            image_dir = output_path / split / self._image_subdir / class_name
+            label_dir = output_path / split / self._label_subdir / class_name
+
+            # Create directories if they don't exist
+            image_dir.mkdir(parents=True, exist_ok=True)
+            label_dir.mkdir(parents=True, exist_ok=True)
+
+            # Copy the image file to the appropriate image directory
+            image_dest = image_dir / Path(row['image_path']).name
+            copy2(row['image_path'], image_dest)
+
+            # Copy the label file to the appropriate label directory, if it exists
+            if pd.notna(row['label_path']):  # Check if the label path is not NaN
+                label_dest = label_dir / Path(row['label_path']).name
+                copy2(row['label_path'], label_dest)
