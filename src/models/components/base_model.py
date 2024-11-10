@@ -6,7 +6,7 @@ from torch import nn
 import torchvision.models as models
 import segmentation_models_pytorch as seg_models
 
-class BaseModule(nn.Module):
+class BaseModel(nn.Module):
     def __init__(
         self,
         model_name: str,
