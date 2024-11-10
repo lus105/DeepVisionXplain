@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from .nn_utils import create_model
+from .base_model import BaseModel
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -130,7 +130,7 @@ class ClassActivationMapGenerator(nn.Module):
         return cam
 
 
-class CNNCAMMultihead(nn.Module):
+class CNNCAMMultihead(BaseModel):
     """Extends the CNN model to produce binary classification and optionally generate
     Class Activation Maps (CAM)."""
 
@@ -153,13 +153,11 @@ class CNNCAMMultihead(nn.Module):
         Raises:
             ValueError: If no valid backbone is found
         """
-        super().__init__()
+        super().__init__(backbone)
         self.multi_head = multi_head
-
-        pretrained_model = create_model(backbone, weights=weights)
         
         self.feature_extractor = FeatureExtractor(
-            pretrained_model, return_node=return_node
+            self.model, return_node=return_node
         )
         self.output_layer = BinaryClassificationHead(
             last_layer_features=self.feature_extractor.n_features

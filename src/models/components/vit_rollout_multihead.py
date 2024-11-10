@@ -4,12 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from .nn_utils import create_model
+from .base_model import BaseModel
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
-class Vit(nn.Module):
+class Vit(BaseModel):
     def __init__(
         self,
         model_name: str,
@@ -29,14 +29,18 @@ class Vit(nn.Module):
             head_name (str, optional): Classification head name. Defaults to "head".
             img_size (int, optional): Input image size. Defaults to 224.
         """
-        super().__init__()
+        super().__init__(
+            self.model_name,
+            pretrained=self.pretrained,
+            num_classes=self.output_size,
+            img_size=self.img_size
+        )
         self.model_name = model_name
         self.pretrained = pretrained
         self.output_size = output_size
         self.return_nodes = return_nodes
         self.head_name = head_name
         self.img_size = img_size
-        self.model = self.__create_model()
         self.feature_extractor = self.__create_feature_extractor()
 
     def forward(self, input: torch.Tensor) -> tuple[list[torch.Tensor], torch.Tensor]:
@@ -52,25 +56,6 @@ class Vit(nn.Module):
         attn_tensors = [v for k, v in out.items() if self.return_nodes in k]
         classification_out = out[self.head_name]
         return attn_tensors, classification_out
-
-    def __create_model(self) -> nn.Module:
-        """Creates model from timm library.
-
-        Returns:
-            nn.Module: Constructed model (Vit).
-        """
-        try:
-            model = create_model(
-                self.model_name,
-                pretrained=self.pretrained,
-                num_classes=self.output_size,
-                img_size=self.img_size,
-            )
-            log.info(f"Model '{self.model_name}' created successfully.")
-            return model
-        except Exception as e:
-            log.exception(f"Error creating model '{self.model_name}': {e}")
-            raise
 
     def __create_feature_extractor(self) -> nn.Module:
         """Creates feature extractor.
