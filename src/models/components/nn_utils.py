@@ -8,7 +8,6 @@ import timm
 import segmentation_models_pytorch as smp
 import torchvision.models as models
 
-
 def weight_load(
     ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt"
 ) -> dict:
@@ -34,7 +33,6 @@ def weight_load(
     }
 
     return model_weights
-
 
 def create_model(
         model_name: str,
