@@ -1,12 +1,9 @@
-from typing import Tuple, List, Union
+from typing import Union
 import torch
-import rootutils
 import torch.nn as nn
 import timm
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
-
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 from src.utils import RankedLogger
 
@@ -42,7 +39,7 @@ class Vit(nn.Module):
         self.model = self.__create_model()
         self.feature_extractor = self.__create_feature_extractor()
 
-    def forward(self, input: torch.Tensor) -> Tuple[List[torch.Tensor], torch.Tensor]:
+    def forward(self, input: torch.Tensor) -> tuple[list[torch.Tensor], torch.Tensor]:
         """Perform a forward pass through the network.
 
         Args:
@@ -124,7 +121,7 @@ class AttentionRollout:
         self.head_fusion = head_fusion
 
     def __call__(
-        self, input_size: Tuple, attentions: List[torch.Tensor]
+        self, input_size: tuple, attentions: list[torch.Tensor]
     ) -> torch.Tensor:
         """Perform Attention Rollout and generate explainability map.
 
@@ -237,7 +234,7 @@ class VitRolloutMultihead(nn.Module):
         )
         self.multi_head = multi_head
 
-    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
 
         Args:
@@ -256,17 +253,3 @@ class VitRolloutMultihead(nn.Module):
         else:
             return output
 
-def test_model() -> None:
-    """Tests forward pass and prints out shapes
-    """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = VitRolloutMultihead(model_name = "vit_tiny_patch16_224.augreg_in21k_ft_in1k", multi_head=True).to(device)
-    model.eval()
-    dummy_input = torch.randn(10, 3, 224, 224).to(device)
-    with torch.no_grad():
-        out, map = model(dummy_input)
-    print("Output shape: ", out.shape)
-    print("Explainability output shape: ", map.shape)
-
-if __name__ == "__main__":
-    test_model()
