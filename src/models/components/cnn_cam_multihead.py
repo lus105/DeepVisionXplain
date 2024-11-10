@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from nn_utils import create_model
+from .nn_utils import create_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
