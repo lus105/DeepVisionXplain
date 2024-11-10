@@ -1,10 +1,12 @@
 from pathlib import Path
-import random
+import pandas as pd
+from sklearn.model_selection import train_test_split
 from shutil import copy2
-from os import path
 from .preproc_strategy import PreprocessingStep
-from ..utils import (list_files,
+from ..utils import (DatasetType,
+                     list_files,
                      list_dirs,
+                     find_annotation_file,
                      IMAGE_EXTENSIONS,
                      XML_EXTENSION,
                      JSON_EXTENSION)
@@ -13,88 +15,162 @@ from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
+
 class SplitStep(PreprocessingStep):
     def __init__(
         self,
         split_ratio: tuple,
-        random_state: int = 42,
+        seed: int,
     ):
         super().__init__()
         self.split_ratio = split_ratio
-        random.seed(random_state)
+        self.seed = seed
 
     def process(self, data: dict, overwrite_data: bool) -> dict:
         if not round(sum(self.split_ratio), 5) == 1:
             raise ValueError("The sums of `ratio` is over 1.")
         data_path = Path(data['initial_data'])
+        dataset_type = self._determine_dataset_type(data_path)
+        data_frame = self._to_dataframe(data_path, dataset_type)
+        split = self._split_dataset(data_frame)
 
-        self._check_input_format(data_path)
+    def _determine_dataset_type(self, data_path: Path) -> DatasetType:
+        def count_class_folders(path: Path) -> int:
+            return sum(1 for item in path.iterdir() if item.is_dir())
 
-        for class_dir in list_dirs(data_path):
-            self.split_class_dir_ratio(class_dir)
+        # Check for `/images` and `/labels` folder structure
+        if (data_path / self._image_subdir).exists() and (data_path / self._label_subdir).exists():
+            image_folder_count = count_class_folders(data_path / self._image_subdir)
+            
+            if image_folder_count >= 3:
+                return DatasetType.ImageLabelMultiClass
+            elif image_folder_count == 2:
+                return DatasetType.ImageLabelBinary
+            else:
+                raise ValueError("Unknown dataset structure in image/label subdirectories")
 
-    def _check_input_format(self, input: Path):
-        p_input = Path(input)
-        if not p_input.exists():
-            err_msg = f'The provided input folder "{input}" does not exists.'
-            if not p_input.is_absolute():
-                err_msg += f' Your relative path cannot be found from the current working directory "{Path.cwd()}".'
-            log.error(err_msg)
-            raise ValueError(err_msg)
-
-        if not p_input.is_dir():
-            err_msg = f'The provided input folder "{input}" is not a directory'
-            log.error(err_msg)
-            raise ValueError(err_msg)
-
-        dirs = list_dirs(input)
-        if len(dirs) == 0:
-            err_msg = f'The input data is not in a right format.'
-            log.error(err_msg)
-            raise ValueError(err_msg)
+        # Check for class folders directly at the root level
+        root_folder_count = count_class_folders(data_path)
         
-    def _split_class_dir_ratio(self, class_dir):
-        files = self._setup_files(class_dir)
-        split_train_idx = int(self.split_ratio[0] * len(files))
-        split_val_idx = split_train_idx + int(self.split_ratio[1] * len(files))
+        if root_folder_count >= 3:
+            return DatasetType.ImageMultiClass
+        elif root_folder_count == 2:
+            return DatasetType.ImageBinary
 
-        li = self._split_files(files, split_train_idx, split_val_idx, len(self.split_ratio) == 3)
-        self._copy_files(li, class_dir)
-
-    def _setup_files(self, class_dir):
-        files = list_files(class_dir, IMAGE_EXTENSIONS)
-        files.sort()
-        random.shuffle(files)
-        return files
+        # Raise error if no known structure is found
+        raise ValueError("Unknown dataset structure")
     
-    def _split_files(self, files, split_train_idx, split_val_idx, use_test, max_test=None):
-        files_train = files[:split_train_idx]
-        files_val = (
-            files[split_train_idx:split_val_idx] if use_test else files[split_train_idx:]
+    def _to_dataframe(self, data_path: Path, dataset_type: DatasetType) -> pd.DataFrame:
+        data = []
+
+        if dataset_type == DatasetType.ImageLabelBinary:
+            # Flat structure with /images and /labels
+            image_dir = data_path / self._image_subdir
+            label_dir = data_path / self._label_subdir
+            image_files = list_files(image_dir, IMAGE_EXTENSIONS)
+            
+            for image_path in image_files:
+                label_path = find_annotation_file(
+                    label_dir,
+                    image_path.stem,
+                    IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION]
+                )
+                if label_path:
+                    data.append({
+                        "image_path": image_path,
+                        "label_path": label_path,
+                        "class": "binary"
+                    })
+
+        elif dataset_type == DatasetType.ImageLabelMultiClass:
+            # /images and /labels have class subdirectories
+            image_dir = data_path / self._image_subdir
+            label_dir = data_path / self._label_subdir
+            class_dirs = list_dirs(image_dir)
+            
+            for class_dir in class_dirs:
+                class_name = class_dir.name
+                image_files = list_files(class_dir, IMAGE_EXTENSIONS)
+                
+                for image_path in image_files:
+                    label_path = find_annotation_file(
+                        label_dir / class_name,
+                        image_path.stem,
+                        IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION]
+                    )
+                    if label_path:
+                        data.append({
+                            "image_path": image_path,
+                            "label_path": label_path,
+                            "class": class_name
+                        })
+
+        elif dataset_type == DatasetType.ImageBinary:
+            # Two class folders directly at root level
+            class_dirs = list_dirs(data_path)
+            
+            for class_dir in class_dirs:
+                class_name = class_dir.name
+                image_files = list_files(class_dir, IMAGE_EXTENSIONS)
+                
+                for image_path in image_files:
+                    data.append({
+                        "image_path": image_path,
+                        "label_path": None,
+                        "class": class_name
+                    })
+
+        elif dataset_type == DatasetType.ImageMultiClass:
+            # Multiple class folders directly at root level
+            class_dirs = list_dirs(data_path)
+            
+            for class_dir in class_dirs:
+                class_name = class_dir.name
+                image_files = list_files(class_dir, IMAGE_EXTENSIONS)
+                
+                for image_path in image_files:
+                    data.append({
+                        "image_path": image_path,
+                        "label_path": None,
+                        "class": class_name
+                    })
+
+        else:
+            raise ValueError("Unsupported dataset type")
+
+        # Convert to DataFrame
+        df = pd.DataFrame(data)
+        return df
+
+    def _split_dataset(self, df: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        train_size, test_size, val_size = self.split_ratio
+
+        # Ensure the DataFrame has a 'class' column for stratification
+        if 'class' not in df.columns:
+            raise ValueError("DataFrame must contain a 'class' column for stratified splitting.")
+
+        # Check the minimum required test and validation sizes based on the number of classes
+        num_classes = df['class'].nunique()
+        total_samples = len(df)
+
+        # Ensure that test and validation splits are each at least the number of unique classes
+        min_samples_per_split = num_classes
+        test_count = max(int(total_samples * test_size), min_samples_per_split)
+        val_count = max(int(total_samples * val_size), min_samples_per_split)
+        train_count = total_samples - test_count - val_count
+
+        # If train count is too small, adjust the splits proportionally
+        if train_count < num_classes:
+            raise ValueError("Not enough samples to create stratified splits with the current split ratios and number of classes.")
+
+        # Perform the train/test split
+        train_df, remaining_df = train_test_split(
+            df, train_size=train_count, random_state=self.seed, stratify=df['class']
         )
 
-        li = [(files_train, "train"), (files_val, "val")]
+        # Perform the test/validation split on the remaining data
+        test_df, val_df = train_test_split(
+            remaining_df, train_size=test_count, random_state=self.seed, stratify=remaining_df['class']
+        )
 
-        # optional test folder
-        if use_test:
-            files_test = files[split_val_idx:]
-            if max_test is not None:
-                files_test = files_test[:max_test]
-
-            li.append((files_test, "test"))
-        return li
-    
-    def _copy_files(self, files_type, class_dir, output='data'):
-
-        # get the last part within the file
-        class_name = path.split(class_dir)[1]
-        for (files, folder_type) in files_type:
-            full_path = path.join(output, folder_type, class_name)
-
-            Path(full_path).mkdir(parents=True, exist_ok=True)
-            for f in files:
-                if type(f) is tuple:
-                    for x in f:
-                        copy2(str(x), str(full_path))
-                else:
-                    copy2(str(f), str(full_path))
+        return train_df, test_df, val_df
