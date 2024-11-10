@@ -5,6 +5,7 @@ lightning
 torchmetrics
 torch-summary
 torchinfo
+segmentation-models-pytorch
 
 # --------- hydra --------- #
 hydra-core

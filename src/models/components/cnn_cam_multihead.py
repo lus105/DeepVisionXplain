@@ -1,13 +1,10 @@
-from typing import Tuple, Union
-import rootutils
+from typing import Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision import models
 from torchvision.models.feature_extraction import create_feature_extractor
 
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
-
+from .nn_utils import create_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -53,7 +50,7 @@ class FeatureExtractor(nn.Module):
         features = self.model(input)
         return features[self.out_name]
 
-    def _calculate_n_features(self, input_shape: Tuple=(1, 3, 224, 224)) -> int:
+    def _calculate_n_features(self, input_shape: tuple=(1, 3, 224, 224)) -> int:
         """Calculates the number of channel features in out layer.
 
         Args:
@@ -111,7 +108,7 @@ class ClassActivationMapGenerator(nn.Module):
         super().__init__()
         self.fc = fc
 
-    def forward(self, input_size: Tuple, features: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_size: tuple, features: torch.Tensor) -> torch.Tensor:
         """Compute the Class Activation Maps using features and weights from the fc layer.
 
         Args:
@@ -159,17 +156,7 @@ class CNNCAMMultihead(nn.Module):
         super().__init__()
         self.multi_head = multi_head
 
-        # Get the model constructor from torchvision.models
-        try:
-            model_constructor = getattr(models, backbone)
-        except AttributeError:
-            log.exception(f"Backbone '{backbone}' is not available in torchvision.models.")
-            raise ValueError(
-                f"Backbone '{backbone}' is not available in torchvision.models."
-            )
-        
-        # Load the model with specified weights
-        pretrained_model = model_constructor(weights=weights)
+        pretrained_model = create_model(backbone, weights=weights)
         
         self.feature_extractor = FeatureExtractor(
             pretrained_model, return_node=return_node
@@ -179,7 +166,7 @@ class CNNCAMMultihead(nn.Module):
         )
         self.cam_generator = ClassActivationMapGenerator(self.output_layer.fc)
 
-    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
 
         Args:
@@ -198,18 +185,3 @@ class CNNCAMMultihead(nn.Module):
             return output, cam
         else:
             return output
-
-def test_model() -> None:
-    """Tests forward pass and prints out shapes
-    """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = CNNCAMMultihead(backbone = "mobilenet_v3_large", multi_head=True).to(device)
-    model.eval()
-    dummy_input = torch.randn(10, 3, 224, 224).to(device)
-    with torch.no_grad():
-        out, cam = model(dummy_input)
-    print("Output shape: ", out.shape)
-    print("Explainability output shape: ", cam.shape)   
-
-if __name__ == "__main__":
-    test_model()
