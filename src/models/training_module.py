@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import torch
 from lightning import LightningModule
@@ -85,8 +85,8 @@ class TrainingLitModule(LightningModule):
         self.val_acc_best.reset()
 
     def model_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        self, batch: tuple[torch.Tensor, torch.Tensor]
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Perform a single model step on a batch of data.
 
         Args:
@@ -107,7 +107,7 @@ class TrainingLitModule(LightningModule):
         return loss, preds, y
 
     def training_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> torch.Tensor:
         """Perform a single training step on a batch of data from the training set.
 
@@ -135,7 +135,7 @@ class TrainingLitModule(LightningModule):
         return loss
 
     def validation_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
         """Perform a single validation step on a batch of data from the validation set.
 
@@ -164,7 +164,7 @@ class TrainingLitModule(LightningModule):
         )
 
     def test_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
         """Perform a single test step on a batch of data from the test set.
 
@@ -192,7 +192,7 @@ class TrainingLitModule(LightningModule):
         )
 
     def predict_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> None:
         """Perform a single predict step on a batch of data from the test set.
 
@@ -245,7 +245,7 @@ class TrainingLitModule(LightningModule):
             model_weights = weight_load(self.hparams.ckpt_path)
             self.net.load_state_dict(model_weights)
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         Normally you'd need one. But in the case of GANs or similar you might have multiple.
 
