@@ -36,7 +36,8 @@ class SplitStep(PreprocessingStep):
         base_path = data_path.parent
         last_subdir = data_path.name
         output_path = base_path / f"{last_subdir}_processed"
-        self._save_split(data_frame_splitted, output_path)
+        self._save_split(data_frame_splitted, output_path, dataset_type)
+        print('done')
 
     def _determine_dataset_type(self, data_path: Path) -> DatasetType:
         def count_class_folders(path: Path) -> int:
@@ -46,9 +47,9 @@ class SplitStep(PreprocessingStep):
         if (data_path / self._image_subdir).exists() and (data_path / self._label_subdir).exists():
             image_folder_count = count_class_folders(data_path / self._image_subdir)
             
-            if image_folder_count >= 3:
+            if image_folder_count >= 2:
                 return DatasetType.ImageLabelMultiClass
-            elif image_folder_count == 2:
+            elif image_folder_count == 0:
                 return DatasetType.ImageLabelBinary
             else:
                 raise ValueError("Unknown dataset structure in image/label subdirectories")
@@ -189,7 +190,12 @@ class SplitStep(PreprocessingStep):
         
         return final_df
     
-    def _save_split(self, dataframe: pd.DataFrame, output_path: Path) -> None:
+    def _save_split(
+            self,
+            dataframe: pd.DataFrame,
+            output_path: Path,
+            dataset_type: DatasetType
+        ) -> None:
         """Saves images and labels to separate directories based on the split and class.
 
         Args:
@@ -200,19 +206,29 @@ class SplitStep(PreprocessingStep):
             split = row['split']
             class_name = row['class']
 
-            # Define directories for images and labels within the split directory
-            image_dir = output_path / split / self._image_subdir / class_name
-            label_dir = output_path / split / self._label_subdir / class_name
+            label_dir = None
+            if dataset_type == DatasetType.ImageBinary:
+                image_dir = output_path / split / class_name
+            elif dataset_type == DatasetType.ImageLabelBinary:
+                image_dir = output_path / split / self._image_subdir
+                label_dir = output_path / split / self._label_subdir
+            elif dataset_type == DatasetType.ImageMultiClass:
+                image_dir = output_path / split / class_name
+            elif dataset_type == DatasetType.ImageLabelMultiClass:
+                image_dir = output_path / split / self._image_subdir / class_name
+                label_dir = output_path / split / self._label_subdir / class_name
 
-            # Create directories if they don't exist
             image_dir.mkdir(parents=True, exist_ok=True)
-            label_dir.mkdir(parents=True, exist_ok=True)
+            if label_dir:
+                label_dir.mkdir(parents=True, exist_ok=True)
 
             # Copy the image file to the appropriate image directory
-            image_dest = image_dir / Path(row['image_path']).name
-            copy2(row['image_path'], image_dest)
+            image_path_rn = 'image_path'
+            image_dest = image_dir / Path(row[image_path_rn]).name
+            copy2(row[image_path_rn], image_dest)
 
             # Copy the label file to the appropriate label directory, if it exists
-            if pd.notna(row['label_path']):  # Check if the label path is not NaN
-                label_dest = label_dir / Path(row['label_path']).name
-                copy2(row['label_path'], label_dest)
+            label_path_rn = 'label_path'
+            if pd.notna(row[label_path_rn]):  # Check if the label path is not NaN
+                label_dest = label_dir / Path(row[label_path_rn]).name
+                copy2(row[label_path_rn], label_dest)
