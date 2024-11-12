@@ -30,10 +30,10 @@ class Vit(BaseModel):
             img_size (int, optional): Input image size. Defaults to 224.
         """
         super().__init__(
-            self.model_name,
-            pretrained=self.pretrained,
-            num_classes=self.output_size,
-            img_size=self.img_size
+            model_name,
+            pretrained=pretrained,
+            num_classes=output_size,
+            img_size=img_size
         )
         self.model_name = model_name
         self.pretrained = pretrained
