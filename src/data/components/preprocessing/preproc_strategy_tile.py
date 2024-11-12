@@ -206,10 +206,10 @@ class TilingStep(PreprocessingStep):
                 tile.save_tile(tile_image_subdir / category)
                 tile.save_label_tile(tile_label_subdir / category)
 
-    def process(self, data: dict, overwrite_data: bool) -> dict:
+    def process(self, data: dict, overwrite: bool) -> dict:
         new_data = {}
         for split, path in data.items():
             log.info(f"Tiling data in {path} ...")
-            tiled_dir = self._split_images(path, overwrite_data)
+            tiled_dir = self._split_images(path, overwrite)
             new_data[split] = tiled_dir
         return new_data

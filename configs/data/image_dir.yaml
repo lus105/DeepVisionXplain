@@ -15,7 +15,7 @@ preprocessing_pipeline:
       iterate_over_defective_areas: true
       tiles_subdir: "tiles"
 
-overwrite_data: true
+overwrite: true
 batch_size: 64
 num_workers: 3
 pin_memory: false

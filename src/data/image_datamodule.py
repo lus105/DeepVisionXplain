@@ -18,7 +18,7 @@ class ImageDataModule(LightningDataModule):
         self,
         data_dir: str = 'data/',
         preprocessing_pipeline: PreprocessingPipeline = None,
-        overwrite_data: bool = False,
+        overwrite: bool = False,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -66,7 +66,7 @@ class ImageDataModule(LightningDataModule):
         """
         log.info(f"Preparing data in {self.hparams.data_dir}...")
         initial_data = {'initial_data': self.hparams.data_dir}
-        self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data, self.hparams.overwrite_data)
+        self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data, self.hparams.overwrite)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.

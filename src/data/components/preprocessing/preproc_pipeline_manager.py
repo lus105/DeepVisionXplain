@@ -8,7 +8,7 @@ class PreprocessingPipeline:
         """
         self.steps = steps
 
-    def run(self, data: dict, overwrite_data: bool) -> dict:
+    def run(self, data: dict, overwrite: bool) -> dict:
         """
         Execute all preprocessing steps in sequence.
         
@@ -19,5 +19,5 @@ class PreprocessingPipeline:
             dict: Final data dictionary after all processing steps.
         """
         for step in self.steps:
-            data = step.process(data, overwrite_data)
+            data = step.process(data, overwrite)
         return data

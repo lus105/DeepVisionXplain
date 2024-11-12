@@ -7,6 +7,7 @@ from ..utils import (DatasetType,
                      list_files,
                      list_dirs,
                      find_annotation_file,
+                     clear_directory,
                      IMAGE_EXTENSIONS,
                      XML_EXTENSION,
                      JSON_EXTENSION)
@@ -26,16 +27,24 @@ class SplitStep(PreprocessingStep):
         self.split_ratio = split_ratio
         self.seed = seed
 
-    def process(self, data: dict, overwrite_data: bool) -> dict:
+    def process(self, data: dict, overwrite: bool) -> dict:
         if not round(sum(self.split_ratio), 5) == 1:
             raise ValueError("The sums of `ratio` is over 1.")
         data_path = Path(data['initial_data'])
-        dataset_type = self._determine_dataset_type(data_path)
-        data_frame = self._to_dataframe(data_path, dataset_type)
-        data_frame_splitted = self._split_dataset(data_frame)
         base_path = data_path.parent
         last_subdir = data_path.name
         output_path = base_path / f"{last_subdir}_processed"
+
+        if (output_path.exists() and overwrite):
+            clear_directory(output_path)
+            output_path.rmdir()
+        elif (output_path.exists() and not overwrite):
+            log.info('Data is already splitted. In order to overwrite, set data.overwrite=True')
+            return
+        
+        dataset_type = self._determine_dataset_type(data_path)
+        data_frame = self._to_dataframe(data_path, dataset_type)
+        data_frame_splitted = self._split_dataset(data_frame)
         self._save_split(data_frame_splitted, output_path, dataset_type)
         print('done')
 
