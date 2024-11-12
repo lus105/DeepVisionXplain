@@ -1,14 +1,18 @@
+from .preproc_strategy import PreprocessingStep
+
 class PreprocessingPipeline:
-    def __init__(self, steps: list):
+    def __init__(self, steps: list[PreprocessingStep], overwrite: bool):
         """
         Initialize the pipeline with a list of preprocessing steps.
         
         Args:
-            steps (list): List of PreprocessingStep instances.
+            steps (list[PreprocessingStep]): List of PreprocessingStep instances.
+            overwrite (bool): If true and data already preprocessed, overwrites it.
         """
         self.steps = steps
+        self.overwrite = overwrite
 
-    def run(self, data: dict, overwrite: bool) -> dict:
+    def run(self, data: dict) -> dict:
         """
         Execute all preprocessing steps in sequence.
         
@@ -19,5 +23,5 @@ class PreprocessingPipeline:
             dict: Final data dictionary after all processing steps.
         """
         for step in self.steps:
-            data = step.process(data, overwrite)
+            data = step.process(data, self.overwrite)
         return data

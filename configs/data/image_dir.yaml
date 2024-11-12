@@ -14,8 +14,8 @@ preprocessing_pipeline:
       contour_iter_step_size: 10
       iterate_over_defective_areas: true
       tiles_subdir: "tiles"
+  overwrite: true
 
-overwrite: true
 batch_size: 64
 num_workers: 3
 pin_memory: false

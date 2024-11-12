@@ -29,11 +29,11 @@ class SplitStep(PreprocessingStep):
 
     def process(self, data: dict, overwrite: bool) -> dict:
         if not round(sum(self.split_ratio), 5) == 1:
-            raise ValueError("The sums of `ratio` is over 1.")
+            raise ValueError('The sums of `ratio` is over 1.')
         data_path = Path(data['initial_data'])
         base_path = data_path.parent
         last_subdir = data_path.name
-        output_path = base_path / f"{last_subdir}_processed"
+        output_path = base_path / f'{last_subdir}_processed'
 
         if (output_path.exists() and overwrite):
             clear_directory(output_path)
@@ -52,7 +52,6 @@ class SplitStep(PreprocessingStep):
         def count_class_folders(path: Path) -> int:
             return sum(1 for item in path.iterdir() if item.is_dir())
 
-        # Check for `/images` and `/labels` folder structure
         if (data_path / self._image_subdir).exists() and (data_path / self._label_subdir).exists():
             image_folder_count = count_class_folders(data_path / self._image_subdir)
             
@@ -61,9 +60,8 @@ class SplitStep(PreprocessingStep):
             elif image_folder_count == 0:
                 return DatasetType.ImageLabelBinary
             else:
-                raise ValueError("Unknown dataset structure in image/label subdirectories")
+                raise ValueError('Unknown dataset structure in image/label subdirectories')
 
-        # Check for class folders directly at the root level
         root_folder_count = count_class_folders(data_path)
         
         if root_folder_count >= 3:
@@ -71,14 +69,12 @@ class SplitStep(PreprocessingStep):
         elif root_folder_count == 2:
             return DatasetType.ImageBinary
 
-        # Raise error if no known structure is found
-        raise ValueError("Unknown dataset structure")
+        raise ValueError('Unknown dataset structure')
     
     def _to_dataframe(self, data_path: Path, dataset_type: DatasetType) -> pd.DataFrame:
         data = []
 
         if dataset_type == DatasetType.ImageLabelBinary:
-            # Flat structure with /images and /labels
             image_dir = data_path / self._image_subdir
             label_dir = data_path / self._label_subdir
             image_files = list_files(image_dir, IMAGE_EXTENSIONS)
@@ -91,13 +87,12 @@ class SplitStep(PreprocessingStep):
                 )
                 if label_path:
                     data.append({
-                        "image_path": image_path,
-                        "label_path": label_path,
-                        "class": "binary"
+                        'image_path': image_path,
+                        'label_path': label_path,
+                        'class': "binary"
                     })
 
         elif dataset_type == DatasetType.ImageLabelMultiClass:
-            # /images and /labels have class subdirectories
             image_dir = data_path / self._image_subdir
             label_dir = data_path / self._label_subdir
             class_dirs = list_dirs(image_dir)
@@ -114,13 +109,12 @@ class SplitStep(PreprocessingStep):
                     )
                     if label_path:
                         data.append({
-                            "image_path": image_path,
-                            "label_path": label_path,
-                            "class": class_name
+                            'image_path': image_path,
+                            'label_path': label_path,
+                            'class': class_name
                         })
 
         elif dataset_type == DatasetType.ImageBinary:
-            # Two class folders directly at root level
             class_dirs = list_dirs(data_path)
             
             for class_dir in class_dirs:
@@ -129,13 +123,12 @@ class SplitStep(PreprocessingStep):
                 
                 for image_path in image_files:
                     data.append({
-                        "image_path": image_path,
-                        "label_path": None,
-                        "class": class_name
+                        'image_path': image_path,
+                        'label_path': None,
+                        'class': class_name
                     })
 
         elif dataset_type == DatasetType.ImageMultiClass:
-            # Multiple class folders directly at root level
             class_dirs = list_dirs(data_path)
             
             for class_dir in class_dirs:
@@ -144,40 +137,34 @@ class SplitStep(PreprocessingStep):
                 
                 for image_path in image_files:
                     data.append({
-                        "image_path": image_path,
-                        "label_path": None,
-                        "class": class_name
+                        'image_path': image_path,
+                        'label_path': None,
+                        'class': class_name
                     })
 
         else:
-            raise ValueError("Unsupported dataset type")
+            raise ValueError('Unsupported dataset type')
 
-        # Convert to DataFrame
         df = pd.DataFrame(data)
         return df
 
     def _split_dataset(self, df: pd.DataFrame)-> pd.DataFrame:
         train_size, test_size, val_size = self.split_ratio
 
-        # Ensure the DataFrame has a 'class' column for stratification
         if 'class' not in df.columns:
-            raise ValueError("DataFrame must contain a 'class' column for stratified splitting.")
+            raise ValueError('DataFrame must contain a \'class\' column for stratified splitting.')
 
-        # Check the minimum required test and validation sizes based on the number of classes
         num_classes = df['class'].nunique()
         total_samples = len(df)
 
-        # Ensure that test and validation splits are each at least the number of unique classes
         min_samples_per_split = num_classes
         test_count = max(int(total_samples * test_size), min_samples_per_split)
         val_count = max(int(total_samples * val_size), min_samples_per_split)
         train_count = total_samples - test_count - val_count
 
-        # If train count is too small, adjust the splits proportionally
         if train_count < num_classes:
-            raise ValueError("Not enough samples to create stratified splits with the current split ratios and number of classes.")
+            raise ValueError('Not enough samples to create stratified splits with the current split ratios and number of classes.')
 
-        # Perform the train split and assign 'train' to the 'split' column
         train_df, remaining_df = train_test_split(
             df, train_size=train_count, random_state=self.seed, stratify=df['class']
         )
@@ -185,7 +172,6 @@ class SplitStep(PreprocessingStep):
         split_cn = 'split'
         train_df[split_cn] = self._train_subdir
 
-        # Perform the test/validation split on the remaining data
         test_df, val_df = train_test_split(
             remaining_df, train_size=test_count, random_state=self.seed, stratify=remaining_df['class']
         )
@@ -194,7 +180,6 @@ class SplitStep(PreprocessingStep):
         val_df = val_df.copy()
         val_df[split_cn] = self._val_subdir
 
-        # Combine all splits into a single DataFrame
         final_df = pd.concat([train_df, test_df, val_df], ignore_index=True)
         
         return final_df
@@ -231,12 +216,10 @@ class SplitStep(PreprocessingStep):
             if label_dir:
                 label_dir.mkdir(parents=True, exist_ok=True)
 
-            # Copy the image file to the appropriate image directory
             image_path_rn = 'image_path'
             image_dest = image_dir / Path(row[image_path_rn]).name
             copy2(row[image_path_rn], image_dest)
 
-            # Copy the label file to the appropriate label directory, if it exists
             label_path_rn = 'label_path'
             if pd.notna(row[label_path_rn]):  # Check if the label path is not NaN
                 label_dest = label_dir / Path(row[label_path_rn]).name
