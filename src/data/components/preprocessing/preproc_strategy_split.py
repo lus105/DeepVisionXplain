@@ -21,11 +21,13 @@ class SplitStep(PreprocessingStep):
     def __init__(
         self,
         split_ratio: tuple,
-        seed: int,
+        seed: int = 42,
+        merge_classes: bool = False
     ):
         super().__init__()
         self.split_ratio = split_ratio
         self.seed = seed
+        self.merge_classes = merge_classes
 
     def process(self, data: dict, overwrite: bool) -> dict:
         if not round(sum(self.split_ratio), 5) == 1:
