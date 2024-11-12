@@ -24,7 +24,7 @@ class PreprocessingStep(ABC):
         self._label_subdir = label_subdir
 
     @abstractmethod
-    def process(self, data: dict, overwrite_data: bool) -> dict:
+    def process(self, data: dict, overwrite: bool) -> dict:
         """
         Process the data and return the modified data directories.
         

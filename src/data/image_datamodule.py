@@ -18,26 +18,26 @@ class ImageDataModule(LightningDataModule):
         self,
         data_dir: str = 'data/',
         preprocessing_pipeline: PreprocessingPipeline = None,
-        overwrite_data: bool = False,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
         train_transforms: Compose = None,
         val_test_transforms: Compose = None,
         save_predict_images: bool = False,
+        num_classes: int = 2,
     ) -> None:
         """Initialize a `DirDataModule`.
 
         Args:
             data_dir (str, optional): The data directory. Defaults to 'data/'.
             preprocessing_pipeline (PreprocessingPipeline, optional): Custom preprocessing pipeline. Defaults to None.
-            overwrite_data (bool, optional): If data is already processed overwrite it and run pipeline steps. Defaults to False.
             batch_size (int, optional): Batch size. Defaults to 64.
             num_workers (int, optional): Number of workers. Defaults to 0.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
             train_transforms (Compose, optional): Train split transformations. Defaults to None.
             val_test_transforms (Compose, optional): Validation and test split transformations. Defaults to None.
             save_predict_images (bool, optional): Save images in predict mode? Defaults to False.
+            num_classes (int, optional): Number of classes in the dataset.
         """
         super().__init__()
 
@@ -57,14 +57,14 @@ class ImageDataModule(LightningDataModule):
         Returns:
             int: The number of classes (2).
         """
-        return 2
+        return self.hparams.num_classes
 
     def prepare_data(self) -> None:
         """Data preparation hook.
         """
         log.info(f"Preparing data in {self.hparams.data_dir}...")
         initial_data = {'initial_data': self.hparams.data_dir}
-        self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data, self.hparams.overwrite_data)
+        self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.

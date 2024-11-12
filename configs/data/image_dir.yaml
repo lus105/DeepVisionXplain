@@ -6,7 +6,8 @@ preprocessing_pipeline:
   steps:
     - _target_: src.data.components.preprocessing.preproc_strategy_split.SplitStep
       split_ratio: [0.7, 0.2, 0.1]
-      random_state: 42
+      seed: 42
+      merge_classes: true
     - _target_: src.data.components.preprocessing.preproc_strategy_tile.TilingStep
       tile_size: [224, 224]
       min_defective_area: 0.01
@@ -14,8 +15,8 @@ preprocessing_pipeline:
       contour_iter_step_size: 10
       iterate_over_defective_areas: true
       tiles_subdir: "tiles"
+  overwrite: true
 
-overwrite_data: true
 batch_size: 64
 num_workers: 3
 pin_memory: false
@@ -35,3 +36,4 @@ val_test_transforms:
     - _target_: torchvision.transforms.ToTensor
 
 save_predict_images: false
+num_classes: 2

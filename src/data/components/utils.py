@@ -1,6 +1,7 @@
 import shutil
 from pathlib import Path
 from typing import Optional
+from enum import Enum
 
 from src.utils import RankedLogger
 
@@ -9,6 +10,12 @@ log = RankedLogger(__name__, rank_zero_only=True)
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".bmp"]
 XML_EXTENSION = ".xml"
 JSON_EXTENSION = ".json"
+
+class DatasetType(Enum):
+    ImageLabelBinary = 1
+    ImageLabelMultiClass = 2
+    ImageBinary = 3
+    ImageMultiClass = 4
 
 
 def list_files(root_path: Path, file_extensions: list = None) -> list[Path]:
