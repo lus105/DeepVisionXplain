@@ -200,7 +200,7 @@ class SplitStep(PreprocessingStep):
         """
         for _, row in dataframe.iterrows():
             split = row['split']
-            class_name = row['class']
+            class_name = row['class'] if not self.merge_classes else ""
 
             label_dir = None
             if dataset_type == DatasetType.ImageBinary:
