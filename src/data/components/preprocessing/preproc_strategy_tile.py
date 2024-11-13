@@ -118,6 +118,14 @@ class TilingStep(PreprocessingStep):
 
         self.label_parsing_strategy: LabelStrategy = None
 
+    def process(self, data: dict, overwrite: bool) -> dict:
+        new_data = {}
+        for split, path in data.items():
+            log.info(f"Tiling data in {path} ...")
+            tiled_dir = self._split_images(path, overwrite)
+            new_data[split] = tiled_dir
+        return new_data
+
     def _extract_tiles(self, image: np.array, label: np.array, image_name: str) -> dict[str, list[Tile]]:
         """
         Generate and classify tiles as 'good' or 'defective' based on overlap and tile size.
@@ -167,7 +175,7 @@ class TilingStep(PreprocessingStep):
 
             label_path = find_annotation_file(
                 path / self._label_subdir, image_path.stem,
-                file_extensions=[IMAGE_EXTENSIONS, XML_EXTENSION, JSON_EXTENSION]
+                file_extensions=IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION]
             )
             
             if self.label_parsing_strategy is None:
@@ -205,11 +213,3 @@ class TilingStep(PreprocessingStep):
             for tile in tile_list:
                 tile.save_tile(tile_image_subdir / category)
                 tile.save_label_tile(tile_label_subdir / category)
-
-    def process(self, data: dict, overwrite: bool) -> dict:
-        new_data = {}
-        for split, path in data.items():
-            log.info(f"Tiling data in {path} ...")
-            tiled_dir = self._split_images(path, overwrite)
-            new_data[split] = tiled_dir
-        return new_data
