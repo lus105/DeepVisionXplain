@@ -65,8 +65,6 @@ def evaluate(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         log.info("Logging hyperparameters!")
         log_hyperparameters(object_dict)
 
-    trainer.test(model=model, datamodule=datamodule)
-
     if cfg.get("predict"):
         log.info("Starting predicting!")
         trainer.predict(model=model, datamodule=datamodule)
