@@ -150,8 +150,6 @@ class CNNCAMMultihead(nn.Module):
             return_node (str, optional): Return node of the feature extractor. Defaults to "features.16".
             weights (str, optional): Pre-trained weights to be used with the model. Defaults to "IMAGENET1K_V1".
 
-        Raises:
-            ValueError: If no valid backbone is found
         """
         super().__init__()
         self.multi_head = multi_head

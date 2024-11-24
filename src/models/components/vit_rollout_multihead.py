@@ -142,6 +142,9 @@ class VitRolloutMultihead(nn.Module):
     def _create_feature_extractor(self, model: nn.Module):
         """Creates feature extractor.
 
+        Args:
+            model (nn.Module): ViT model backbone.
+
         Returns:
             nn.Module: Feature extractor.
         """
