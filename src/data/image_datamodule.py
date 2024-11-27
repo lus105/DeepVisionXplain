@@ -72,12 +72,15 @@ class ImageDataModule(LightningDataModule):
         output_path = base_path / f'{last_subdir}_processed'
         
         initial_data = {'initial_data': self.hparams.data_dir}
-        if output_path.exists() and self.hparams.overwrite_data:
-            clear_directory(output_path)
-            output_path.rmdir()
-            self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
+        if output_path.exists():
+            if self.hparams.overwrite_data:
+                clear_directory(output_path)
+                output_path.rmdir()
+                self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
+            else:
+                self.preprocessed_data = self.hparams.preprocessing_pipeline.get_processed_data_path(initial_data)
         else:
-            self.preprocessed_data = self.hparams.preprocessing_pipeline.get_processed_data_path(initial_data)
+            self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.

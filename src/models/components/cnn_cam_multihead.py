@@ -154,7 +154,7 @@ class CNNCAMMultihead(nn.Module):
         super().__init__()
         self.multi_head = multi_head
         
-        model = get_model(backbone, weights)
+        model = get_model(backbone, weights=weights)
         self.feature_extractor = FeatureExtractor(
             model, return_node=return_node
         )
