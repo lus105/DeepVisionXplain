@@ -7,7 +7,6 @@ from ..utils import (DatasetType,
                      list_files,
                      list_dirs,
                      find_annotation_file,
-                     clear_directory,
                      IMAGE_EXTENSIONS,
                      XML_EXTENSION,
                      JSON_EXTENSION)
@@ -29,9 +28,25 @@ class SplitStep(PreprocessingStep):
         self.seed = seed
         self.merge_classes = merge_classes
 
-    def process(self, data: dict, overwrite: bool) -> dict:
+    def process(self, data: dict) -> dict:
         if not round(sum(self.split_ratio), 5) == 1:
             raise ValueError('The sums of `ratio` is over 1.')
+        
+        data_path = Path(data['initial_data'])
+        base_path = data_path.parent
+        last_subdir = data_path.name
+        output_path = base_path / f'{last_subdir}_processed'
+        
+        dataset_type = self._determine_dataset_type(data_path)
+        data_frame = self._to_dataframe(data_path, dataset_type)
+        data_frame_splitted = self._split_dataset(data_frame)
+        self._save_split(data_frame_splitted, output_path, dataset_type)
+
+        new_data = self.get_processed_data_path(data)
+
+        return new_data
+    
+    def get_processed_data_path(self, data: dict) -> dict:
         data_path = Path(data['initial_data'])
         base_path = data_path.parent
         last_subdir = data_path.name
@@ -43,18 +58,6 @@ class SplitStep(PreprocessingStep):
             self._val_subdir: output_path / self._val_subdir
         }
 
-        if output_path.exists():
-            if overwrite:
-                clear_directory(output_path)
-                output_path.rmdir()
-            else:
-                log.info('Data is already split. To overwrite, set data.overwrite=True')
-                return new_data
-        
-        dataset_type = self._determine_dataset_type(data_path)
-        data_frame = self._to_dataframe(data_path, dataset_type)
-        data_frame_splitted = self._split_dataset(data_frame)
-        self._save_split(data_frame_splitted, output_path, dataset_type)
         return new_data
 
     def _determine_dataset_type(self, data_path: Path) -> DatasetType:

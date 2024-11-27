@@ -8,6 +8,7 @@ from torchvision.transforms import Compose
 
 from src.data.components.preprocessing.preproc_pipeline_manager import PreprocessingPipeline
 from src.data.components.image_label_dataset import ImageLabelDataset
+from src.data.components.utils import clear_directory
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -18,6 +19,7 @@ class ImageDataModule(LightningDataModule):
         self,
         data_dir: str = 'data/',
         preprocessing_pipeline: PreprocessingPipeline = None,
+        overwrite_data: bool = False,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -63,8 +65,19 @@ class ImageDataModule(LightningDataModule):
         """Data preparation hook.
         """
         log.info(f"Preparing data in {self.hparams.data_dir}...")
+
+        data_path = Path(self.hparams.data_dir)
+        base_path = data_path.parent
+        last_subdir = data_path.name
+        output_path = base_path / f'{last_subdir}_processed'
+        
         initial_data = {'initial_data': self.hparams.data_dir}
-        self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
+        if output_path.exists() and self.hparams.overwrite_data:
+            clear_directory(output_path)
+            output_path.rmdir()
+            self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
+        else:
+            self.preprocessed_data = self.hparams.preprocessing_pipeline.get_processed_data_path(initial_data)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.

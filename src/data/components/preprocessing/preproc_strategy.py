@@ -24,13 +24,24 @@ class PreprocessingStep(ABC):
         self._label_subdir = label_subdir
 
     @abstractmethod
-    def process(self, data: dict, overwrite: bool) -> dict:
+    def process(self, data: dict) -> dict:
         """
         Process the data and return the modified data directories.
         
         Args:
             data (dict): Input data dictionary containing input directories.
+        Returns:
+            dict: Modified data dictionary of directories after processing.
+        """
+        pass
+    
+    @abstractmethod
+    def get_processed_data_path(self, data: dict) -> dict:
+        """
+        Get only path of preprocessed data
         
+        Args:
+            data (dict): Input data dictionary containing input directories.
         Returns:
             dict: Modified data dictionary of directories after processing.
         """

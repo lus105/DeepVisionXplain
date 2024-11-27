@@ -118,12 +118,19 @@ class TilingStep(PreprocessingStep):
 
         self.label_parsing_strategy: LabelStrategy = None
 
-    def process(self, data: dict, overwrite: bool) -> dict:
-        new_data = {}
+    def process(self, data: dict) -> dict:
         for split, path in data.items():
             log.info(f"Tiling data in {path} ...")
-            tiled_dir = self._split_images(path, overwrite)
-            new_data[split] = tiled_dir
+            self._split_images(path)
+        new_data = self.get_processed_data_path(data)
+        return new_data
+    
+    def get_processed_data_path(self, data: dict) -> dict:
+        new_data = {}
+        for split, path in data.items():
+            tile_subdir = path / self.tiles_subdir
+            new_data[split] = tile_subdir
+
         return new_data
 
     def _extract_tiles(self, image: np.array, label: np.array, image_name: str) -> dict[str, list[Tile]]:
@@ -163,12 +170,9 @@ class TilingStep(PreprocessingStep):
 
         return tiles
 
-    def _split_images(self, path: Path, overwrite_data: bool) -> Path:
+    def _split_images(self, path: Path):
         image_paths = list_files(path / self._image_subdir, file_extensions=IMAGE_EXTENSIONS)
         tile_image_subdir, tile_label_subdir = self._prepare_tile_directories(path)
-
-        if not overwrite_data:
-            return tile_image_subdir.parent
 
         for image_path in tqdm(image_paths, desc='Processing images'):
             image = cv2.imread(str(image_path))
@@ -187,8 +191,6 @@ class TilingStep(PreprocessingStep):
 
             if self.iterate_over_defective_areas:
                 self._process_and_save_defective_tiles(image, label, image_path.name, tile_image_subdir, tile_label_subdir)
-
-        return tile_image_subdir.parent
 
     def _prepare_tile_directories(self, path: Path) -> tuple:
         tile_subdir = path / self.tiles_subdir
