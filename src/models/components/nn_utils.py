@@ -21,9 +21,8 @@ def weight_load(
 
     checkpoint = torch.load(ckpt_path)
     model_weights = {
-        k[len(remove_prefix) :]: v
+        (k[len(remove_prefix):] if k.startswith(remove_prefix) else k): v
         for k, v in checkpoint["state_dict"].items()
-        if k.startswith(remove_prefix)
     }
 
     return model_weights
