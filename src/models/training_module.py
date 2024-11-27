@@ -242,7 +242,7 @@ class TrainingLitModule(LightningModule):
         if self.hparams.compile and stage == "fit":
             self.net = torch.compile(self.net)
         if self.hparams.ckpt_path:
-            model_weights = weight_load(self.hparams.ckpt_path)
+            model_weights = weight_load(self.hparams.ckpt_path, ext='.pth')
             self.net.load_state_dict(model_weights)
 
     def configure_optimizers(self) -> dict[str, Any]:

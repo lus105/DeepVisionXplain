@@ -16,16 +16,16 @@ class ImageLabelDataset(Dataset):
         self.label_transform = label_transform
         self.img_label_pairs = self._get_img_label_pairs()
 
-    def _get_img_label_pairs(self):
+    def _get_img_label_pairs(self, label_ext: str = '_label'):
         img_files = list(self.img_dir.rglob("*.*"))
         img_label_pairs = []
 
         for img_path in img_files:
             relative_path = img_path.relative_to(self.img_dir)
-            # Append '_mask' before '.png' in the label path
+            # Append '_label' before '.png' in the label path
             label_path = self.label_dir / relative_path
             label_path = label_path.with_name(
-                label_path.stem + "_mask" + label_path.suffix
+                label_path.stem + label_ext + label_path.suffix
             )
             if label_path.exists():  # Ensure the modified label path exists
                 img_label_pairs.append((img_path, label_path))

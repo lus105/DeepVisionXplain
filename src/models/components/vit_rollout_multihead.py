@@ -4,89 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from .base_model import BaseModel
+from .base_model import get_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
-
-class Vit(BaseModel):
-    def __init__(
-        self,
-        model_name: str,
-        pretrained: bool = True,
-        output_size: int = 1,
-        return_nodes: str = "attn_drop",
-        head_name: str = "head",
-        img_size: int = 224,
-    ) -> None:
-        """Initialize the `Vit` module.
-
-        Args:
-            model_name (str): Name of the VIT.
-            pretrained (bool, optional): Whether to use pretrained model. Defaults to True.
-            output_size (int, optional): Number of classes. Defaults to 1.
-            return_nodes (str, optional): Part of the model for Rollout calculation. Defaults to "attn_drop".
-            head_name (str, optional): Classification head name. Defaults to "head".
-            img_size (int, optional): Input image size. Defaults to 224.
-        """
-        super().__init__(
-            model_name,
-            pretrained=pretrained,
-            num_classes=output_size,
-            img_size=img_size
-        )
-        self.model_name = model_name
-        self.pretrained = pretrained
-        self.output_size = output_size
-        self.return_nodes = return_nodes
-        self.head_name = head_name
-        self.img_size = img_size
-        self.feature_extractor = self.__create_feature_extractor()
-
-    def forward(self, input: torch.Tensor) -> tuple[list[torch.Tensor], torch.Tensor]:
-        """Perform a forward pass through the network.
-
-        Args:
-            input (torch.Tensor): The input tensor of shape (batch_size, channels, height, width).
-
-        Returns:
-            Tuple[List[torch.Tensor], torch.Tensor]: Attention tensors wit classification output.
-        """
-        out = self.feature_extractor(input)
-        attn_tensors = [v for k, v in out.items() if self.return_nodes in k]
-        classification_out = out[self.head_name]
-        return attn_tensors, classification_out
-
-    def __create_feature_extractor(self) -> nn.Module:
-        """Creates feature extractor.
-
-        Returns:
-            nn.Module: Feature extractor.
-        """
-        if hasattr(self.model, 'blocks'):
-            for block in self.model.blocks:
-                if hasattr(block.attn, 'fused_attn'):
-                    block.attn.fused_attn = False
-        else:
-            log.error("The model does not have 'blocks' attribute.")
-            raise AttributeError("Model does not have 'blocks' attribute.")
-
-        feature_layer_names = []
-        for name, _ in self.model.named_modules():
-            if "attn_drop" in name:
-                feature_layer_names.append(name)
-
-        # add classification output
-        feature_layer_names.append(self.head_name)
-
-        try:
-            feature_extractor = create_feature_extractor(
-                self.model, return_nodes=feature_layer_names
-            )
-            return feature_extractor
-        except Exception as e:
-            log.exception(f"Error creating feature extractor: {e}")
-            raise
 
 
 class AttentionRollout:
@@ -182,20 +103,21 @@ class AttentionRollout:
 class VitRolloutMultihead(nn.Module):
     def __init__(
         self,
-        model_name: str,
+        backbone: str,
+        multi_head: bool = False,
         pretrained: bool = True,
         output_size: int = 1,
         return_nodes: str = "attn_drop",
         head_name: str = "head",
         img_size: int = 224,
         discard_ratio: float = 0.2,
-        head_fusion: str = "mean",
-        multi_head: bool = False,
+        head_fusion: str = "mean"
     ) -> None:
         """Initialize the `VitRolloutMultihead` module.
 
         Args:
-            model_name (str, optional): Name of the VIT. Defaults to "vit_tiny_patch16_224.augreg_in21k_ft_in1k".
+            backbone (str, optional): Name of the VIT. Defaults to "vit_tiny_patch16_224.augreg_in21k_ft_in1k".
+            multi_head (bool, optional): If True, the forward method returns both output and explainability output. Defaults to False.
             pretrained (bool, optional): Whether to use pretrained model. Defaults to True.
             output_size (int, optional): Number of classes. Defaults to 1.
             return_nodes (str, optional): Part of the model for Rollout calculation. Defaults to "attn_drop".
@@ -203,21 +125,53 @@ class VitRolloutMultihead(nn.Module):
             img_size (int, optional): Input image size. Defaults to 224.
             discard_ratio (float, optional): Percentage of attentions to drop. Defaults to 0.2.
             head_fusion (str, optional): Head fusion mode. Defaults to "mean".
-            multi_head (bool, optional): If True, the forward method returns both output and explainability output. Defaults to False.
         """
         super().__init__()
-        self.model = Vit(
-            model_name,
-            pretrained=pretrained,
-            output_size=output_size,
-            return_nodes=return_nodes,
-            head_name=head_name,
-            img_size=img_size,
-        )
+        self.return_nodes = return_nodes
+        self.head_name = head_name
+        model = get_model(backbone,
+                          pretrained=pretrained,
+                          num_classes=output_size,
+                          img_size=img_size)
+        self.feature_extractor = self._create_feature_extractor(model)
         self.attention_rollout = AttentionRollout(
             discard_ratio=discard_ratio, head_fusion=head_fusion
         )
         self.multi_head = multi_head
+
+    def _create_feature_extractor(self, model: nn.Module):
+        """Creates feature extractor.
+
+        Args:
+            model (nn.Module): ViT model backbone.
+
+        Returns:
+            nn.Module: Feature extractor.
+        """
+        if hasattr(model, 'blocks'):
+            for block in model.blocks:
+                if hasattr(block.attn, 'fused_attn'):
+                    block.attn.fused_attn = False
+        else:
+            log.error("The model does not have 'blocks' attribute.")
+            raise AttributeError("Model does not have 'blocks' attribute.")
+
+        feature_layer_names = []
+        for name, _ in model.named_modules():
+            if "attn_drop" in name:
+                feature_layer_names.append(name)
+
+        # add classification output
+        feature_layer_names.append(self.head_name)
+
+        try:
+            feature_extractor = create_feature_extractor(
+                model, return_nodes=feature_layer_names
+            )
+            return feature_extractor
+        except Exception as e:
+            log.exception(f"Error creating feature extractor: {e}")
+            raise
 
     def forward(self, input: torch.Tensor) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
@@ -229,7 +183,9 @@ class VitRolloutMultihead(nn.Module):
             Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]: A tensor containing the output,
               and optionally the Attention Rollout Map if multi_head is True.
         """
-        attn_drop_tensors, output = self.model(input)
+        out = self.feature_extractor(input)
+        attn_drop_tensors = [v for k, v in out.items() if self.return_nodes in k]
+        output = out[self.head_name]
         output = torch.sigmoid(output)
 
         if self.multi_head:

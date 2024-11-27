@@ -2,7 +2,8 @@ _target_: src.models.training_module.TrainingLitModule
 
 net:
   _target_: src.models.components.vit_rollout_multihead.VitRolloutMultihead
-  model_name: ???
+  backbone: ???
+  multi_head: False
   pretrained: True
   output_size: 1
   return_nodes: "attn_drop"
@@ -10,7 +11,6 @@ net:
   img_size: 224
   discard_ratio: 0.2
   head_fusion: "mean"
-  multi_head: False
 
 optimizer:
   _target_: torch.optim.AdamW

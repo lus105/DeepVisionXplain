@@ -3,4 +3,4 @@ defaults:
   - _self_
 
 net:
-  model_name: timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k
+  backbone: timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k
