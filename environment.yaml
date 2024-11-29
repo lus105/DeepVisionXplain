@@ -37,3 +37,4 @@ dependencies:
       - segmentation-models-pytorch
       - ipywidgets
       - ipykernel
+      - pandas
