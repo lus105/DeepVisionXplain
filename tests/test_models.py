@@ -4,11 +4,11 @@ import torch
 import pytest
 
 
-@pytest.mark.parametrize("num_classes", [1, 10])
+@pytest.mark.parametrize('num_classes', [1, 10])
 def test_simple_net(num_classes: int):
     cfg = {
-        "_target_": "src.models.components.simple_dense_net.SimpleDenseNet",
-        "output_size": num_classes,
+        '_target_': 'src.models.components.simple_dense_net.SimpleDenseNet',
+        'output_size': num_classes,
     }
     cfg = omegaconf.OmegaConf.create(cfg)
     model = hydra.utils.instantiate(cfg)

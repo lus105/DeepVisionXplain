@@ -32,23 +32,23 @@ def extras(cfg: DictConfig) -> None:
         cfg (DictConfig): A DictConfig object containing the config tree.
     """
     # return if no `extras` config
-    if not cfg.get("extras"):
-        log.warning("Extras config not found! <cfg.extras=null>")
+    if not cfg.get('extras'):
+        log.warning('Extras config not found! <cfg.extras=null>')
         return
 
     # disable python warnings
-    if cfg.extras.get("ignore_warnings"):
-        log.info("Disabling python warnings! <cfg.extras.ignore_warnings=True>")
-        warnings.filterwarnings("ignore")
+    if cfg.extras.get('ignore_warnings'):
+        log.info('Disabling python warnings! <cfg.extras.ignore_warnings=True>')
+        warnings.filterwarnings('ignore')
 
     # prompt user to input tags from command line if none are provided in the config
-    if cfg.extras.get("enforce_tags"):
-        log.info("Enforcing tags! <cfg.extras.enforce_tags=True>")
+    if cfg.extras.get('enforce_tags'):
+        log.info('Enforcing tags! <cfg.extras.enforce_tags=True>')
         rich_utils.enforce_tags(cfg, save_to_file=True)
 
     # pretty print config tree using Rich library
-    if cfg.extras.get("print_config"):
-        log.info("Printing config tree with Rich! <cfg.extras.print_config=True>")
+    if cfg.extras.get('print_config'):
+        log.info('Printing config tree with Rich! <cfg.extras.print_config=True>')
         rich_utils.print_config_tree(cfg, resolve=True, save_to_file=True)
 
 
@@ -87,7 +87,7 @@ def task_wrapper(task_func: Callable) -> Callable:
         # things to do if exception occurs
         except Exception as ex:
             # save exception to `.log` file
-            log.exception("")
+            log.exception('')
 
             # some hyperparameter combinations might be invalid or cause out-of-memory errors
             # so when using hparam search plugins like Optuna, you might want to disable
@@ -97,7 +97,7 @@ def task_wrapper(task_func: Callable) -> Callable:
         # things to always do after either success or exception
         finally:
             # display output dir path in terminal
-            log.info(f"Output dir: {cfg.paths.output_dir}")
+            log.info(f'Output dir: {cfg.paths.output_dir}')
 
             # always close wandb run (even if exception occurs so multirun won't fail)
             close_loggers()
@@ -120,18 +120,18 @@ def get_metric_value(
         Optional[float]: If a metric name was provided, the value of the metric.
     """
     if not metric_name:
-        log.info("Metric name is None! Skipping metric value retrieval...")
+        log.info('Metric name is None! Skipping metric value retrieval...')
         return None
 
     if metric_name not in metric_dict:
         raise Exception(
-            f"Metric value not found! <metric_name={metric_name}>\n"
-            "Make sure metric name logged in LightningModule is correct!\n"
-            "Make sure `optimized_metric` name in `hparams_search` config is correct!"
+            f'Metric value not found! <metric_name={metric_name}>\n'
+            'Make sure metric name logged in LightningModule is correct!\n'
+            'Make sure `optimized_metric` name in `hparams_search` config is correct!'
         )
 
     metric_value = metric_dict[metric_name].item()
-    log.info(f"Retrieved metric value! <{metric_name}={metric_value}>")
+    log.info(f'Retrieved metric value! <{metric_name}={metric_value}>')
 
     return metric_value
 
@@ -162,23 +162,23 @@ def run_sh_command(cmd: Any, allow_fail: bool = True, **kwargs: Any) -> str:
         )
     except subprocess.SubprocessError as exception:
         if allow_fail:
-            output = f"{exception}\n\n{exception.output}"
+            output = f'{exception}\n\n{exception.output}'
         else:
             raise
-    return f"> {cmd}\n\n{output}\n"
+    return f'> {cmd}\n\n{output}\n'
 
 
 def close_loggers() -> None:
     """Makes sure all loggers closed properly (prevents logging failure during
     multirun).
     """
-    log.info("Closing loggers...")
+    log.info('Closing loggers...')
 
-    if find_spec("wandb"):  # if wandb is installed
+    if find_spec('wandb'):  # if wandb is installed
         import wandb
 
         if wandb.run:
-            log.info("Closing wandb!")
+            log.info('Closing wandb!')
             wandb.finish()
 
 
@@ -194,15 +194,15 @@ def instantiate_callbacks(callbacks_cfg: DictConfig) -> list[Callback]:
     callbacks: list[Callback] = []
 
     if not callbacks_cfg:
-        log.warning("No callback configs found! Skipping..")
+        log.warning('No callback configs found! Skipping..')
         return callbacks
 
     if not isinstance(callbacks_cfg, DictConfig):
-        raise TypeError("Callbacks config must be a DictConfig!")
+        raise TypeError('Callbacks config must be a DictConfig!')
 
     for _, cb_conf in callbacks_cfg.items():
-        if isinstance(cb_conf, DictConfig) and "_target_" in cb_conf:
-            log.info(f"Instantiating callback <{cb_conf._target_}>")
+        if isinstance(cb_conf, DictConfig) and '_target_' in cb_conf:
+            log.info(f'Instantiating callback <{cb_conf._target_}>')
             callbacks.append(hydra.utils.instantiate(cb_conf))
 
     return callbacks
@@ -220,15 +220,15 @@ def instantiate_loggers(logger_cfg: DictConfig) -> list[Logger]:
     logger: list[Logger] = []
 
     if not logger_cfg:
-        log.warning("No logger configs found! Skipping...")
+        log.warning('No logger configs found! Skipping...')
         return logger
 
     if not isinstance(logger_cfg, DictConfig):
-        raise TypeError("Logger config must be a DictConfig!")
+        raise TypeError('Logger config must be a DictConfig!')
 
     for _, lg_conf in logger_cfg.items():
-        if isinstance(lg_conf, DictConfig) and "_target_" in lg_conf:
-            log.info(f"Instantiating logger <{lg_conf._target_}>")
+        if isinstance(lg_conf, DictConfig) and '_target_' in lg_conf:
+            log.info(f'Instantiating logger <{lg_conf._target_}>')
             logger.append(hydra.utils.instantiate(lg_conf))
 
     return logger
@@ -247,35 +247,35 @@ def log_hyperparameters(object_dict: dict[str, Any]) -> None:
     """
     hparams = {}
 
-    cfg = OmegaConf.to_container(object_dict["cfg"])
-    model = object_dict["model"]
-    trainer = object_dict["trainer"]
+    cfg = OmegaConf.to_container(object_dict['cfg'])
+    model = object_dict['model']
+    trainer = object_dict['trainer']
 
     if not trainer.logger:
-        log.warning("Logger not found! Skipping hyperparameter logging...")
+        log.warning('Logger not found! Skipping hyperparameter logging...')
         return
 
-    hparams["model"] = cfg["model"]
+    hparams['model'] = cfg['model']
 
     # save number of model parameters
-    hparams["model/params/total"] = sum(p.numel() for p in model.parameters())
-    hparams["model/params/trainable"] = sum(
+    hparams['model/params/total'] = sum(p.numel() for p in model.parameters())
+    hparams['model/params/trainable'] = sum(
         p.numel() for p in model.parameters() if p.requires_grad
     )
-    hparams["model/params/non_trainable"] = sum(
+    hparams['model/params/non_trainable'] = sum(
         p.numel() for p in model.parameters() if not p.requires_grad
     )
 
-    hparams["data"] = cfg["data"]
-    hparams["trainer"] = cfg["trainer"]
+    hparams['data'] = cfg['data']
+    hparams['trainer'] = cfg['trainer']
 
-    hparams["callbacks"] = cfg.get("callbacks")
-    hparams["extras"] = cfg.get("extras")
+    hparams['callbacks'] = cfg.get('callbacks')
+    hparams['extras'] = cfg.get('extras')
 
-    hparams["task_name"] = cfg.get("task_name")
-    hparams["tags"] = cfg.get("tags")
-    hparams["ckpt_path"] = cfg.get("ckpt_path")
-    hparams["seed"] = cfg.get("seed")
+    hparams['task_name'] = cfg.get('task_name')
+    hparams['tags'] = cfg.get('tags')
+    hparams['ckpt_path'] = cfg.get('ckpt_path')
+    hparams['seed'] = cfg.get('seed')
 
     # send hparams to all loggers
     for logger in trainer.loggers:
@@ -297,6 +297,6 @@ def log_gpu_memory_metadata() -> None:
         total_gb = info.total / div
         free_gb = info.free / div
         used_gb = info.used / div
-        log.info(f"GPU memory info: card {i} : total : {total_gb:.2f} GB")
-        log.info(f"GPU memory info: card {i} : free  : {free_gb:.2f} GB")
-        log.info(f"GPU memory info: card {i} : used  : {used_gb:.2f} GB")
+        log.info(f'GPU memory info: card {i} : total : {total_gb:.2f} GB')
+        log.info(f'GPU memory info: card {i} : free  : {free_gb:.2f} GB')
+        log.info(f'GPU memory info: card {i} : used  : {used_gb:.2f} GB')
