@@ -61,17 +61,34 @@ class Tile:
         output_dir.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(output_dir / self.get_label_tile_name()), self.label)
 
-    def is_defective(self, min_defective_area: float) -> bool:
+    def is_defective(self, defective_area_perc: float) -> bool:
         """Checks if tile contains defects.
 
         Args:
-            min_defective_area (float):  
+            defective_area_perc (float):  
 
         Returns:
             bool: True if tile contains defects.
         """
-        return np.sum(self.label == 255) > min_defective_area
+        total_pixels = self.image.shape[0] * self.image.shape[1]
+        return np.sum(self.label == 255) / total_pixels > defective_area_perc
+    
+    def is_background(self, background_perc: float) -> bool:
+        """
+        Determines if an image has a background percentage of black pixels
+        greater than the specified threshold.
 
+        Args:
+            background_perc (float): The threshold percentage for black pixels.
+
+        Returns:
+            bool: True if the percentage of black pixels is greater than the threshold, False otherwise.
+        """
+        black_pixels = np.all(self.image == 0, axis=-1)
+        black_pixel_count = np.sum(black_pixels)
+        total_pixels = self.image.shape[0] * self.image.shape[1]
+        black_pixel_percentage = black_pixel_count / total_pixels
+        return black_pixel_percentage > background_perc
 
 def sliding_window_with_coordinates(
         image: np.array,
@@ -102,19 +119,20 @@ class TilingStep(PreprocessingStep):
     def __init__(
         self,
         tile_size: tuple[int, int] = (224, 224),
-        min_defective_area: float = 0.1,
+        min_defective_area_th: float = 0.1,
+        discard_background_th: float = 0.0,
         overlap: int = 64,
         contour_iter_step_size: int = 10,
         iterate_over_defective_areas: bool = False,
-        tiles_subdir: str = 'tiles',
     ):
         super().__init__()
         self.tile_size = tile_size
-        self.min_defective_area = min_defective_area
+        self.min_defective_area_th = min_defective_area_th
         self.overlap = overlap
         self.contour_iter_step_size = contour_iter_step_size
         self.iterate_over_defective_areas = iterate_over_defective_areas
-        self.tiles_subdir = tiles_subdir
+        self.discard_background_th = discard_background_th
+        self.tiles_subdir = 'tiles'
 
         self.label_parsing_strategy: LabelStrategy = None
 
@@ -142,7 +160,7 @@ class TilingStep(PreprocessingStep):
         for image_tile, rect in sliding_window_with_coordinates(image, self.tile_size, self.overlap):
             label_tile = label[rect[1]:rect[3], rect[0]:rect[2]]
             tile = Tile(image_tile, label_tile, image_name, rect)
-            category = 'defective' if tile.is_defective(self.min_defective_area) else 'good'
+            category = 'defective' if tile.is_defective(self.min_defective_area_th) else 'good'
             tiles.setdefault(category, []).append(tile)
             
         return tiles
@@ -165,7 +183,7 @@ class TilingStep(PreprocessingStep):
                     image_name,
                     (x_st, y_st, x_st + self.tile_size[1], y_st + self.tile_size[0])
                 )
-                category = 'defective' if tile.is_defective(self.min_defective_area) else 'good'
+                category = 'defective' if tile.is_defective(self.min_defective_area_th) else 'good'
                 tiles.setdefault(category, []).append(tile)
 
         return tiles
@@ -213,5 +231,6 @@ class TilingStep(PreprocessingStep):
     def _save_tiles(self, tiles, tile_image_subdir, tile_label_subdir):
         for category, tile_list in tiles.items():
             for tile in tile_list:
-                tile.save_tile(tile_image_subdir / category)
-                tile.save_label_tile(tile_label_subdir / category)
+                if not tile.is_background(self.discard_background_th):
+                    tile.save_tile(tile_image_subdir / category)
+                    tile.save_label_tile(tile_label_subdir / category)
