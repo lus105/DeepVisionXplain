@@ -10,11 +10,11 @@ preprocessing_pipeline:
       merge_classes: true
     - _target_: src.data.components.preprocessing.preproc_strategy_tile.TilingStep
       tile_size: [224, 224]
-      min_defective_area: 0.01
+      min_defective_area_th: 0.1
+      discard_background_th: 0.0
       overlap: 10
       contour_iter_step_size: 10
       iterate_over_defective_areas: true
-      tiles_subdir: "tiles"
 overwrite_data: false
 
 batch_size: 64

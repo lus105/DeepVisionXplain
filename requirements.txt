@@ -25,6 +25,9 @@ matplotlib
 scikit-learn
 timm
 onnx
-onnxruntime
+onnxruntime-gpu
 pynvml
 ruff
+ipywidgets
+ipykernel
+pandas

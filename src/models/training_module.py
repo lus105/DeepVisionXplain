@@ -23,7 +23,7 @@ class TrainingLitModule(LightningModule):
         scheduler: torch.optim.lr_scheduler,
         loss: torch.nn.modules.loss,
         compile: bool,
-        ckpt_path: str
+        ckpt_path: str,
     ) -> None:
         """Initialize lightning module.
 
@@ -46,9 +46,9 @@ class TrainingLitModule(LightningModule):
         self.criterion = loss
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task="binary")
-        self.val_acc = Accuracy(task="binary")
-        self.test_acc = Accuracy(task="binary")
+        self.train_acc = Accuracy(task='binary')
+        self.val_acc = Accuracy(task='binary')
+        self.test_acc = Accuracy(task='binary')
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
         # for averaging loss across batches
@@ -56,13 +56,15 @@ class TrainingLitModule(LightningModule):
         self.val_loss = MeanMetric()
         self.test_loss = MeanMetric()
         # segmentation metrics collection
-        self.seg_metrics = MetricCollection({
-            'accuracy': BinaryAccuracy(),
-            'f1_score': BinaryF1Score(),
-            'precision': BinaryPrecision(),
-            'recall': BinaryRecall(),
-            'jaccard': BinaryJaccardIndex(),
-        })
+        self.seg_metrics = MetricCollection(
+            {
+                'accuracy': BinaryAccuracy(),
+                'f1_score': BinaryF1Score(),
+                'precision': BinaryPrecision(),
+                'recall': BinaryRecall(),
+                'jaccard': BinaryJaccardIndex(),
+            }
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -76,8 +78,7 @@ class TrainingLitModule(LightningModule):
         return self.net(x)
 
     def on_train_start(self) -> None:
-        """Lightning hook that is called when training begins.
-        """
+        """Lightning hook that is called when training begins."""
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
@@ -125,10 +126,10 @@ class TrainingLitModule(LightningModule):
         self.train_loss(loss)
         self.train_acc(preds, targets)
         self.log(
-            "train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True
+            'train/loss', self.train_loss, on_step=False, on_epoch=True, prog_bar=True
         )
         self.log(
-            "train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True
+            'train/acc', self.train_acc, on_step=False, on_epoch=True, prog_bar=True
         )
 
         # return loss or backpropagation will fail
@@ -149,18 +150,17 @@ class TrainingLitModule(LightningModule):
         # update and log metrics
         self.val_loss(loss)
         self.val_acc(preds, targets)
-        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/loss', self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/acc', self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
-        """Lightning hook that is called when a validation epoch ends.
-        """
+        """Lightning hook that is called when a validation epoch ends."""
         acc = self.val_acc.compute()  # get current val acc
         self.val_acc_best(acc)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         self.log(
-            "val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True
+            'val/acc_best', self.val_acc_best.compute(), sync_dist=True, prog_bar=True
         )
 
     def test_step(
@@ -178,18 +178,13 @@ class TrainingLitModule(LightningModule):
         self.test_loss(loss)
         self.test_acc(preds, targets)
         self.log(
-            "test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True
+            'test/loss', self.test_loss, on_step=False, on_epoch=True, prog_bar=True
         )
-        self.log(
-            "test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True
-        )
+        self.log('test/acc', self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self) -> None:
-        """Lightning hook that is called when a test epoch ends.
-        """
-        self.log(
-            "test/acc", self.test_acc.compute(), sync_dist=True, prog_bar=True
-        )
+        """Lightning hook that is called when a test epoch ends."""
+        self.log('test/acc', self.test_acc.compute(), sync_dist=True, prog_bar=True)
 
     def predict_step(
         self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -214,23 +209,22 @@ class TrainingLitModule(LightningModule):
                     map_segmentation.max() - map_segmentation.min()
                 )
                 if self.trainer.datamodule.hparams.save_predict_images:
-                    filename = f"img_batch_{batch_idx}_sample_{i}.png"
+                    filename = f'img_batch_{batch_idx}_sample_{i}.png'
                     save_images(
                         image,
                         map_segmentation,
                         label,
-                        f"{self.trainer.default_root_dir}/images/{filename}",
+                        f'{self.trainer.default_root_dir}/images/{filename}',
                     )
 
             map_segmentation = (map_segmentation > 0.5).float()
             self.seg_metrics(map_segmentation, label)
 
     def on_predict_epoch_end(self) -> None:
-        """Lightning hook that is called when a predict epoch ends.
-        """
+        """Lightning hook that is called when a predict epoch ends."""
         metrics_dict = self.seg_metrics.compute()
         for metric_name, metric_value in metrics_dict.items():
-            print(f"test/{metric_name}: {metric_value}")
+            print(f'test/{metric_name}: {metric_value}')
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,
@@ -239,10 +233,10 @@ class TrainingLitModule(LightningModule):
         Args:
             stage (str): Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
         """
-        if self.hparams.compile and stage == "fit":
+        if self.hparams.compile and stage == 'fit':
             self.net = torch.compile(self.net)
         if self.hparams.ckpt_path:
-            model_weights = weight_load(self.hparams.ckpt_path, ext='.pth')
+            model_weights = weight_load(self.hparams.ckpt_path)
             self.net.load_state_dict(model_weights)
 
     def configure_optimizers(self) -> dict[str, Any]:
@@ -257,12 +251,12 @@ class TrainingLitModule(LightningModule):
         if self.hparams.scheduler is not None:
             scheduler = self.hparams.scheduler(optimizer=optimizer)
             return {
-                "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
+                'optimizer': optimizer,
+                'lr_scheduler': {
+                    'scheduler': scheduler,
+                    'monitor': 'val/loss',
+                    'interval': 'epoch',
+                    'frequency': 1,
                 },
             }
-        return {"optimizer": optimizer}
+        return {'optimizer': optimizer}

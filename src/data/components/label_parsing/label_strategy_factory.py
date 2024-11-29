@@ -23,4 +23,4 @@ def get_label_strategy(file_extension: str) -> LabelStrategy:
     if file_extension == XML_EXTENSION:
         return XmlBboxLabelStrategy()
     else:
-        raise ValueError(f"No label strategy available for extension {file_extension}")
+        raise ValueError(f'No label strategy available for extension {file_extension}')

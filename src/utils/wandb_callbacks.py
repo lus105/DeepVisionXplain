@@ -10,10 +10,10 @@ from lightning.pytorch.utilities import rank_zero_only
 def get_wandb_logger(trainer: Trainer) -> WandbLogger:
     """Safely get Weights&Biases logger from Trainer."""
 
-    if hasattr(trainer, "fast_dev_run") and trainer.fast_dev_run:
+    if hasattr(trainer, 'fast_dev_run') and trainer.fast_dev_run:
         raise Exception(
-            "Cannot use wandb callbacks since pytorch lightning disables"
-            "loggers in `fast_dev_run=true` mode."
+            'Cannot use wandb callbacks since pytorch lightning disables'
+            'loggers in `fast_dev_run=true` mode.'
         )
 
     if isinstance(trainer.logger, WandbLogger):
@@ -25,15 +25,15 @@ def get_wandb_logger(trainer: Trainer) -> WandbLogger:
                 return logger
 
     raise Exception(
-        "You are using wandb related callback, but WandbLogger was not"
-        "found for some reason..."
+        'You are using wandb related callback, but WandbLogger was not'
+        'found for some reason...'
     )
 
 
 class WatchModel(Callback):
     """Make wandb watch model at the beginning of the run."""
 
-    def __init__(self, log: str = "gradients", log_freq: int = 100) -> None:
+    def __init__(self, log: str = 'gradients', log_freq: int = 100) -> None:
         self.log = log
         self.log_freq = log_freq
 
@@ -67,18 +67,18 @@ class UploadCodeAsArtifact(Callback):
         logger = get_wandb_logger(trainer=trainer)
         experiment = logger.experiment
 
-        code = wandb.Artifact("project-source", type="code")
+        code = wandb.Artifact('project-source', type='code')
 
         if self.use_git:
             # get .git folder path
             git_dir_path = Path(
-                check_output(["git", "rev-parse", "--git-dir"]).strip().decode("utf8")
+                check_output(['git', 'rev-parse', '--git-dir']).strip().decode('utf8')
             ).resolve()
 
-            for path in Path(self.code_dir).resolve().rglob("*"):
+            for path in Path(self.code_dir).resolve().rglob('*'):
                 # don't upload files ignored by git
                 # https://alexwlchan.net/2020/11/a-python-function-to-ignore-a-path-with-git-info-exclude/
-                command = ["git", "check-ignore", "-q", str(path)]
+                command = ['git', 'check-ignore', '-q', str(path)]
                 not_ignored = run(command).returncode == 1
 
                 # don't upload files from .git folder
@@ -88,7 +88,7 @@ class UploadCodeAsArtifact(Callback):
                     code.add_file(str(path), name=str(path.relative_to(self.code_dir)))
 
         else:
-            for path in Path(self.code_dir).resolve().rglob("*.py"):
+            for path in Path(self.code_dir).resolve().rglob('*.py'):
                 code.add_file(str(path), name=str(path.relative_to(self.code_dir)))
 
         experiment.log_artifact(code)
@@ -110,12 +110,12 @@ class UploadCheckpointsAsArtifact(Callback):
         logger = get_wandb_logger(trainer=trainer)
         experiment = logger.experiment
 
-        ckpts = wandb.Artifact("experiment-ckpts", type="checkpoints")
+        ckpts = wandb.Artifact('experiment-ckpts', type='checkpoints')
 
         if self.upload_best_only:
             ckpts.add_file(trainer.checkpoint_callback.best_model_path)
         else:
-            for path in Path(self.ckpt_dir).rglob("*.ckpt"):
+            for path in Path(self.ckpt_dir).rglob('*.ckpt'):
                 ckpts.add_file(str(path))
 
         experiment.log_artifact(ckpts)

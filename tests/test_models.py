@@ -4,11 +4,11 @@ import torch
 import pytest
 
 
-@pytest.mark.parametrize("num_classes", [1, 10])
+@pytest.mark.parametrize('num_classes', [1, 10])
 def test_simple_net(num_classes: int):
     cfg = {
-        "_target_": "src.models.components.simple_dense_net.SimpleDenseNet",
-        "output_size": num_classes,
+        '_target_': 'src.models.components.simple_dense_net.SimpleDenseNet',
+        'output_size': num_classes,
     }
     cfg = omegaconf.OmegaConf.create(cfg)
     model = hydra.utils.instantiate(cfg)
@@ -24,11 +24,11 @@ def test_simple_net(num_classes: int):
 
 def test_cnn_cam_multihead():
     cfg = {
-        "_target_": "src.models.components.cnn_cam_multihead.CNNCAMMultihead",
-        "backbone": "torchvision.models/efficientnet_v2_s",
-        "multi_head": "True",
-        "return_node": "features.6.0.block.0",
-        "weights": "IMAGENET1K_V1"
+        '_target_': 'src.models.components.cnn_cam_multihead.CNNCAMMultihead',
+        'backbone': 'torchvision.models/efficientnet_v2_s',
+        'multi_head': 'True',
+        'return_node': 'features.6.0.block.0',
+        'weights': 'IMAGENET1K_V1',
     }
     cfg = omegaconf.OmegaConf.create(cfg)
     model = hydra.utils.instantiate(cfg)
@@ -47,16 +47,16 @@ def test_cnn_cam_multihead():
 
 def test_vit_rollout_multihead():
     cfg = {
-        "_target_": "src.models.components.vit_rollout_multihead.VitRolloutMultihead",
-        "backbone": "timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k",
-        "multi_head": True,
-        "pretrained": True,
-        "output_size": 1,
-        "return_nodes": "attn_drop",
-        "head_name": "head",
-        "img_size": 224,
-        "discard_ratio": 0.2,
-        "head_fusion": "mean",
+        '_target_': 'src.models.components.vit_rollout_multihead.VitRolloutMultihead',
+        'backbone': 'timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k',
+        'multi_head': True,
+        'pretrained': True,
+        'output_size': 1,
+        'return_nodes': 'attn_drop',
+        'head_name': 'head',
+        'img_size': 224,
+        'discard_ratio': 0.2,
+        'head_fusion': 'mean',
     }
     cfg = omegaconf.OmegaConf.create(cfg)
     model = hydra.utils.instantiate(cfg)

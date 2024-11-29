@@ -11,7 +11,7 @@ log = RankedLogger(__name__, rank_zero_only=True)
 
 
 class AttentionRollout:
-    def __init__(self, discard_ratio: float = 0.2, head_fusion: str = "mean") -> None:
+    def __init__(self, discard_ratio: float = 0.2, head_fusion: str = 'mean') -> None:
         """Initialize the `AttentionRollout` module.
 
         Args:
@@ -19,10 +19,10 @@ class AttentionRollout:
             head_fusion (str, optional): Head fusion mode. Defaults to "mean".
         """
         if not 0.0 <= discard_ratio < 1.0:
-            raise ValueError("discard_ratio must be in [0.0, 1.0).")
-        if head_fusion not in {"mean", "max", "min"}:
+            raise ValueError('discard_ratio must be in [0.0, 1.0).')
+        if head_fusion not in {'mean', 'max', 'min'}:
             raise ValueError("head_fusion must be one of 'mean', 'max', or 'min'.")
-        
+
         self.discard_ratio = discard_ratio
         self.head_fusion = head_fusion
 
@@ -52,14 +52,14 @@ class AttentionRollout:
         with torch.no_grad():
             for attention in attentions:
                 # Fuse attentions accros head dimension
-                if self.head_fusion == "mean":
+                if self.head_fusion == 'mean':
                     attention_heads_fused = attention.mean(dim=1)
-                elif self.head_fusion == "max":
+                elif self.head_fusion == 'max':
                     attention_heads_fused = attention.max(dim=1).values
-                elif self.head_fusion == "min":
+                elif self.head_fusion == 'min':
                     attention_heads_fused = attention.min(dim=1).values
                 else:
-                    raise ValueError("Attention head fusion type not supported")
+                    raise ValueError('Attention head fusion type not supported')
 
                 # Drop the lowest attentions, but don't drop the class token for each in the batch
                 flat = attention_heads_fused.view(batch_size, -1)
@@ -68,12 +68,12 @@ class AttentionRollout:
                 )
                 flat.scatter_(1, indices, 0)
 
-                ''' The identity matrix serves as a baseline to incorporate self-attention
+                """ The identity matrix serves as a baseline to incorporate self-attention
                 into the aggregated attention. By adding it to the existing attention matrices,
                 we ensure that each token retains some degree of self-focus, which is crucial
                 for preserving the token's own information during the rollout.
                 Division by 2 is required for balancing the contribution of the original
-                attention and the self-attention.'''
+                attention and the self-attention."""
                 i_m = torch.eye(height, device=device).expand_as(attention_heads_fused)
                 a = (attention_heads_fused + i_m) / 2
                 a = a / a.sum(dim=-1, keepdim=True)
@@ -87,14 +87,12 @@ class AttentionRollout:
         map = map.view(batch_size, map_width, map_width)
 
         # Normalize
-        map = map / map.view(batch_size, -1).max(dim=1).values.view(
-            batch_size, 1, 1
-        )
+        map = map / map.view(batch_size, -1).max(dim=1).values.view(batch_size, 1, 1)
         map = map.unsqueeze(1)
-        
+
         # Upscale explainability map to input image dimensions
         map = F.interpolate(
-            map, size=input_size[2:], mode="bilinear", align_corners=False
+            map, size=input_size[2:], mode='bilinear', align_corners=False
         ).squeeze(1)
 
         return map
@@ -107,11 +105,11 @@ class VitRolloutMultihead(nn.Module):
         multi_head: bool = False,
         pretrained: bool = True,
         output_size: int = 1,
-        return_nodes: str = "attn_drop",
-        head_name: str = "head",
+        return_nodes: str = 'attn_drop',
+        head_name: str = 'head',
         img_size: int = 224,
         discard_ratio: float = 0.2,
-        head_fusion: str = "mean"
+        head_fusion: str = 'mean',
     ) -> None:
         """Initialize the `VitRolloutMultihead` module.
 
@@ -129,10 +127,9 @@ class VitRolloutMultihead(nn.Module):
         super().__init__()
         self.return_nodes = return_nodes
         self.head_name = head_name
-        model = get_model(backbone,
-                          pretrained=pretrained,
-                          num_classes=output_size,
-                          img_size=img_size)
+        model = get_model(
+            backbone, pretrained=pretrained, num_classes=output_size, img_size=img_size
+        )
         self.feature_extractor = self._create_feature_extractor(model)
         self.attention_rollout = AttentionRollout(
             discard_ratio=discard_ratio, head_fusion=head_fusion
@@ -158,7 +155,7 @@ class VitRolloutMultihead(nn.Module):
 
         feature_layer_names = []
         for name, _ in model.named_modules():
-            if "attn_drop" in name:
+            if 'attn_drop' in name:
                 feature_layer_names.append(name)
 
         # add classification output
@@ -170,10 +167,12 @@ class VitRolloutMultihead(nn.Module):
             )
             return feature_extractor
         except Exception as e:
-            log.exception(f"Error creating feature extractor: {e}")
+            log.exception(f'Error creating feature extractor: {e}')
             raise
 
-    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def forward(
+        self, input: torch.Tensor
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
 
         Args:
@@ -193,4 +192,3 @@ class VitRolloutMultihead(nn.Module):
             return output, map
         else:
             return output
-
