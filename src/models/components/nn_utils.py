@@ -5,7 +5,7 @@ import cv2
 from pathlib import Path
 
 def weight_load(
-    ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt"
+    ckpt_path: str, remove_prefix: str = "net.", ext: str = ".ckpt", weights_only: bool = False
 ) -> dict:
     """Model weight loading helper function.
 
@@ -21,7 +21,7 @@ def weight_load(
         searched_path = Path(ckpt_path)
         ckpt_path = next(searched_path.rglob("*" + ext), "")
 
-    checkpoint = torch.load(ckpt_path)
+    checkpoint = torch.load(ckpt_path, weights_only=weights_only)
     model_weights = {
         (k[len(remove_prefix):] if k.startswith(remove_prefix) else k): v
         for k, v in checkpoint["state_dict"].items()
