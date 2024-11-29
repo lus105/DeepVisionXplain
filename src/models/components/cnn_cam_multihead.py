@@ -9,8 +9,11 @@ from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
+
 class FeatureExtractor(nn.Module):
-    def __init__(self, pretrained_model: nn.Module, return_node: str, out_name: str = "layerout") -> None:
+    def __init__(
+        self, pretrained_model: nn.Module, return_node: str, out_name: str = 'layerout'
+    ) -> None:
         """Initialize a FeatureExtractor module.
 
         Args:
@@ -24,8 +27,8 @@ class FeatureExtractor(nn.Module):
         super().__init__()
         try:
             if not return_node:
-                log.error("No return_node provided to FeatureExtractor")
-                raise ValueError("return_nodes must contain at least one node.")
+                log.error('No return_node provided to FeatureExtractor')
+                raise ValueError('return_nodes must contain at least one node.')
 
             self.out_name = out_name
             return_nodes = {return_node: out_name}
@@ -35,7 +38,7 @@ class FeatureExtractor(nn.Module):
             )
             self.n_features = self._calculate_n_features()
         except Exception as e:
-            log.exception("Failed to initialize FeatureExtractor")
+            log.exception('Failed to initialize FeatureExtractor')
             raise e
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -50,7 +53,7 @@ class FeatureExtractor(nn.Module):
         features = self.model(input)
         return features[self.out_name]
 
-    def _calculate_n_features(self, input_shape: tuple=(1, 3, 224, 224)) -> int:
+    def _calculate_n_features(self, input_shape: tuple = (1, 3, 224, 224)) -> int:
         """Calculates the number of channel features in out layer.
 
         Args:
@@ -69,6 +72,7 @@ class BinaryClassificationHead(nn.Module):
     It consists of a global average pooling layer followed by a fully connected
     layer.
     """
+
     def __init__(self, last_layer_features: int, num_classes: int = 1):
         """Initialize the `BinaryClassificationHead` module.
 
@@ -119,12 +123,12 @@ class ClassActivationMapGenerator(nn.Module):
             torch.Tensor: A tensor containing the Class Activation Maps of shape (B, H, W).
         """
         weights = self.fc.weight.detach().unsqueeze(-1).unsqueeze(-1)
-        cam = torch.einsum("ijkl,ijkl->ikl", features, weights).unsqueeze(
+        cam = torch.einsum('ijkl,ijkl->ikl', features, weights).unsqueeze(
             1
         )  # (B, 1, H, W)
 
         cam = F.interpolate(
-            cam, size=input_size[2:], mode="bilinear", align_corners=False
+            cam, size=input_size[2:], mode='bilinear', align_corners=False
         ).squeeze(1)  # (B, H, W)
 
         return cam
@@ -138,8 +142,8 @@ class CNNCAMMultihead(nn.Module):
         self,
         backbone: str,
         multi_head: bool = False,
-        return_node: str = "features.16",
-        weights: str = "IMAGENET1K_V1",
+        return_node: str = 'features.16',
+        weights: str = 'IMAGENET1K_V1',
     ):
         """Initialize the `CNNCAMMultihead` module.
 
@@ -153,17 +157,17 @@ class CNNCAMMultihead(nn.Module):
         """
         super().__init__()
         self.multi_head = multi_head
-        
+
         model = get_model(backbone, weights=weights)
-        self.feature_extractor = FeatureExtractor(
-            model, return_node=return_node
-        )
+        self.feature_extractor = FeatureExtractor(model, return_node=return_node)
         self.output_layer = BinaryClassificationHead(
             last_layer_features=self.feature_extractor.n_features
         )
         self.cam_generator = ClassActivationMapGenerator(self.output_layer.fc)
 
-    def forward(self, input: torch.Tensor) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def forward(
+        self, input: torch.Tensor
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """Perform a forward pass through the network.
 
         Args:

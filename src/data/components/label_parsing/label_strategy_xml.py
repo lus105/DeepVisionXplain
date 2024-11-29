@@ -22,12 +22,12 @@ class XmlBboxLabelStrategy(LabelStrategy):
         label_image = np.zeros(image_shape[:2], dtype=np.uint8)
 
         # Extract bounding boxes and draw them on the label image
-        for obj in root.findall("object"):
-            bndbox = obj.find("bndbox")
-            xmin = int(bndbox.find("xmin").text)
-            ymin = int(bndbox.find("ymin").text)
-            xmax = int(bndbox.find("xmax").text)
-            ymax = int(bndbox.find("ymax").text)
+        for obj in root.findall('object'):
+            bndbox = obj.find('bndbox')
+            xmin = int(bndbox.find('xmin').text)
+            ymin = int(bndbox.find('ymin').text)
+            xmax = int(bndbox.find('xmax').text)
+            ymax = int(bndbox.find('ymax').text)
 
             # Fill the bounding box area with white (255)
             label_image[ymin:ymax, xmin:xmax] = 255

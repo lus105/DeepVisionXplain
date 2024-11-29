@@ -17,7 +17,7 @@ class ImageLabelDataset(Dataset):
         self.img_label_pairs = self._get_img_label_pairs()
 
     def _get_img_label_pairs(self, label_ext: str = '_label'):
-        img_files = list(self.img_dir.rglob("*.*"))
+        img_files = list(self.img_dir.rglob('*.*'))
         img_label_pairs = []
 
         for img_path in img_files:
@@ -37,8 +37,8 @@ class ImageLabelDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path, label_path = self.img_label_pairs[idx]
-        image = Image.open(img_path).convert("RGB")
-        label = Image.open(label_path).convert("L")
+        image = Image.open(img_path).convert('RGB')
+        label = Image.open(label_path).convert('L')
 
         if self.transform:
             image = self.transform(image)

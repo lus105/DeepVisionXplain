@@ -6,7 +6,9 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose
 
-from src.data.components.preprocessing.preproc_pipeline_manager import PreprocessingPipeline
+from src.data.components.preprocessing.preproc_pipeline_manager import (
+    PreprocessingPipeline,
+)
 from src.data.components.image_label_dataset import ImageLabelDataset
 from src.data.components.utils import clear_directory
 from src.utils import RankedLogger
@@ -62,25 +64,32 @@ class ImageDataModule(LightningDataModule):
         return self.hparams.num_classes
 
     def prepare_data(self) -> None:
-        """Data preparation hook.
-        """
-        log.info(f"Preparing data in {self.hparams.data_dir}...")
+        """Data preparation hook."""
+        log.info(f'Preparing data in {self.hparams.data_dir}...')
 
         data_path = Path(self.hparams.data_dir)
         base_path = data_path.parent
         last_subdir = data_path.name
         output_path = base_path / f'{last_subdir}_processed'
-        
+
         initial_data = {'initial_data': self.hparams.data_dir}
         if output_path.exists():
             if self.hparams.overwrite_data:
                 clear_directory(output_path)
                 output_path.rmdir()
-                self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
+                self.preprocessed_data = self.hparams.preprocessing_pipeline.run(
+                    initial_data
+                )
             else:
-                self.preprocessed_data = self.hparams.preprocessing_pipeline.get_processed_data_path(initial_data)
+                self.preprocessed_data = (
+                    self.hparams.preprocessing_pipeline.get_processed_data_path(
+                        initial_data
+                    )
+                )
         else:
-            self.preprocessed_data = self.hparams.preprocessing_pipeline.run(initial_data)
+            self.preprocessed_data = self.hparams.preprocessing_pipeline.run(
+                initial_data
+            )
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.
@@ -93,12 +102,12 @@ class ImageDataModule(LightningDataModule):
             root=self.preprocessed_data['train'],
             transform=self.hparams.train_transforms,
         )
-        
+
         self.data_test = ImageFolder(
             root=self.preprocessed_data['test'],
             transform=self.hparams.val_test_transforms,
         )
-        
+
         self.data_val = ImageFolder(
             root=self.preprocessed_data['val'],
             transform=self.hparams.val_test_transforms,
@@ -134,7 +143,7 @@ class ImageDataModule(LightningDataModule):
             DataLoader[Any]: The test dataloader.
         """
         return self._default_dataloader(self.data_test, shuffle=False)
-    
+
     def predict_dataloader(self) -> DataLoader[Any]:
         """Create and return the predict dataloader.
 
@@ -171,7 +180,8 @@ class ImageDataModule(LightningDataModule):
         pass
 
     def _default_dataloader(
-        self, dataset: Dataset, shuffle: bool = False) -> DataLoader[Any]:
+        self, dataset: Dataset, shuffle: bool = False
+    ) -> DataLoader[Any]:
         """Create and return a dataloader.
 
         Args:

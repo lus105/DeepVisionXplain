@@ -16,6 +16,8 @@ class ImageLabelStrategy(LabelStrategy):
             np.array: The processed label data as image.
         """
         label = cv2.imread(str(label_path), cv2.IMREAD_GRAYSCALE)
-        _, thresholded_label = cv2.threshold(label, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, thresholded_label = cv2.threshold(
+            label, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
 
         return thresholded_label

@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from pathlib import Path
 
+
 def weight_load(
     ckpt_path: str,
     remove_prefix: str = 'net.',
@@ -31,6 +32,7 @@ def weight_load(
     }
 
     return model_weights
+
 
 def save_images(
     image: torch.Tensor, map: torch.Tensor, label: torch.Tensor, path: str
