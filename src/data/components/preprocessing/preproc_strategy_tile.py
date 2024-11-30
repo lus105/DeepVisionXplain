@@ -108,10 +108,16 @@ def sliding_window_with_coordinates(
     """
     step_y = tile_size[0] - overlap
     step_x = tile_size[1] - overlap
-    for y in range(0, image.shape[0] - tile_size[0] + 1, step_y):
-        for x in range(0, image.shape[1] - tile_size[1] + 1, step_x):
-            image_tile = image[y : y + tile_size[0], x : x + tile_size[1]]
-            yield image_tile, (x, y, x + tile_size[1], y + tile_size[0])
+    for y in range(0, image.shape[0], step_y):
+        for x in range(0, image.shape[1], step_x):
+            # Ensure the tile fits within the image bounds
+            x_start = min(x, image.shape[1] - tile_size[1])
+            y_start = min(y, image.shape[0] - tile_size[0])
+            x_end = x_start + tile_size[1]
+            y_end = y_start + tile_size[0]
+
+            image_tile = image[y_start:y_end, x_start:x_end]
+            yield image_tile, (x_start, y_start, x_end, y_end)
 
 
 class TilingStep(PreprocessingStep):
@@ -184,8 +190,13 @@ class TilingStep(PreprocessingStep):
         for contour in contours:
             for i in range(0, len(contour), self.contour_iter_step_size):
                 center_x, center_y = contour[i][0][0], contour[i][0][1]
+                
                 x_st = max(center_x - self.tile_size[1] // 2, 0)
                 y_st = max(center_y - self.tile_size[0] // 2, 0)
+
+                x_st = min(x_st, image.shape[1] - self.tile_size[1])
+                y_st = min(y_st, image.shape[0] - self.tile_size[0])
+
                 tile = Tile(
                     image[
                         y_st : y_st + self.tile_size[0], x_st : x_st + self.tile_size[1]
