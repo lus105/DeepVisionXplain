@@ -40,6 +40,18 @@ data:
         p: 0.5
       - _target_: torchvision.transforms.RandomVerticalFlip
         p: 0.5
+      - _target_: torchvision.transforms.RandomApply
+        transforms:
+          - _target_: torchvision.transforms.RandomChoice
+            transforms:
+              - _target_: torchvision.transforms.RandomRotation
+                degrees: 10
+              - _target_: torchvision.transforms.RandomAffine
+                degrees: 0
+                translate: [0.1, 0.1]
+              - _target_: torchvision.transforms.RandomPerspective
+                distortion_scale: 0.05
+        p: 0.7
 
   val_test_transforms:
     _target_: torchvision.transforms.Compose
@@ -54,25 +66,26 @@ data:
 model:
   net:
     multi_head: false
+    weights: "IMAGENET1K_V1"
   ckpt_path: null
 
-optimizer:
-  _target_: torch.optim.Adam
-  _partial_: true
-  lr: 0.001
-  weight_decay: 0.0
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 0.001
+    weight_decay: 0.0
 
-scheduler:
-  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
-  _partial_: true
-  mode: min
-  factor: 0.1
-  patience: 10
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: true
+    mode: min
+    factor: 0.1
+    patience: 10
 
-loss:
-  _target_: torch.nn.BCELoss
+  loss:
+    _target_: torch.nn.BCELoss
 
-compile: false
+  compile: false
 
 #===============================================================================
 
