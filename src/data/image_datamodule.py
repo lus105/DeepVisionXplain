@@ -126,7 +126,7 @@ class ImageDataModule(LightningDataModule):
         Returns:
             DataLoader[Any]: The train dataloader.
         """
-        return self._default_dataloader(self.data_train, shuffle=False)
+        return self._default_dataloader(self.data_train, shuffle=True)
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.
