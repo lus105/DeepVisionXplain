@@ -114,8 +114,8 @@ class ImageDataModule(LightningDataModule):
         )
 
         self.data_predict = ImageLabelDataset(
-            img_dir=self.preprocessed_data['test'] / 'images',
-            label_dir=self.preprocessed_data['test'] / 'labels',
+            img_dir=self.preprocessed_data['test'],
+            label_dir=self.preprocessed_data['test'].parent / 'labels',
             transform=self.hparams.val_test_transforms,
             label_transform=self.hparams.val_test_transforms,
         )
