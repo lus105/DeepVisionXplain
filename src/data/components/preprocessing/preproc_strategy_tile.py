@@ -151,7 +151,7 @@ class TilingStep(PreprocessingStep):
     def get_processed_data_path(self, data: dict) -> dict:
         new_data = {}
         for split, path in data.items():
-            tile_subdir = path / self.tiles_subdir
+            tile_subdir = path / self.tiles_subdir / self._image_subdir
             new_data[split] = tile_subdir
 
         return new_data
