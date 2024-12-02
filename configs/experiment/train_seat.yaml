@@ -5,14 +5,14 @@ defaults:
   - override /model: cnn_effnet_v2_s_down
   - override /callbacks: default
   - override /trainer: default
-  - override /logger: csv
+  - override /logger: many_loggers
 
 tags: ["train", "cnn", "seats"]
 
 #===============================================================================
 
 data:
-  data_dir: ${oc.env:seats_data_path}
+  data_dir: ${oc.env:lear_wrinkles_data_path}
   preprocessing_pipeline:
     _target_: src.data.components.preprocessing.preproc_pipeline_manager.PreprocessingPipeline
     steps:
@@ -83,5 +83,12 @@ trainer:
   accelerator: gpu
 
 #===============================================================================
+
+logger:
+  wandb:
+    project: "inobranda"
+    log_model: False # upload lightning ckpts
+    entity: "easyodm" # set to name of your wandb team
+    group: "wrinkle_calssification"
 
 seed: 12345
