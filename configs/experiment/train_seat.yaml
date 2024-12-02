@@ -1,0 +1,87 @@
+# @package _global_
+
+defaults:
+  - override /data: image_dir
+  - override /model: cnn_effnet_v2_s_down
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: csv
+
+tags: ["train", "cnn", "seats"]
+
+#===============================================================================
+
+data:
+  data_dir: ${oc.env:seats_data_path}
+  preprocessing_pipeline:
+    _target_: src.data.components.preprocessing.preproc_pipeline_manager.PreprocessingPipeline
+    steps:
+      - _target_: src.data.components.preprocessing.preproc_strategy_split.SplitStep
+        split_ratio: [0.7, 0.2, 0.1]
+        seed: 42
+        merge_classes: false
+      - _target_: src.data.components.preprocessing.preproc_strategy_tile.TilingStep
+        tile_size: [224, 224]
+        min_defective_area_th: 0.02
+        discard_background_th: 0.9
+        overlap: 10
+        contour_iter_step_size: 5
+        iterate_over_defective_areas: true
+  overwrite_data: false
+  batch_size: 64
+  num_workers: 3
+  pin_memory: false
+
+  train_transforms:
+    _target_: torchvision.transforms.Compose
+    transforms:
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+        p: 0.5
+      - _target_: torchvision.transforms.RandomVerticalFlip
+        p: 0.5
+
+  val_test_transforms:
+    _target_: torchvision.transforms.Compose
+    transforms:
+      - _target_: torchvision.transforms.ToTensor
+
+  save_predict_images: false
+  num_classes: 2
+
+#===============================================================================
+
+model:
+  net:
+    multi_head: false
+  ckpt_path: null
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  weight_decay: 0.0
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 10
+
+loss:
+  _target_: torch.nn.BCELoss
+
+compile: false
+
+#===============================================================================
+
+trainer:
+  min_epochs: 10
+  max_epochs: 20
+  gradient_clip_val: 0.5
+  accelerator: gpu
+
+#===============================================================================
+
+seed: 12345
