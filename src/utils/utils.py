@@ -15,6 +15,8 @@ from pynvml import (
     nvmlInit,
 )
 
+from src.utils.wandb_callbacks import UploadCodeAsArtifact
+from src.utils.wandb_callbacks import UploadCheckpointsAsArtifact
 from src.utils import pylogger, rich_utils
 
 log = pylogger.RankedLogger(__name__, rank_zero_only=True)
