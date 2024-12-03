@@ -15,7 +15,7 @@ from torchmetrics.classification import (
 from .components.nn_utils import weight_load, save_images
 
 
-class TrainingLitModule(LightningModule):
+class ClassificationLitModule(LightningModule):
     def __init__(
         self,
         net: torch.nn.Module,
