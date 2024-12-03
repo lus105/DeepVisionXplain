@@ -5,7 +5,7 @@ defaults:
   - override /model: null
   - override /callbacks: default
   - override /trainer: default
-  - override /logger: many_loggers
+  - override /logger: csv
 
 tags: ["train", "segmentation", "seats"]
 
@@ -50,6 +50,7 @@ data:
   num_classes: 2
 
 #model==========================================================================
+
 model:
   _target_: src.models.segmentation_module.SegmentationLitModule
 
@@ -80,6 +81,19 @@ model:
 
   ckpt_path: null
 
+#callbacks======================================================================
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/iou"
+    mode: "max"
+    save_last: True
+    auto_insert_metric_name: False
+
+  early_stopping:
+    monitor: "val/iou"
+    mode: "max"
+
 #trainer========================================================================
 
 trainer:
@@ -96,5 +110,7 @@ logger:
     log_model: False # upload lightning ckpts
     entity: "easyodm" # set to name of your wandb team
     group: "segmentation"
+
+#other==========================================================================
 
 seed: 12345
