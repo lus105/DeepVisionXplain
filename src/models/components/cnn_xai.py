@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import torch
 from torch import nn
@@ -112,25 +114,43 @@ class CNNXAI(nn.Module):
         heat_map = np.uint8(255 * heat_map)
         return heat_map
     
-    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, np.ndarray]:
+    def __generate_cam(self, pred: torch.Tensor) -> np.ndarray:
         """
-        Forward pass through the model. In addition to returning the prediction, it generates 
-        the explainability heatmap based on the activations of the last convolutional layer and
-        the weights of the last linear layer.
+        Generates an explainability heatmap based on the activations of the last convolutional layer
+        and the weights of the last linear layer corresponding to the predicted class.
 
         Args:
-            x (torch.Tensor): Input tensor to the model.
+            pred (torch.Tensor): The predicted class probabilities from the model.
 
         Returns:
-            tuple[torch.Tensor, np.ndarray]: A tuple containing:
-                - The predicted class index (torch.Tensor).
-                - The heatmap (np.ndarray) for explainability.
+            np.ndarray: The generated heatmap as a NumPy array.
+        """
+        pred_argmax: int = torch.argmax(pred).item()  # Get the index of the predicted class.
+        last_conv_out: torch.Tensor = self.__conv_activations  # Activations of the last convolutional layer.
+        last_conv_output_processed: np.ndarray = self.__process_conv_output(last_conv_out)  # Process activations.
+        last_layer_weights_for_pred: np.ndarray = (self.__last_linear_layer.weight[pred_argmax, :].detach().numpy())  # Weights for the predicted class.
+        heatmap: np.ndarray = self.__process_heatmap(last_conv_output_processed, last_layer_weights_for_pred)
+        return heatmap
+    
+    def forward(self, x: torch.Tensor, generate_cam: bool = False) -> tuple[torch.Tensor, Optional[np.ndarray]]:
+        """
+        Forward pass through the model. Optionally generates an explainability heatmap
+        using the activations of the last convolutional layer and the weights of the last linear layer.
+
+        Args:
+            x (torch.Tensor): The input tensor to the model.
+            generate_cam (bool, optional): If True, generate and return an explainability heatmap. 
+                                           Defaults to False.
+
+        Returns:
+            tuple[torch.Tensor, Optional[np.ndarray]]: A tuple containing:
+                - prediction (torch.Tensor): Class probability distribution
+                - heatmap (Optional[np.ndarray]): The explainability heatmap as a NumPy array if `generate_cam` is True.
+                  Otherwise, None.
         """
         logits: torch.Tensor = self.model(x)
         pred: torch.Tensor = torch.softmax(logits, dim=-1)
-        pred_argmax = torch.argmax(pred)
-        last_conv_out = self.__conv_activations
-        last_conv_output_processed = self.__process_conv_output(last_conv_out)
-        last_layer_weights_for_pred = self.__last_linear_layer.weight[pred_argmax, :].detach().numpy()
-        heatmap = self.__process_heatmap(last_conv_output_processed, last_layer_weights_for_pred)
-        return pred_argmax, heatmap
+        if generate_cam:
+            heatmap: np.ndarray = self.__generate_cam(pred)
+            return pred, heatmap
+        return pred
