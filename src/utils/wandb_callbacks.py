@@ -19,8 +19,8 @@ def get_wandb_logger(trainer: Trainer) -> WandbLogger:
     if isinstance(trainer.logger, WandbLogger):
         return trainer.logger
 
-    if isinstance(trainer.logger, list):
-        for logger in trainer.logger:
+    if isinstance(trainer.loggers, list):
+        for logger in trainer.loggers:
             if isinstance(logger, WandbLogger):
                 return logger
 
