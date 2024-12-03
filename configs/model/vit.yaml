@@ -1,4 +1,4 @@
-_target_: src.models.training_module.TrainingLitModule
+_target_: src.models.classification_module.ClassificationLitModule
 
 net:
   _target_: src.models.components.vit_rollout_multihead.VitRolloutMultihead

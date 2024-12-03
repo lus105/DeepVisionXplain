@@ -54,7 +54,7 @@ class MNISTDataModule(LightningDataModule):
 
     def __init__(
         self,
-        data_dir: str = "data/",
+        data_dir: str = 'data/',
         train_val_test_split: tuple[int, int, int] = (55_000, 5_000, 10_000),
         batch_size: int = 64,
         num_workers: int = 0,
@@ -123,7 +123,7 @@ class MNISTDataModule(LightningDataModule):
         if self.trainer is not None:
             if self.hparams.batch_size % self.trainer.world_size != 0:
                 raise RuntimeError(
-                    f"Batch size ({self.hparams.batch_size}) is not divisible by the number of devices ({self.trainer.world_size})."
+                    f'Batch size ({self.hparams.batch_size}) is not divisible by the number of devices ({self.trainer.world_size}).'
                 )
             self.batch_size_per_device = (
                 self.hparams.batch_size // self.trainer.world_size

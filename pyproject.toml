@@ -19,3 +19,6 @@ testpaths = "tests/"
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "*" = ["E402"]
+
+[tool.ruff.format]
+quote-style = 'single'

@@ -1,12 +1,15 @@
 from abc import ABC, abstractmethod
 
+
 class PreprocessingStep(ABC):
-    def __init__(self,
-                 train_subdir: str = 'train',
-                 test_subdir: str = 'test',
-                 val_subdir: str = 'val',
-                 image_subdir: str = 'images',
-                 label_subdir: str = 'labels'):
+    def __init__(
+        self,
+        train_subdir: str = 'train',
+        test_subdir: str = 'test',
+        val_subdir: str = 'val',
+        image_subdir: str = 'images',
+        label_subdir: str = 'labels',
+    ):
         """
         Abstract base class for image preprocessing.
 
@@ -27,19 +30,19 @@ class PreprocessingStep(ABC):
     def process(self, data: dict) -> dict:
         """
         Process the data and return the modified data directories.
-        
+
         Args:
             data (dict): Input data dictionary containing input directories.
         Returns:
             dict: Modified data dictionary of directories after processing.
         """
         pass
-    
+
     @abstractmethod
     def get_processed_data_path(self, data: dict) -> dict:
         """
         Get only path of preprocessed data
-        
+
         Args:
             data (dict): Input data dictionary containing input directories.
         Returns:

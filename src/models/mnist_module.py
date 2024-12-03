@@ -70,9 +70,9 @@ class MNISTLitModule(LightningModule):
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task="multiclass", num_classes=10)
-        self.val_acc = Accuracy(task="multiclass", num_classes=10)
-        self.test_acc = Accuracy(task="multiclass", num_classes=10)
+        self.train_acc = Accuracy(task='multiclass', num_classes=10)
+        self.val_acc = Accuracy(task='multiclass', num_classes=10)
+        self.test_acc = Accuracy(task='multiclass', num_classes=10)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -141,10 +141,10 @@ class MNISTLitModule(LightningModule):
         self.train_loss(loss)
         self.train_acc(preds, targets)
         self.log(
-            "train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True
+            'train/loss', self.train_loss, on_step=False, on_epoch=True, prog_bar=True
         )
         self.log(
-            "train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True
+            'train/acc', self.train_acc, on_step=False, on_epoch=True, prog_bar=True
         )
 
         # return loss or backpropagation will fail
@@ -169,8 +169,8 @@ class MNISTLitModule(LightningModule):
         # update and log metrics
         self.val_loss(loss)
         self.val_acc(preds, targets)
-        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/loss', self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/acc', self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
@@ -179,7 +179,7 @@ class MNISTLitModule(LightningModule):
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         self.log(
-            "val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True
+            'val/acc_best', self.val_acc_best.compute(), sync_dist=True, prog_bar=True
         )
 
     def test_step(
@@ -198,9 +198,9 @@ class MNISTLitModule(LightningModule):
         self.test_loss(loss)
         self.test_acc(preds, targets)
         self.log(
-            "test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True
+            'test/loss', self.test_loss, on_step=False, on_epoch=True, prog_bar=True
         )
-        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('test/acc', self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
@@ -233,7 +233,7 @@ class MNISTLitModule(LightningModule):
         Args:
             stage (str): Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
         """
-        if self.hparams.compile and stage == "fit":
+        if self.hparams.compile and stage == 'fit':
             self.net = torch.compile(self.net)
         if self.hparams.ckpt_path:
             model_weights = weight_load(self.hparams.ckpt_path)
@@ -250,12 +250,12 @@ class MNISTLitModule(LightningModule):
         if self.hparams.scheduler is not None:
             scheduler = self.hparams.scheduler(optimizer=optimizer)
             return {
-                "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
+                'optimizer': optimizer,
+                'lr_scheduler': {
+                    'scheduler': scheduler,
+                    'monitor': 'val/loss',
+                    'interval': 'epoch',
+                    'frequency': 1,
                 },
             }
-        return {"optimizer": optimizer}
+        return {'optimizer': optimizer}

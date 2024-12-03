@@ -29,17 +29,17 @@ def test_train_eval(
     HydraConfig().set_config(cfg_train)
     train_metric_dict, _ = train(cfg_train)
 
-    assert "last.ckpt" in os.listdir(tmp_path / "checkpoints")
+    assert 'last.ckpt' in os.listdir(tmp_path / 'checkpoints')
 
     with open_dict(cfg_eval):
-        cfg_eval.model.ckpt_path = str(tmp_path / "checkpoints" / "last.ckpt")
+        cfg_eval.model.ckpt_path = str(tmp_path / 'checkpoints' / 'last.ckpt')
 
     HydraConfig().set_config(cfg_eval)
     test_metric_dict, _ = evaluate(cfg_eval)
 
-    assert test_metric_dict["test/acc"] > 0.0
+    assert test_metric_dict['test/acc'] > 0.0
     assert (
-        abs(train_metric_dict["test/acc"].item() - test_metric_dict["test/acc"].item())
+        abs(train_metric_dict['test/acc'].item() - test_metric_dict['test/acc'].item())
         < 0.001
     )
 
