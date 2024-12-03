@@ -1,7 +1,7 @@
 from pathlib import Path
-from PIL import Image
+import cv2
 from torch.utils.data import Dataset
-
+from .utils import find_annotation_file
 
 class ImageLabelDataset(Dataset):
     """
@@ -9,25 +9,20 @@ class ImageLabelDataset(Dataset):
     Labels have '_mask' appended before the '.png' extension.
     """
 
-    def __init__(self, img_dir, label_dir, transform=None, label_transform=None):
+    def __init__(self, img_dir, label_dir, transform=None, label_postfix=''):
         self.img_dir = Path(img_dir)
         self.label_dir = Path(label_dir)
         self.transform = transform
-        self.label_transform = label_transform
+        self.label_postfix= label_postfix
         self.img_label_pairs = self._get_img_label_pairs()
 
-    def _get_img_label_pairs(self, label_ext: str = '_label'):
+    def _get_img_label_pairs(self):
         img_files = list(self.img_dir.rglob('*.*'))
         img_label_pairs = []
 
         for img_path in img_files:
-            relative_path = img_path.relative_to(self.img_dir)
-            # Append '_label' before '.png' in the label path
-            label_path = self.label_dir / relative_path
-            label_path = label_path.with_name(
-                label_path.stem + label_ext + label_path.suffix
-            )
-            if label_path.exists():  # Ensure the modified label path exists
+            label_path = find_annotation_file(self.label_dir, img_path.stem)
+            if label_path.exists():
                 img_label_pairs.append((img_path, label_path))
 
         return img_label_pairs
@@ -37,13 +32,12 @@ class ImageLabelDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path, label_path = self.img_label_pairs[idx]
-        image = Image.open(img_path).convert('RGB')
-        label = Image.open(label_path).convert('L')
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        label = cv2.imread(label_path, cv2.IMREAD_UNCHANGED)
 
-        if self.transform:
-            image = self.transform(image)
-
-        if self.label_transform:
-            label = self.label_transform(label)
+        if self.transform is not None:
+            transformed = self.transform(image=image, mask=label)
+            image = transformed["image"]
+            label = transformed["mask"]
 
         return image, label
