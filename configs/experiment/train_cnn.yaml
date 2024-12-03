@@ -1,7 +1,7 @@
 # @package _global_
 
 defaults:
-  - override /data: image_dir
+  - override /data: classification_dir
   - override /model: cnn_effnet_v2_s_down
   - override /callbacks: default
   - override /trainer: default

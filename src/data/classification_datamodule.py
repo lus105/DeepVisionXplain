@@ -16,7 +16,7 @@ from src.utils import RankedLogger
 log = RankedLogger(__name__, rank_zero_only=True)
 
 
-class ImageDataModule(LightningDataModule):
+class ClassificationDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = 'data/',

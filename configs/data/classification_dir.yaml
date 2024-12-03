@@ -1,4 +1,4 @@
-_target_: src.data.image_datamodule.ImageDataModule
+_target_: src.data.classification_datamodule.ClassificationDataModule
 data_dir: ${paths.data_dir}
 
 preprocessing_pipeline:
