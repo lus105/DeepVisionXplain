@@ -155,3 +155,6 @@ configs/local/default.yaml
 
 # Additional folders
 trained_models/
+
+# .history files
+.history/
