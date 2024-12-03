@@ -1,0 +1,100 @@
+# @package _global_
+
+defaults:
+  - override /data: null
+  - override /model: null
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: many_loggers
+
+tags: ["train", "segmentation", "seats"]
+
+#data===========================================================================
+
+data:
+  _target_: src.data.segmentation_datamodule.SegmentationDataModule
+
+  data_dir: ${oc.env:lear_outline_data_path}
+  preprocessing_pipeline: null
+  overwrite_data: false
+
+  batch_size: 4  
+  num_workers: 3
+  pin_memory: false
+
+  train_transforms:
+    _target_: albumentations.Compose
+    transforms:
+      - _target_: albumentations.Resize
+        height: 224
+        width: 224
+      - _target_: albumentations.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+      - _target_: albumentations.HorizontalFlip
+        p: 0.5
+      - _target_: albumentations.pytorch.transforms.ToTensorV2
+
+  val_test_transforms:
+    _target_: albumentations.Compose
+    transforms:
+      - _target_: albumentations.Resize
+        height: 224
+        width: 224
+      - _target_: albumentations.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+      - _target_: albumentations.pytorch.transforms.ToTensorV2
+
+  save_predict_images: false
+  num_classes: 2
+
+#model==========================================================================
+model:
+  _target_: src.models.segmentation_module.SegmentationLitModule
+
+  net:
+    _target_: src.models.components.seg_deeplabv3.DeepLabV3
+    model_name: torch.hub/deeplabv3_resnet50
+    model_repo: pytorch/vision:v0.10.0
+    pretrained: true
+    num_classes: 1
+
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 5e-5
+    weight_decay: 0.0
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: true
+    mode: min
+    factor: 0.1
+    patience: 10
+
+  loss:
+    _target_: torch.nn.BCEWithLogitsLoss
+
+  compile: false
+
+  ckpt_path: null
+
+#trainer========================================================================
+
+trainer:
+  min_epochs: 10
+  max_epochs: 20
+  gradient_clip_val: 0.5
+  accelerator: gpu
+
+#logger=========================================================================
+
+logger:
+  wandb:
+    project: "inobranda"
+    log_model: False # upload lightning ckpts
+    entity: "easyodm" # set to name of your wandb team
+    group: "segmentation"
+
+seed: 12345
