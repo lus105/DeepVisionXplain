@@ -152,8 +152,8 @@ The diagram shows how Hydra loads all configuration files and combines them into
   <img src="docs/res/workflow_steps.png"/>
 </p>
 
-1. Write your PyTorch Lightning Module (see example in [data/mnist_datamodule.py](src/data/mnist_datamodule.py))
-2. Write your PyTorch Lightning DataModule (see examples in [models/mnist_module.py](src/models/mnist_module.py))
+1. Write your PyTorch Lightning DataModule (see example in [data/mnist_datamodule.py](src/data/mnist_datamodule.py))
+2. Write your PyTorch Lightning Module (see examples in [models/mnist_module.py](src/models/mnist_module.py))
 3. Fill up your configs, in particularly create experiment/runs configs
 4. Run experiments:
 
