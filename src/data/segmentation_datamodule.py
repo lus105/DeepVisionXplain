@@ -175,5 +175,6 @@ class SegmentationDataModule(LightningDataModule):
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
+            persistent_workers=True,
             shuffle=shuffle,
         )
