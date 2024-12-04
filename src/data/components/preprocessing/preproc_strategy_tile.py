@@ -138,6 +138,8 @@ class TilingStep(PreprocessingStep):
         self.iterate_over_defective_areas = iterate_over_defective_areas
         self.discard_background_th = discard_background_th
         self.tiles_subdir = 'tiles'
+        self.good_subdir = '0'
+        self.defective_subdir = '1'
 
         self.label_parsing_strategy: LabelStrategy = None
 
@@ -170,7 +172,7 @@ class TilingStep(PreprocessingStep):
             label_tile = label[rect[1] : rect[3], rect[0] : rect[2]]
             tile = Tile(image_tile, label_tile, image_name, rect)
             category = (
-                'defective' if tile.is_defective(self.min_defective_area_th) else 'good'
+                self.defective_subdir if tile.is_defective(self.min_defective_area_th) else self.good_subdir
             )
             tiles.setdefault(category, []).append(tile)
 
@@ -208,9 +210,9 @@ class TilingStep(PreprocessingStep):
                     (x_st, y_st, x_st + self.tile_size[1], y_st + self.tile_size[0]),
                 )
                 category = (
-                    'defective'
+                    self.defective_subdir
                     if tile.is_defective(self.min_defective_area_th)
-                    else 'good'
+                    else self.good_subdir
                 )
                 tiles.setdefault(category, []).append(tile)
 
@@ -237,12 +239,12 @@ class TilingStep(PreprocessingStep):
             label = self.label_parsing_strategy.process_label(label_path, image.shape)
 
             self._process_and_save_tiles(
-                image, label, image_path.name, tile_image_subdir, tile_label_subdir
+                image, label, image_path.stem, tile_image_subdir, tile_label_subdir
             )
 
             if self.iterate_over_defective_areas:
                 self._process_and_save_defective_tiles(
-                    image, label, image_path.name, tile_image_subdir, tile_label_subdir
+                    image, label, image_path.stem, tile_image_subdir, tile_label_subdir
                 )
 
     def _prepare_tile_directories(self, path: Path) -> tuple:
