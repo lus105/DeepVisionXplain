@@ -113,13 +113,6 @@ class ClassificationDataModule(LightningDataModule):
             transform=self.hparams.val_test_transforms,
         )
 
-        self.data_predict = ImageLabelDataset(
-            img_dir=self.preprocessed_data['test'],
-            label_dir=self.preprocessed_data['test'].parent / 'labels',
-            transform=self.hparams.val_test_transforms,
-            label_transform=self.hparams.val_test_transforms,
-        )
-
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
 
@@ -150,7 +143,7 @@ class ClassificationDataModule(LightningDataModule):
         Returns:
             DataLoader[Any]: The predict dataloader.
         """
-        return self._default_dataloader(self.data_predict, shuffle=False)
+        pass
 
     def teardown(self, stage: Optional[str] = None) -> None:
         """Lightning hook for cleaning up after `trainer.fit()`, `trainer.validate()`,

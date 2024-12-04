@@ -51,7 +51,7 @@ data:
                 translate: [0.1, 0.1]
               - _target_: torchvision.transforms.RandomPerspective
                 distortion_scale: 0.05
-        p: 0.7
+        p: 0.6
 
   val_test_transforms:
     _target_: torchvision.transforms.Compose
@@ -102,6 +102,6 @@ logger:
     project: "inobranda"
     log_model: False # upload lightning ckpts
     entity: "easyodm" # set to name of your wandb team
-    group: "wrinkle_calssification"
+    group: "wrinkle_calssification_lear"
 
 seed: 12345
