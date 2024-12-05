@@ -64,9 +64,6 @@ data:
 #===============================================================================
 
 model:
-  net:
-    multi_head: false
-    weights: "IMAGENET1K_V1"
   ckpt_path: null
 
   optimizer:
@@ -103,5 +100,10 @@ logger:
     log_model: False # upload lightning ckpts
     entity: "easyodm" # set to name of your wandb team
     group: "wrinkle_calssification_lear"
+
+#===============================================================================
+callbacks:
+  early_stopping:
+    patience: 6
 
 seed: 12345
