@@ -3,7 +3,7 @@ from typing import Any
 import hydra
 import rootutils
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer, Callback
-from lightning.pytorch.loggers import Logger
+from lightning.pytorch.loggers import Logger, WandbLogger
 from omegaconf import DictConfig
 
 rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
@@ -42,26 +42,28 @@ def evaluate(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     log.info(f'Instantiating model <{cfg.model._target_}>')
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
-    log.info('Instantiating callbacks...')
-    callbacks: list[Callback] = instantiate_callbacks(cfg.get('callbacks'))
-
     log.info('Instantiating loggers...')
-    logger: list[Logger] = instantiate_loggers(cfg.get('logger'))
+    loggers: list[Logger] = instantiate_loggers(cfg.get('logger'))
+
+    has_wandb = any(isinstance(logger, WandbLogger) for logger in loggers)
+
+    log.info('Instantiating callbacks...')
+    callbacks: list[Callback] = instantiate_callbacks(cfg.get('callbacks'), has_wandb=has_wandb)
 
     log.info(f'Instantiating trainer <{cfg.trainer._target_}>')
     trainer: Trainer = hydra.utils.instantiate(
-        cfg.trainer, callbacks=callbacks, logger=logger
+        cfg.trainer, callbacks=callbacks, logger=loggers
     )
 
     object_dict = {
         'cfg': cfg,
         'datamodule': datamodule,
         'model': model,
-        'logger': logger,
+        'logger': loggers,
         'trainer': trainer,
     }
 
-    if logger:
+    if loggers:
         log.info('Logging hyperparameters!')
         log_hyperparameters(object_dict)
 
