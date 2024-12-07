@@ -182,11 +182,12 @@ def close_loggers() -> None:
             wandb.finish()
 
 
-def instantiate_callbacks(callbacks_cfg: DictConfig) -> list[Callback]:
+def instantiate_callbacks(callbacks_cfg: DictConfig, has_wandb: bool) -> list[Callback]:
     """Instantiates callbacks from config.
 
     Args:
         callbacks_cfg (DictConfig): A DictConfig object containing callback configurations.
+        has_wandb (bool): Whether WandbLogger is available.
 
     Returns:
         List[Callback]: A list of instantiated callbacks.
@@ -200,8 +201,15 @@ def instantiate_callbacks(callbacks_cfg: DictConfig) -> list[Callback]:
     if not isinstance(callbacks_cfg, DictConfig):
         raise TypeError('Callbacks config must be a DictConfig!')
 
-    for _, cb_conf in callbacks_cfg.items():
+    for name, cb_conf in callbacks_cfg.items():
         if isinstance(cb_conf, DictConfig) and '_target_' in cb_conf:
+            if 'wandb' in cb_conf._target_.lower():
+                if not has_wandb:
+                    log.warning(
+                        f"Skipping Wandb callback <{name}> ({cb_conf._target_}) since WandbLogger is not found."
+                    )
+                    continue
+
             log.info(f'Instantiating callback <{cb_conf._target_}>')
             callbacks.append(hydra.utils.instantiate(cb_conf))
 

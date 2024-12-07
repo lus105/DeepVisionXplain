@@ -3,6 +3,7 @@ defaults:
   - early_stopping
   - model_summary
   - rich_progress_bar
+  - wandb
   - _self_
 
 model_checkpoint:
