@@ -15,11 +15,14 @@ class XmlBboxLabelStrategy(LabelStrategy):
         Returns:
             np.array: The processed label data as image.
         """
+        # Create a blank label image based on the input image shape
+        label_image = np.zeros(image_shape[:2], dtype=np.uint8)
+        if label_path is None:
+            return label_image
+        
         # Parse the XML file
         tree = ET.parse(label_path)
         root = tree.getroot()
-        # Create a blank label image based on the input image shape
-        label_image = np.zeros(image_shape[:2], dtype=np.uint8)
 
         # Extract bounding boxes and draw them on the label image
         for obj in root.findall('object'):
