@@ -53,7 +53,9 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     has_wandb = any(isinstance(logger, WandbLogger) for logger in loggers)
 
     log.info('Instantiating callbacks...')
-    callbacks: list[Callback] = instantiate_callbacks(cfg.get('callbacks'), has_wandb=has_wandb)
+    callbacks: list[Callback] = instantiate_callbacks(
+        cfg.get('callbacks'), has_wandb=has_wandb
+    )
 
     log.info(f'Instantiating trainer <{cfg.trainer._target_}>')
     trainer: Trainer = hydra.utils.instantiate(

@@ -206,7 +206,7 @@ def instantiate_callbacks(callbacks_cfg: DictConfig, has_wandb: bool) -> list[Ca
             if 'wandb' in cb_conf._target_.lower():
                 if not has_wandb:
                     log.warning(
-                        f"Skipping Wandb callback <{name}> ({cb_conf._target_}) since WandbLogger is not found."
+                        f'Skipping Wandb callback <{name}> ({cb_conf._target_}) since WandbLogger is not found.'
                     )
                     continue
 

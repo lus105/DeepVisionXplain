@@ -172,7 +172,9 @@ class TilingStep(PreprocessingStep):
             label_tile = label[rect[1] : rect[3], rect[0] : rect[2]]
             tile = Tile(image_tile, label_tile, image_name, rect)
             category = (
-                self.defective_subdir if tile.is_defective(self.min_defective_area_th) else self.good_subdir
+                self.defective_subdir
+                if tile.is_defective(self.min_defective_area_th)
+                else self.good_subdir
             )
             tiles.setdefault(category, []).append(tile)
 
@@ -192,7 +194,7 @@ class TilingStep(PreprocessingStep):
         for contour in contours:
             for i in range(0, len(contour), self.contour_iter_step_size):
                 center_x, center_y = contour[i][0][0], contour[i][0][1]
-                
+
                 x_st = max(center_x - self.tile_size[1] // 2, 0)
                 y_st = max(center_y - self.tile_size[0] // 2, 0)
 

@@ -98,14 +98,13 @@ class SplitStep(PreprocessingStep):
                     image_path.stem,
                     IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION],
                 )
-                if label_path:
-                    data.append(
-                        {
-                            'image_path': image_path,
-                            'label_path': label_path,
-                            'class': 'binary',
-                        }
-                    )
+                data.append(
+                    {
+                        'image_path': image_path,
+                        'label_path': label_path,
+                        'class': 'binary',
+                    }
+                )
 
         elif dataset_type == DatasetType.ImageLabelMultiClass:
             image_dir = data_path / self._image_subdir
@@ -122,14 +121,13 @@ class SplitStep(PreprocessingStep):
                         image_path.stem,
                         IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION],
                     )
-                    if label_path:
-                        data.append(
-                            {
-                                'image_path': image_path,
-                                'label_path': label_path,
-                                'class': class_name,
-                            }
-                        )
+                    data.append(
+                        {
+                            'image_path': image_path,
+                            'label_path': label_path,
+                            'class': class_name,
+                        }
+                    )
 
         elif dataset_type == DatasetType.ImageBinary:
             class_dirs = list_dirs(data_path)
