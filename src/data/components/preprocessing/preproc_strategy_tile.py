@@ -8,7 +8,7 @@ from typing import Generator
 from .preproc_strategy import PreprocessingStep
 from ..utils import (
     list_files,
-    find_annotation_file,
+    find_file_by_name,
     IMAGE_EXTENSIONS,
     XML_EXTENSION,
     JSON_EXTENSION,
@@ -229,7 +229,7 @@ class TilingStep(PreprocessingStep):
         for image_path in tqdm(image_paths, desc='Processing images'):
             image = cv2.imread(str(image_path))
 
-            label_path = find_annotation_file(
+            label_path = find_file_by_name(
                 path / self._label_subdir,
                 image_path.stem,
                 file_extensions=IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION],
