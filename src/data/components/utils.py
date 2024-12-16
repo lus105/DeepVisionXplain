@@ -83,7 +83,7 @@ def save_files(file_paths: list[Path], target_dir: Path) -> None:
         shutil.copy(file_path, target_path / file_path.name)
 
 
-def find_annotation_file(
+def find_file_by_name(
     directory: Path, file_name: str, file_extensions: list = IMAGE_EXTENSIONS
 ) -> Optional[Path]:
     """Searches for a file with a specified base name and various extensions in a given directory.

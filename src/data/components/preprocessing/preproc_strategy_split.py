@@ -7,7 +7,7 @@ from ..utils import (
     DatasetType,
     list_files,
     list_dirs,
-    find_annotation_file,
+    find_file_by_name,
     IMAGE_EXTENSIONS,
     XML_EXTENSION,
     JSON_EXTENSION,
@@ -93,7 +93,7 @@ class SplitStep(PreprocessingStep):
             image_files = list_files(image_dir, IMAGE_EXTENSIONS)
 
             for image_path in image_files:
-                label_path = find_annotation_file(
+                label_path = find_file_by_name(
                     label_dir,
                     image_path.stem,
                     IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION],
@@ -116,7 +116,7 @@ class SplitStep(PreprocessingStep):
                 image_files = list_files(class_dir, IMAGE_EXTENSIONS)
 
                 for image_path in image_files:
-                    label_path = find_annotation_file(
+                    label_path = find_file_by_name(
                         label_dir / class_name,
                         image_path.stem,
                         IMAGE_EXTENSIONS + [XML_EXTENSION, JSON_EXTENSION],
