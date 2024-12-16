@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import cv2
 import torch
 from torch.utils.data import Dataset
-from .utils import find_annotation_file, list_files, IMAGE_EXTENSIONS
+from .utils import find_file_by_name, list_files, IMAGE_EXTENSIONS
 
 class ImageLabelDataset(Dataset):
     """
@@ -40,7 +40,7 @@ class ImageLabelDataset(Dataset):
         img_label_pairs = []
 
         for img_path in img_files:
-            label_path = find_annotation_file(self.label_dir, img_path.stem)
+            label_path = find_file_by_name(self.label_dir, img_path.stem)
             if label_path.exists():
                 img_label_pairs.append((img_path, label_path))
 
