@@ -1,0 +1,1 @@
+python src/train.py experiment=train_segmentation logger=wandb hparams_search=seg_optuna
