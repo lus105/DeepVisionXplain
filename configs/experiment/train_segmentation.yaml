@@ -1,0 +1,170 @@
+# @package _global_
+
+defaults:
+  - override /data: null
+  - override /model: null
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: wandb # csv, manyloger
+
+tags: ["train", "segmentation", "seats"]
+
+#data===========================================================================
+
+data:
+  _target_: src.data.segmentation_datamodule.SegmentationDataModule
+
+  data_dir: ${oc.env:lear_adient_outline_data_path}
+  preprocessing_pipeline: null
+  overwrite_data: false
+
+  batch_size: 2
+  num_workers: 3
+  pin_memory: false
+
+  train_transforms:
+    _target_: albumentations.Compose
+    transforms:       
+      - _target_: albumentations.HorizontalFlip
+        p: 0.5
+      - _target_: albumentations.ShiftScaleRotate
+        p: 0.8
+        scale_limit: [-0.03, 0.03]
+        shift_limit: [-0.02, 0.02]
+        rotate_limit: [-2, 2]
+      - _target_: albumentations.OneOf
+        transforms:
+          - _target_: albumentations.RandomBrightnessContrast
+            p: 0.5 
+            brightness_limit: 0.15
+            contrast_limit: 0.15
+          - _target_: albumentations.RandomGamma
+            p: 0.5
+            gamma_limit: [75, 125]
+      - _target_: src.data.components.augmentations.ResizeWithAspectRatio
+        target_height: 512
+        target_width: 512
+        always_apply: True 
+      - _target_: albumentations.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]      
+      - _target_: albumentations.pytorch.transforms.ToTensorV2
+       
+
+  val_test_transforms:
+    _target_: albumentations.Compose
+    transforms:       
+      - _target_: albumentations.HorizontalFlip
+        p: 0.5
+      - _target_: albumentations.ShiftScaleRotate
+        p: 0.8
+        scale_limit: [-0.03, 0.03]
+        shift_limit: [-0.02, 0.02]
+        rotate_limit: [-2, 2]
+      - _target_: albumentations.OneOf
+        transforms:
+          - _target_: albumentations.RandomBrightnessContrast
+            p: 0.5 
+            brightness_limit: 0.15
+            contrast_limit: 0.15
+          - _target_: albumentations.RandomGamma
+            p: 0.5
+            gamma_limit: [75, 125]
+      - _target_: src.data.components.augmentations.ResizeWithAspectRatio
+        target_height: 512
+        target_width: 512
+        always_apply: True 
+      - _target_: albumentations.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]      
+      - _target_: albumentations.pytorch.transforms.ToTensorV2
+       
+
+  save_predict_images: false
+  num_classes: 2
+
+#model==========================================================================
+
+model:
+  _target_: src.models.segmentation_module.SegmentationLitModule
+
+
+ # DeepLabv3+
+  # net:
+  #   _target_: src.models.components.seg_deeplabv3plus.DeepLabv3Plus
+  #   model_name: segmentation_models_pytorch/DeepLabV3Plus
+  #   encoder_name: resnet50
+  #   encoder_weigths: imagenet
+  #   num_classes: 1
+
+
+  # Transunet
+  net:
+    _target_: src.models.components.seg_transunet.VisionTransformer
+    img_size: 512
+    num_classes: 1
+    path_to_pretrained: /media/gpu0/data/lukas/DeepVisionXplain/trained_models/imagenet21k_R50+ViT-B_16.npz
+
+
+  # Segformer
+  # net:
+  #   _target_: src.models.components.seg_segformer.SegFormer
+  #   encoder_name: resnet50
+  #   encoder_weigths: imagenet
+  #   num_classes: 1
+
+
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 5e-5
+    weight_decay: 0.0
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: true
+    mode: min
+    factor: 0.1
+    patience: 10
+
+  loss:
+    _target_: torch.nn.BCEWithLogitsLoss
+
+  compile: false
+
+  ckpt_path: null
+
+#callbacks======================================================================
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/iou"
+    mode: "max"
+    save_last: True
+    auto_insert_metric_name: False
+
+  early_stopping:
+    monitor: "val/iou"
+    mode: "max"
+    patience: 4
+
+#trainer========================================================================
+
+trainer:
+  min_epochs: 10
+  max_epochs: 25
+  gradient_clip_val: 0.5
+  accelerator: gpu
+
+#logger=========================================================================
+
+logger:
+  wandb:
+    project: "inobranda"
+    log_model: False # upload lightning ckpts
+    entity: "easyodm" # set to name of your wandb team
+    group: "outline_segmentation_adient_lear_islaikant_aspect"
+
+#other==========================================================================
+
+seed: 12345
