@@ -102,6 +102,13 @@ def find_file_by_name(
         file_path = directory_path / f'{file_name}{extension}'
         if file_path.is_file():
             return Path(file_path)
+        
+    # Recursively search in subdirectories
+    for subdirectory in directory_path.iterdir():
+        if subdirectory.is_dir():
+            found_file = find_file_by_name(subdirectory, file_name, file_extensions)
+            if found_file:
+                return found_file
 
     return None
 
