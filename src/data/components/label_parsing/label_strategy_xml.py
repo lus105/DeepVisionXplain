@@ -19,7 +19,7 @@ class XmlBboxLabelStrategy(LabelStrategy):
         label_image = np.zeros(image_shape[:2], dtype=np.uint8)
         if label_path is None:
             return label_image
-        
+
         # Parse the XML file
         tree = ET.parse(label_path)
         root = tree.getroot()

@@ -98,27 +98,28 @@ class ClassificationDataModule(LightningDataModule):
             stage (Optional[str], optional): The stage to setup. Either `"fit"`,
             `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
-        self.data_train = ImageFolder(
-            root=self.preprocessed_data['train'],
-            transform=self.hparams.train_transforms,
-        )
+        if stage in {'fit', 'validate', 'test'}:
+            self.data_train = ImageFolder(
+                root=self.preprocessed_data['train'],
+                transform=self.hparams.train_transforms,
+            )
 
-        self.data_test = ImageFolder(
-            root=self.preprocessed_data['test'],
-            transform=self.hparams.val_test_transforms,
-        )
+            self.data_test = ImageFolder(
+                root=self.preprocessed_data['test'],
+                transform=self.hparams.val_test_transforms,
+            )
 
-        self.data_val = ImageFolder(
-            root=self.preprocessed_data['val'],
-            transform=self.hparams.val_test_transforms,
-        )
+            self.data_val = ImageFolder(
+                root=self.preprocessed_data['val'],
+                transform=self.hparams.val_test_transforms,
+            )
 
-        self.data_predict = ImageLabelDataset(
-            img_dir=self.preprocessed_data['test'],
-            label_dir=self.preprocessed_data['test'].parent / 'labels',
-            transform=self.hparams.val_test_transforms,
-            label_transform=self.hparams.val_test_transforms,
-        )
+        if stage == 'predict':
+            self.data_predict = ImageLabelDataset(
+                img_dir=self.preprocessed_data['test'],
+                label_dir=self.preprocessed_data['test'].parent / 'labels',
+                transform=self.hparams.val_test_transforms,
+            )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
