@@ -41,7 +41,7 @@ class Tile:
         Returns:
             str: Tile label name based on coordinates.
         """
-        return f'{self.image_name}_{self.rect[0]}_{self.rect[1]}_label.png'
+        return f'{self.image_name}_{self.rect[0]}_{self.rect[1]}.png'
 
     def save_tile(self, output_dir: Path) -> None:
         """Save tile (image).
