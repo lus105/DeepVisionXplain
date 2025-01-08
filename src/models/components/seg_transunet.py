@@ -53,13 +53,13 @@ def get_b16_config():
 
     config.decoder_channels = (256, 128, 64, 16)
     config.n_classes = 1
-    config.activation = 'softmax'
+    config.activation = 'sigmoid'
     return config
 
 def get_r50_b16_config():
     """Returns the Resnet50 + ViT-B/16 configuration."""
     config = get_b16_config()
-    config.patches.grid = (32, 32) # keista is 16x16 i 32x32
+    config.patches.grid = (16, 16)
     config.resnet = ml_collections.ConfigDict()
     config.resnet.num_layers = (3, 4, 9)
     config.resnet.width_factor = 1
@@ -502,7 +502,7 @@ class DecoderBlock(nn.Module):
     def forward(self, x, skip=None):
         x = self.up(x)
         if skip is not None:
-            x = torch.cat([x, skip], dim=1) ## CIA KLAIDA
+            x = torch.cat([x, skip], dim=1)
         x = self.conv1(x)
         x = self.conv2(x)
         return x
@@ -567,7 +567,7 @@ class VisionTransformer(nn.Module):
         self.num_classes = num_classes
         self.zero_head = zero_head
         self.classifier = config.classifier
-        self.transformer = Transformer(config, img_size, vis) # neluzta
+        self.transformer = Transformer(config, img_size, vis)
         self.decoder = DecoderCup(config)
         self.segmentation_head = SegmentationHead(
             in_channels=config['decoder_channels'][-1],
