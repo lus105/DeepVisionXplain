@@ -102,7 +102,7 @@ def find_file_by_name(
         file_path = directory_path / f'{file_name}{extension}'
         if file_path.is_file():
             return Path(file_path)
-        
+
     # Recursively search in subdirectories
     for subdirectory in directory_path.iterdir():
         if subdirectory.is_dir():
