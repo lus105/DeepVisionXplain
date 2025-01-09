@@ -151,7 +151,7 @@ class ClassificationDataModule(LightningDataModule):
         Returns:
             DataLoader[Any]: The predict dataloader.
         """
-        pass
+        return self._default_dataloader(self.data_predict, shuffle=False)
 
     def teardown(self, stage: Optional[str] = None) -> None:
         """Lightning hook for cleaning up after `trainer.fit()`, `trainer.validate()`,
