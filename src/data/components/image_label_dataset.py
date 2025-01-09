@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 import albumentations
 import torchvision
 from PIL import Image
-from .utils import find_file_by_name, list_files, IMAGE_EXTENSIONS
+from .utils import list_files, IMAGE_EXTENSIONS
 
 
 class ImageLabelDataset(Dataset):
@@ -28,10 +28,12 @@ class ImageLabelDataset(Dataset):
             label_dir (str): Directory containing labels.
             transform (Optional[Callable], optional): Transform applied
               to image-label pairs. Defaults to None.
+            label_postfix (str): image name label postfix. Defaults to ''
         """
         self.img_dir = Path(img_dir)
         self.label_dir = Path(label_dir)
         self.transform = transform
+        self.label_postfix = label_postfix
         self.img_label_pairs = self._get_img_label_pairs()
 
     def _get_img_label_pairs(self) -> list[tuple[Path, Path]]:
@@ -40,12 +42,23 @@ class ImageLabelDataset(Dataset):
         Returns:
             list[tuple[Path, Path]]: List of (image_path, label_path) pairs.
         """
+        # Get all image and label files
         img_files = list_files(self.img_dir, IMAGE_EXTENSIONS)
-        img_label_pairs = []
+        label_files = list_files(self.label_dir, IMAGE_EXTENSIONS)
 
+        # Create a lookup dictionary for label files by stem name (without "_label" suffix)
+        label_lookup = {
+            label_file.stem: label_file
+            for label_file in label_files
+        }
+
+        # Match image files with corresponding label files
+        img_label_pairs = []
         for img_path in img_files:
-            label_path = find_file_by_name(self.label_dir, img_path.stem)
-            if label_path.exists():
+            # Construct the expected label stem
+            expected_label_stem = f"{img_path.stem}{self.label_postfix}"
+            label_path = label_lookup.get(expected_label_stem)
+            if label_path and label_path.exists():
                 img_label_pairs.append((img_path, label_path))
 
         return img_label_pairs
@@ -72,7 +85,7 @@ class ImageLabelDataset(Dataset):
         label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
         # Convert OpenCV BGR to RGB for PyTorch/TorchVision compatibility
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.transform is not None:
             # Handle Albumentations transforms

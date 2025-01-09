@@ -119,6 +119,7 @@ class ClassificationDataModule(LightningDataModule):
                 img_dir=self.preprocessed_data['test'],
                 label_dir=self.preprocessed_data['test'].parent / 'labels',
                 transform=self.hparams.val_test_transforms,
+                label_postfix='_label'
             )
 
     def train_dataloader(self) -> DataLoader[Any]:
