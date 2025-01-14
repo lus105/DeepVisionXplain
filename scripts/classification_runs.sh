@@ -56,3 +56,26 @@
 # Shedulers
 # python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers model.scheduler._target_=src.models.components.schedulers.WarmupLRScheduler +model.scheduler.init_lr=1e-8 +model.scheduler.peak_lr=0.000067 +model.scheduler.warmup_steps=4
 # python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers model.scheduler._target_=src.models.components.schedulers.WarmupReduceLROnPlateauScheduler +model.scheduler.init_lr=1e-10 +model.scheduler.peak_lr=0.00007 +model.scheduler.warmup_steps=8 +model.scheduler.patience=4
+
+# Stage 5. Evaluate cnn and vit xai segmentation
+#export lear_wrinkles_data_path="./data/lear_wrinkles"
+#export paths_trained_models="./trained_models"
+#-CNN-
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=cnn_effnet_v2_s_full model.ckpt_path=$paths_trained_models/cnn_misty-wildflower-144.ckpt
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=cnn_effnet_v2_s_down model.ckpt_path=$paths_trained_models/cnn_down_polar-field-189.ckpt
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=cnn_mobnet_v3_large_full model.ckpt_path=$paths_trained_models/cnn_helpful-morning-188.ckpt
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=cnn_mobnet_v3_large_down model.ckpt_path=$paths_trained_models/cnn_down_bumbling-fog-252.ckpt
+
+#-VIT-
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_tiny model.ckpt_path=$paths_trained_models/vit_earnest-donkey-167.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="min"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_tiny model.ckpt_path=$paths_trained_models/vit_earnest-donkey-167.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="min"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_tiny model.ckpt_path=$paths_trained_models/vit_earnest-donkey-167.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="mean"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_tiny model.ckpt_path=$paths_trained_models/vit_earnest-donkey-167.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="mean"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_tiny model.ckpt_path=$paths_trained_models/vit_earnest-donkey-167.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="max"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_tiny model.ckpt_path=$paths_trained_models/vit_earnest-donkey-167.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="max"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="min"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="min"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="mean"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="mean"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="max"
+#python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="max"

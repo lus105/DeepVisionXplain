@@ -4,6 +4,7 @@ defaults:
   - override /data: classification_dir
   - override /model: cnn_effnet_v2_s_full
   - override /trainer: gpu
+  - override /logger: wandb
 
 tags: ["eval", "xai_segmentation"]
 
@@ -41,5 +42,11 @@ data:
   save_predict_images: true
   num_classes: 2
 
+logger:
+  wandb:
+    project: "inobranda"
+    log_model: False # upload lightning ckpts
+    entity: "easyodm" # set to name of your wandb team
+    group: "wrinkle_calssification_lear"
 
 predict: True
