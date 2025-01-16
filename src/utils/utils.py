@@ -308,3 +308,12 @@ def log_gpu_memory_metadata() -> None:
         log.info(f'GPU memory info: card {i} : total : {total_gb:.2f} GB')
         log.info(f'GPU memory info: card {i} : free  : {free_gb:.2f} GB')
         log.info(f'GPU memory info: card {i} : used  : {used_gb:.2f} GB')
+
+def set_precision(precision: str = 'highest') -> None:
+    """Sets the precision for matmul operations.
+    """
+    # Options are 'highest', 'high', 'medium'
+    if precision not in ['highest', 'high', 'medium']:
+        raise ValueError('Precision must be one of "highest", "high", "medium"')
+    
+    torch.set_float32_matmul_precision(precision)

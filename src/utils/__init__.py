@@ -9,4 +9,5 @@ from src.utils.utils import (
     log_hyperparameters,
     log_gpu_memory_metadata,
     run_sh_command,
+    set_precision,
 )
