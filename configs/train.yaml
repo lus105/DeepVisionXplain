@@ -47,4 +47,4 @@ seed: null
 
 # precision for training
 precision:
-  float32_matmul: high  # Options: highest, high, medium
+  float32_matmul: highest  # Options: highest, high, medium
