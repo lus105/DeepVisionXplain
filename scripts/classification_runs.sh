@@ -79,3 +79,11 @@
 #python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="mean"
 #python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.1 model.net.head_fusion="max"
 #python src/eval.py experiment=eval_seat_xai data.data_dir=$lear_wrinkles_data_path model=vit_deit_tiny model.ckpt_path=$paths_trained_models/vit_different-violet-253.ckpt model.net.discard_ratio=0.9 model.net.head_fusion="max"
+
+# Stage 6. Train with different precision
+#python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers
+#python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers precision.float32_matmul=high
+#python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers precision.float32_matmul=medium
+# Delete the sigmoid at the end of the model
+#python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers model.loss._target_=torch.nn.BCEWithLogitsLoss +trainer.precision=16
+#python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers model.loss._target_=torch.nn.BCEWithLogitsLoss +trainer.precision="bf16"
