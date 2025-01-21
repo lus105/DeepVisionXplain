@@ -32,5 +32,3 @@ ipywidgets
 ipykernel
 pandas
 albumentations
-tensorrt
-pycuda

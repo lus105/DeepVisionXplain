@@ -39,5 +39,3 @@ dependencies:
       - ipykernel
       - pandas
       - albumentations
-      - tensorrt
-      - pycuda
