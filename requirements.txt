@@ -31,5 +31,3 @@ ruff
 ipywidgets
 ipykernel
 pandas
-tensorrt
-pycuda

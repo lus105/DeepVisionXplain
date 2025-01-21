@@ -38,5 +38,3 @@ dependencies:
       - ipywidgets
       - ipykernel
       - pandas
-      - tensorrt
-      - pycuda
