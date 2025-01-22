@@ -23,7 +23,7 @@ class InferenceBase(ABC):
         pass
 
     @abstractmethod
-    def predict(self, data: np.ndarray) -> np.ndarray:
+    def __call__(self, data: np.ndarray) -> np.ndarray:
         """
         Perform inference on the provided data.
 

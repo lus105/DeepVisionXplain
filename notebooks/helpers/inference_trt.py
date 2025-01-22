@@ -22,7 +22,7 @@ class InferenceTensorRT(InferenceBase):
                 self.model = self.runtime.deserialize_cuda_engine(f.read())
 
             self.context = self.model.create_execution_context()
-            
+
             # allocate buffers
             self.inputs, self.outputs, self.bindings, self.stream = self._allocate_buffers()
         except Exception as e:
@@ -61,7 +61,7 @@ class InferenceTensorRT(InferenceBase):
 
         return inputs, outputs, bindings, stream
 
-    def predict(self, data: np.ndarray) -> np.ndarray:
+    def __call__(self, data: np.ndarray) -> np.ndarray:
         # transfer input data to device
         np.copyto(self.inputs[0].host, data.ravel())
         cuda.memcpy_htod_async(self.inputs[0].device, self.inputs[0].host, self.stream)

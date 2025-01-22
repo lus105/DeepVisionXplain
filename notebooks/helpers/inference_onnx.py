@@ -21,12 +21,12 @@ class InferenceOnnx(InferenceBase):
         except Exception as e:
             raise RuntimeError(f"Failed to load ONNX model: {e}")
 
-    def predict(self, data: np.ndarray) -> np.ndarray:
+    def __call__(self, data: np.ndarray) -> np.ndarray:
         try:
             input_name = self.model.get_inputs()[0].name
             output_names = [output.name for output in self.model.get_outputs()]
             outputs = self.model.run(output_names, {input_name: data})
-            
+
             return outputs
         except Exception as e:
             raise RuntimeError(f"ONNX prediction failed: {e}")
