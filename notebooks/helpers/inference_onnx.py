@@ -9,20 +9,24 @@ rootutils.setup_root(
 from notebooks.helpers.inference_base import InferenceBase
 
 class InferenceOnnx(InferenceBase):
-    def __init__(self, model_path: str) -> None:
-        super().__init__(model_path)
-        self.model = self.load_model()
+    """
+    Inference implementation for ONNX models using ONNX Runtime.
+    """
+    def initialize(self) -> None:
+        try:
+            self.model = ort.InferenceSession(
+                self._model_path,
+                providers=["CUDAExecutionProvider"]
+            )
+        except Exception as e:
+            raise RuntimeError(f"Failed to load ONNX model: {e}")
 
-    def load_model(self) -> None:
-        model = ort.InferenceSession(
-            self._model_path,
-            providers=['CUDAExecutionProvider']
-        )
-        return model
-    
     def predict(self, data: np.ndarray) -> np.ndarray:
-        input_name = self.model.get_inputs()[0].name
-        output_names = [output.name for output in self.model.get_outputs()]
-        outputs = self.model.run(output_names, {input_name: data})
-
-        return outputs
+        try:
+            input_name = self.model.get_inputs()[0].name
+            output_names = [output.name for output in self.model.get_outputs()]
+            outputs = self.model.run(output_names, {input_name: data})
+            
+            return outputs
+        except Exception as e:
+            raise RuntimeError(f"ONNX prediction failed: {e}")
