@@ -55,7 +55,7 @@ model:
   _target_: src.models.segmentation_module.SegmentationLitModule
 
   net:
-    _target_: src.models.components.seg_deeplabv3.DeepLabV3
+    _target_: src.models.components.segmentation_models.seg_deeplabv3.DeepLabV3
     model_name: torch.hub/deeplabv3_resnet50
     model_repo: pytorch/vision:v0.10.0
     pretrained: true
