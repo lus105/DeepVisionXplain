@@ -87,3 +87,7 @@
 # Delete the sigmoid at the end of the model
 #python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers model.loss._target_=torch.nn.BCEWithLogitsLoss +trainer.precision=16
 #python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers model.loss._target_=torch.nn.BCEWithLogitsLoss +trainer.precision="bf16"
+
+# Stage 7. Unclean data training
+# Label smoothing added
+# python src/train.py trainer.max_epochs=40 experiment=train_seat_cls model=cnn_effnet_v2_s_full model.optimizer.lr=0.000067 data.batch_size=64 logger=many_loggers
