@@ -32,3 +32,8 @@ ipywidgets
 ipykernel
 pandas
 albumentations
+numba
+umap-learn
+cleanlab[all]
+calflops
+transformers
