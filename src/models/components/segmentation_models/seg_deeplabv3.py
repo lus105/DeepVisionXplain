@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .base_model import get_model
+from src.models.components.base_model import get_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
