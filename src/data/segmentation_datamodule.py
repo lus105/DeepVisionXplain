@@ -43,7 +43,16 @@ class SegmentationDataModule(LightningDataModule):
         """
         super().__init__()
 
-        self.save_hyperparameters(logger=False)
+        self.data_dir = data_dir
+        self.preprocessing_pipeline = preprocessing_pipeline
+        self.overwrite_data = overwrite_data
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.train_transforms = train_transforms
+        self.val_test_transforms = val_test_transforms
+        self.save_predict_images = save_predict_images
+        self._num_classes = num_classes
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -57,7 +66,7 @@ class SegmentationDataModule(LightningDataModule):
         Returns:
             int: The number of classes (2).
         """
-        return self.hparams.num_classes
+        return self._num_classes
 
     def prepare_data(self) -> None:
         """Data preparation hook."""
@@ -70,7 +79,7 @@ class SegmentationDataModule(LightningDataModule):
             stage (Optional[str], optional): The stage to setup. Either `"fit"`,
             `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
-        data_path = Path(self.hparams.data_dir)
+        data_path = Path(self.data_dir)
         train_subdir = 'train'
         test_subdir = 'test'
         images_subdir = 'images'
@@ -78,25 +87,25 @@ class SegmentationDataModule(LightningDataModule):
         self.data_train = ImageLabelDataset(
             img_dir=data_path / train_subdir / images_subdir,
             label_dir=data_path / train_subdir / labels_subdir,
-            transform=self.hparams.train_transforms,
+            transform=self.train_transforms,
         )
 
         self.data_test = ImageLabelDataset(
             img_dir=data_path / test_subdir / images_subdir,
             label_dir=data_path / test_subdir / labels_subdir,
-            transform=self.hparams.val_test_transforms,
+            transform=self.val_test_transforms,
         )
 
         self.data_val = ImageLabelDataset(
             img_dir=data_path / test_subdir / images_subdir,
             label_dir=data_path / test_subdir / labels_subdir,
-            transform=self.hparams.val_test_transforms,
+            transform=self.val_test_transforms,
         )
 
         self.data_predict = ImageLabelDataset(
             img_dir=data_path / test_subdir / images_subdir,
             label_dir=data_path / test_subdir / labels_subdir,
-            transform=self.hparams.val_test_transforms,
+            transform=self.val_test_transforms,
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -172,9 +181,9 @@ class SegmentationDataModule(LightningDataModule):
         """
         return DataLoader(
             dataset=dataset,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
             persistent_workers=True,
             shuffle=shuffle,
         )
