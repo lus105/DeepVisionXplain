@@ -18,32 +18,50 @@ data:
   preprocessing_pipeline: null
   overwrite_data: false
 
-  batch_size: 4  
+  batch_size: 8  
   num_workers: 3
   pin_memory: false
 
   train_transforms:
-    _target_: albumentations.Compose
-    transforms:
-      - _target_: albumentations.Resize
-        height: 224
-        width: 224
-      - _target_: albumentations.Normalize
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
+  _target_: albumentations.Compose
+  transforms:
       - _target_: albumentations.HorizontalFlip
         p: 0.5
+      - _target_: albumentations.ShiftScaleRotate
+        p: 0.8
+        rotate_limit:
+          - -2
+          - 2
+        scale_limit:
+          - -0.03
+          - 0.03
+        shift_limit:
+          - -0.02
+          - 0.02
+      - _target_: albumentations.OneOf
+        transforms:
+          - _target_: albumentations.RandomBrightnessContrast
+            brightness_limit: 0.15
+            contrast_limit: 0.15
+            p: 0.5
+          - _target_: albumentations.RandomGamma
+            gamma_limit:
+              - 75
+              - 125
+            p: 0.5
+      - _target_: src.data.components.augmentations.ResizeWithAspectRatio
+        always_apply: true
+        target_height: 640
+        target_width: 768
       - _target_: albumentations.pytorch.transforms.ToTensorV2
 
   val_test_transforms:
     _target_: albumentations.Compose
     transforms:
-      - _target_: albumentations.Resize
-        height: 224
-        width: 224
-      - _target_: albumentations.Normalize
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
+      - _target_: src.data.components.augmentations.ResizeWithAspectRatio
+        always_apply: true
+        target_height: 640
+        target_width: 768
       - _target_: albumentations.pytorch.transforms.ToTensorV2
 
   save_predict_images: false
@@ -55,16 +73,16 @@ model:
   _target_: src.models.segmentation_module.SegmentationLitModule
 
   net:
-    _target_: src.models.components.segmentation_models.seg_deeplabv3.DeepLabV3
-    model_name: torch.hub/deeplabv3_resnet50
-    model_repo: pytorch/vision:v0.10.0
-    pretrained: true
+    _target_: src.models.components.base_model
+    model_name: segmentation_models_pytorch/Segformer
+    encoder_name: resnet50
+    encoder_weigths: imagenet
     num_classes: 1
 
   optimizer:
     _target_: torch.optim.Adam
     _partial_: true
-    lr: 5e-5
+    lr: 0.001
     weight_decay: 0.0
 
   scheduler:
@@ -109,7 +127,7 @@ logger:
     project: "inobranda"
     log_model: False # upload lightning ckpts
     entity: "easyodm" # set to name of your wandb team
-    group: "segmentation"
+    group: "outline_segmentation"
 
 #other==========================================================================
 
