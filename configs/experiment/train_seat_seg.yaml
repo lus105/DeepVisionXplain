@@ -23,8 +23,8 @@ data:
   pin_memory: false
 
   train_transforms:
-  _target_: albumentations.Compose
-  transforms:
+    _target_: albumentations.Compose
+    transforms:
       - _target_: albumentations.HorizontalFlip
         p: 0.5
       - _target_: albumentations.ShiftScaleRotate
@@ -73,7 +73,7 @@ model:
   _target_: src.models.segmentation_module.SegmentationLitModule
 
   net:
-    _target_: src.models.components.base_model
+    _target_: src.models.components.base_model.BaseModel
     model_name: segmentation_models_pytorch/Segformer
     encoder_name: resnet50
     encoder_weigths: imagenet
@@ -127,7 +127,7 @@ logger:
     project: "inobranda"
     log_model: False # upload lightning ckpts
     entity: "easyodm" # set to name of your wandb team
-    group: "outline_segmentation"
+    group: "outline_segmentation_lear"
 
 #other==========================================================================
 
