@@ -4,11 +4,10 @@ import pycuda.driver as cuda
 import pycuda.autoinit
 import tensorrt as trt
 
-rootutils.setup_root(
-    __file__, indicator=['.git', 'pyproject.toml'], pythonpath=True
-)
+rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
 
 from notebooks.helpers.inference_base import InferenceBase
+
 
 # https://stackoverflow.com/questions/59280745/inference-with-tensorrt-engine-file-on-python
 class InferenceTensorRT(InferenceBase):
@@ -18,15 +17,17 @@ class InferenceTensorRT(InferenceBase):
             self.runtime = trt.Runtime(self.logger)
 
             # Load model
-            with open(self._model_path, "rb") as f:
+            with open(self._model_path, 'rb') as f:
                 self.model = self.runtime.deserialize_cuda_engine(f.read())
 
             self.context = self.model.create_execution_context()
 
             # allocate buffers
-            self.inputs, self.outputs, self.bindings, self.stream = self._allocate_buffers()
+            self.inputs, self.outputs, self.bindings, self.stream = (
+                self._allocate_buffers()
+            )
         except Exception as e:
-            raise RuntimeError(f"Failed to load TensorRT model: {e}")
+            raise RuntimeError(f'Failed to load TensorRT model: {e}')
 
     class HostDeviceMem:
         def __init__(self, host_mem, device_mem, shape):
