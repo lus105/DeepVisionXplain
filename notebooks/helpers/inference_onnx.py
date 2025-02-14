@@ -2,24 +2,23 @@ import rootutils
 import numpy as np
 import onnxruntime as ort
 
-rootutils.setup_root(
-    __file__, indicator=['.git', 'pyproject.toml'], pythonpath=True
-)
+rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
 
 from notebooks.helpers.inference_base import InferenceBase
+
 
 class InferenceOnnx(InferenceBase):
     """
     Inference implementation for ONNX models using ONNX Runtime.
     """
+
     def initialize(self) -> None:
         try:
             self.model = ort.InferenceSession(
-                self._model_path,
-                providers=["CUDAExecutionProvider"]
+                self._model_path, providers=['CUDAExecutionProvider']
             )
         except Exception as e:
-            raise RuntimeError(f"Failed to load ONNX model: {e}")
+            raise RuntimeError(f'Failed to load ONNX model: {e}')
 
     def __call__(self, data: np.ndarray) -> np.ndarray:
         try:
@@ -29,4 +28,4 @@ class InferenceOnnx(InferenceBase):
 
             return outputs
         except Exception as e:
-            raise RuntimeError(f"ONNX prediction failed: {e}")
+            raise RuntimeError(f'ONNX prediction failed: {e}')

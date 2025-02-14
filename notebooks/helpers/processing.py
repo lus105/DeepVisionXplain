@@ -30,6 +30,7 @@ def apply_cm(
 
     return blended_image
 
+
 def display_img_with_map(out: np.array, map: np.array, image: np.array) -> None:
     """Displays image with explainability map.
 

@@ -36,14 +36,18 @@ class ClassificationLitModule(LightningModule):
             ckpt_path (string): Model chekpoint path.
         """
         super().__init__()
-
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
         # model
         self.net = net
+        # optimizer
+        self.optimizer = optimizer
+        # scheduler
+        self.scheduler = scheduler
         # loss function
         self.criterion = loss
+        # compile model
+        self.compile = compile
+        # checkpoint path
+        self.ckpt_path = ckpt_path
 
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(task='binary')
@@ -233,10 +237,10 @@ class ClassificationLitModule(LightningModule):
         Args:
             stage (str): Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
         """
-        if self.hparams.compile and stage == 'fit':
+        if self.compile and stage == 'fit':
             self.net = torch.compile(self.net)
-        if self.hparams.ckpt_path:
-            model_weights = weight_load(self.hparams.ckpt_path)
+        if self.ckpt_path:
+            model_weights = weight_load(self.ckpt_path)
             self.net.load_state_dict(model_weights)
 
     def configure_optimizers(self) -> dict[str, Any]:
@@ -247,9 +251,9 @@ class ClassificationLitModule(LightningModule):
             Dict[str, Any]: A dict containing the configured optimizers and
             learning-rate schedulers to be used for training.
         """
-        optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
-        if self.hparams.scheduler is not None:
-            scheduler = self.hparams.scheduler(optimizer=optimizer)
+        optimizer = self.optimizer(params=self.trainer.model.parameters())
+        if self.scheduler is not None:
+            scheduler = self.scheduler(optimizer=optimizer)
             return {
                 'optimizer': optimizer,
                 'lr_scheduler': {
