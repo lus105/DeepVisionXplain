@@ -10,6 +10,7 @@ class InferenceBase(ABC):
         model_path (str): Path to the model file.
         model: Loaded model object (framework-dependent).
     """
+
     def __init__(self, model_path: str) -> None:
         self._model_path = model_path
         self.model = None

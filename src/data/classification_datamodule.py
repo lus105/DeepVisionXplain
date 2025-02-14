@@ -45,7 +45,16 @@ class ClassificationDataModule(LightningDataModule):
         """
         super().__init__()
 
-        self.save_hyperparameters(logger=False)
+        self.data_dir = data_dir
+        self.preprocessing_pipeline = preprocessing_pipeline
+        self.overwrite_data = overwrite_data
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.train_transforms = train_transforms
+        self.val_test_transforms = val_test_transforms
+        self.save_predict_images = save_predict_images
+        self._num_classes = num_classes
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -61,35 +70,29 @@ class ClassificationDataModule(LightningDataModule):
         Returns:
             int: The number of classes (2).
         """
-        return self.hparams.num_classes
+        return self._num_classes
 
     def prepare_data(self) -> None:
         """Data preparation hook."""
-        log.info(f'Preparing data in {self.hparams.data_dir}...')
+        log.info(f'Preparing data in {self.data_dir}...')
 
-        data_path = Path(self.hparams.data_dir)
+        data_path = Path(self.data_dir)
         base_path = data_path.parent
         last_subdir = data_path.name
         output_path = base_path / f'{last_subdir}_processed'
 
-        initial_data = {'initial_data': self.hparams.data_dir}
+        initial_data = {'initial_data': self.data_dir}
         if output_path.exists():
-            if self.hparams.overwrite_data:
+            if self.overwrite_data:
                 clear_directory(output_path)
                 output_path.rmdir()
-                self.preprocessed_data = self.hparams.preprocessing_pipeline.run(
-                    initial_data
-                )
+                self.preprocessed_data = self.preprocessing_pipeline.run(initial_data)
             else:
                 self.preprocessed_data = (
-                    self.hparams.preprocessing_pipeline.get_processed_data_path(
-                        initial_data
-                    )
+                    self.preprocessing_pipeline.get_processed_data_path(initial_data)
                 )
         else:
-            self.preprocessed_data = self.hparams.preprocessing_pipeline.run(
-                initial_data
-            )
+            self.preprocessed_data = self.preprocessing_pipeline.run(initial_data)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.
@@ -101,17 +104,17 @@ class ClassificationDataModule(LightningDataModule):
         if stage in {'fit', 'validate', 'test'}:
             self.data_train = ImageFolder(
                 root=self.preprocessed_data['train'],
-                transform=self.hparams.train_transforms,
+                transform=self.train_transforms,
             )
 
             self.data_test = ImageFolder(
                 root=self.preprocessed_data['test'],
-                transform=self.hparams.val_test_transforms,
+                transform=self.val_test_transforms,
             )
 
             self.data_val = ImageFolder(
                 root=self.preprocessed_data['val'],
-                transform=self.hparams.val_test_transforms,
+                transform=self.val_test_transforms,
             )
 
         if stage == 'predict':
@@ -194,9 +197,9 @@ class ClassificationDataModule(LightningDataModule):
         """
         return DataLoader(
             dataset=dataset,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
             persistent_workers=True,
             shuffle=shuffle,
         )
