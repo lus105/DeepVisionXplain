@@ -51,8 +51,8 @@ data:
             p: 0.5
       - _target_: src.data.components.augmentations.ResizeWithAspectRatio
         always_apply: true
-        target_height: 640
-        target_width: 768
+        target_height: 768
+        target_width: 640
       - _target_: albumentations.pytorch.transforms.ToTensorV2
 
   val_test_transforms:
@@ -60,8 +60,8 @@ data:
     transforms:
       - _target_: src.data.components.augmentations.ResizeWithAspectRatio
         always_apply: true
-        target_height: 640
-        target_width: 768
+        target_height: 768
+        target_width: 640
       - _target_: albumentations.pytorch.transforms.ToTensorV2
 
   save_predict_images: false
