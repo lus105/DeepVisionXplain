@@ -109,7 +109,6 @@ class SegmentationLitModule(LightningModule):
         """
         images, masks = batch
         outputs = self.forward(images)
-        outputs = outputs.squeeze(1)
         loss = self.criterion(outputs, masks)
         preds = torch.sigmoid(outputs)
         return loss, preds, masks

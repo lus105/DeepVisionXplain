@@ -50,22 +50,26 @@ data:
               - 125
             p: 0.5
       - _target_: src.data.components.augmentations.ResizeWithAspectRatio
-        always_apply: true
         target_height: 768
         target_width: 640
+      - _target_: albumentations.ToFloat
+        max_value: 255
       - _target_: albumentations.pytorch.transforms.ToTensorV2
+        transpose_mask: True
 
   val_test_transforms:
     _target_: albumentations.Compose
     transforms:
       - _target_: src.data.components.augmentations.ResizeWithAspectRatio
-        always_apply: true
         target_height: 768
         target_width: 640
+      - _target_: albumentations.ToFloat
+        max_value: 255
       - _target_: albumentations.pytorch.transforms.ToTensorV2
+        transpose_mask: True
 
   save_predict_images: false
-  num_classes: 2
+  num_classes: 1
 
 #model==========================================================================
 

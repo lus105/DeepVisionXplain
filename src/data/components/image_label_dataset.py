@@ -82,10 +82,9 @@ class ImageLabelDataset(Dataset):
         """
         img_path, label_path = self.img_label_pairs[idx]
         image = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Convert OpenCV BGR to RGB for PyTorch/TorchVision compatibility
-        #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
         if self.transform is not None:
             # Handle Albumentations transforms
@@ -93,7 +92,8 @@ class ImageLabelDataset(Dataset):
                 transformed = self.transform(image=image, mask=label)
                 image = transformed['image']
                 label = transformed['mask']
-                label = torch.tensor(label, dtype=torch.float32) / 255.0
+                label = torch.as_tensor(label, dtype=torch.float32).unsqueeze(0) / 255.0
+
             # Handle TorchVision transforms
             elif isinstance(self.transform, torchvision.transforms.Compose):
                 image = self.transform(
@@ -104,5 +104,9 @@ class ImageLabelDataset(Dataset):
                 raise ValueError(
                     'Unsupported transform type. Use Albumentations or TorchVision transforms.'
                 )
+            
+        else:
+            image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1) / 255.0
+            label = torch.tensor(label, dtype=torch.float32).unsqueeze(0) / 255.0
 
         return image, label

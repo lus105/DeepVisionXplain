@@ -9,7 +9,7 @@ class ResizeWithAspectRatio(A.core.transforms_interface.DualTransform):
     while maintaining the aspect ratio and adding padding.
     """
 
-    def __init__(self, target_width, target_height, always_apply=False, p=1.0):
+    def __init__(self, target_width, target_height, always_apply=True, p=1.0):
         """
         Args:
             target_width (int): Desired width of the output image.
