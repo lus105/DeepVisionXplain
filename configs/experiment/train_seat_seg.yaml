@@ -29,18 +29,24 @@ data:
         p: 0.5
       - _target_: albumentations.ShiftScaleRotate
         p: 0.8
-        rotate_limit: [-2, 2]
+        rotate_limit: [-5, 5]
         scale_limit: [-0.03, 0.03]
         shift_limit: [-0.02, 0.02]
       - _target_: albumentations.OneOf
         transforms:
           - _target_: albumentations.RandomBrightnessContrast
-            brightness_limit: 0.15
-            contrast_limit: 0.15
+            brightness_limit: 0.1
+            contrast_limit: 0.1
             p: 0.5
           - _target_: albumentations.RandomGamma
-            gamma_limit: [75, 125]
+            gamma_limit: [85, 115]
             p: 0.5
+      - _target_: albumentations.GaussNoise
+        var_limit: [5, 20]
+        p: 0.2
+      - _target_: albumentations.MotionBlur
+        blur_limit: [3, 5]
+        p: 0.2
       - _target_: albumentations.Resize
         height: 768
         width: 640
