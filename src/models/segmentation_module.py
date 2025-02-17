@@ -163,7 +163,7 @@ class SegmentationLitModule(LightningModule):
         """Lightning hook that is called when a validation epoch ends."""
         iou = self.val_metrics['iou'].compute()
         self.val_iou_best(iou)
-        self.log('val/iou_best', self.val_iou_best, prog_bar=True)
+        self.log('val/iou_best', self.val_iou_best.compute(), prog_bar=True)
 
     def test_step(
         self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
