@@ -29,15 +29,9 @@ data:
         p: 0.5
       - _target_: albumentations.ShiftScaleRotate
         p: 0.8
-        rotate_limit:
-          - -2
-          - 2
-        scale_limit:
-          - -0.03
-          - 0.03
-        shift_limit:
-          - -0.02
-          - 0.02
+        rotate_limit: [-2, 2]
+        scale_limit: [-0.03, 0.03]
+        shift_limit: [-0.02, 0.02]
       - _target_: albumentations.OneOf
         transforms:
           - _target_: albumentations.RandomBrightnessContrast
@@ -45,9 +39,7 @@ data:
             contrast_limit: 0.15
             p: 0.5
           - _target_: albumentations.RandomGamma
-            gamma_limit:
-              - 75
-              - 125
+            gamma_limit: [75, 125]
             p: 0.5
       - _target_: albumentations.Resize
         height: 768
