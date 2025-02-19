@@ -1,0 +1,90 @@
+# @package _global_
+
+defaults:
+  - override /data: null
+  - override /model: null
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: wandb
+
+tags: ["train", "contrastive", "seats"]
+
+#data===========================================================================
+
+data:
+  _target_: src.data.contrastive_learning_datamodule.ContrastiveDataModule
+
+  data_dir: ${oc.env:lear_good_data_path}
+  batch_size: 32  
+  num_workers: 3
+  pin_memory: false
+
+  train_transforms:
+    _target_: lightly.transforms.SimCLRTransform
+    input_size: 224
+    vf_prob: 0
+    hf_prob: 0
+    rr_prob: 0
+    gaussian_blur: 0.2
+
+  val_test_transforms:
+    _target_: torchvision.transforms.Compose
+    transforms:
+      - _target_: torchvision.transforms.ToTensor
+
+  num_classes: 1
+
+#model==========================================================================
+
+model:
+  _target_: src.models.contrastive_learning_module.ContrastiveLitModule
+
+  optimizer:
+    _target_: torch.optim.SGD
+    _partial_: true
+    lr: 6e-2
+    momentum: 0.9
+    weight_decay: 5e-4
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: true
+    T_max: ${trainer.max_epochs}
+
+  loss:
+    _target_: lightly.loss.NTXentLoss
+
+  compile: false
+
+#callbacks======================================================================
+
+callbacks:
+  model_checkpoint:
+    monitor: "train/loss_ssl"
+    mode: "min"
+    save_last: True
+    auto_insert_metric_name: False
+
+  early_stopping: null
+
+
+#trainer========================================================================
+
+trainer:
+  min_epochs: 10
+  max_epochs: 100
+  accelerator: gpu
+
+#logger=========================================================================
+
+logger:
+  wandb:
+    project: "inobranda"
+    log_model: False # upload lightning ckpts
+    entity: "easyodm" # set to name of your wandb team
+    group: "contrastive_learning_wrinkles_lear"
+
+#other==========================================================================
+
+seed: 12345
+test: False
