@@ -82,9 +82,9 @@ model:
     num_classes: 1
 
   optimizer:
-    _target_: torch.optim.Adam
+    _target_: torch.optim.AdamW
     _partial_: true
-    lr: 0.001
+    lr: 0.00006
     weight_decay: 0.0
 
   scheduler:
@@ -92,10 +92,11 @@ model:
     _partial_: true
     mode: min
     factor: 0.1
-    patience: 10
+    patience: 5
 
   loss:
-    _target_: torch.nn.BCEWithLogitsLoss
+    _target_: segmentation_models_pytorch.losses.DiceLoss
+    mode: binary
 
   compile: false
 
