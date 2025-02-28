@@ -1,0 +1,84 @@
+# @package _global_
+
+defaults:
+  - override /data: null
+  - override /model: null
+  - override /callbacks: default
+  - override /trainer: default
+  - override /logger: wandb
+
+tags: ["train", "mae", "seats"]
+
+#data===========================================================================
+
+data:
+  _target_: src.data.contrastive_learning_datamodule.ContrastiveDataModule
+
+  data_dir: ${oc.env:lear_good_data_path}
+  batch_size: 64 
+  num_workers: 3
+  pin_memory: false
+
+  train_transforms:
+    _target_: lightly.transforms.MAETransform
+    input_size: 512
+    normalize:
+      mean: [0.0, 0.0, 0.0]
+      std: [1.0, 1.0, 1.0]
+
+  val_test_transforms:
+    _target_: torchvision.transforms.Compose
+    transforms:
+      - _target_: torchvision.transforms.ToTensor
+
+  num_classes: 1
+
+#model==========================================================================
+
+model:
+  _target_: src.models.mae_learning_module.MaeLitModule
+
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 1.5e-4
+
+  scheduler: null
+
+  loss:
+    _target_: torch.nn.MSELoss
+
+  compile: false
+
+#callbacks======================================================================
+
+callbacks:
+  model_checkpoint:
+    monitor: "train/mae_loss"
+    mode: "min"
+    save_last: True
+    auto_insert_metric_name: False
+
+  early_stopping: null
+
+
+#trainer========================================================================
+
+trainer:
+  min_epochs: 10
+  max_epochs: 100
+  accelerator: gpu
+
+#logger=========================================================================
+
+logger:
+  wandb:
+    project: "inobranda"
+    log_model: False # upload lightning ckpts
+    entity: "easyodm" # set to name of your wandb team
+    group: "contrastive_learning_wrinkles_lear"
+
+#other==========================================================================
+
+seed: 12345
+test: False
