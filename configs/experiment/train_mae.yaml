@@ -21,7 +21,7 @@ data:
 
   train_transforms:
     _target_: lightly.transforms.MAETransform
-    input_size: 512
+    input_size: 224
     normalize:
       mean: [0.0, 0.0, 0.0]
       std: [1.0, 1.0, 1.0]
