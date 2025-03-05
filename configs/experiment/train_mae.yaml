@@ -12,7 +12,7 @@ tags: ["train", "mae", "seats"]
 #data===========================================================================
 
 data:
-  _target_: src.data.contrastive_learning_datamodule.ContrastiveDataModule
+  _target_: src.data.unsupervised_datamodule.UnsupervisedDataModule
 
   data_dir: ${oc.env:lear_good_data_path}
   batch_size: 64 
@@ -38,6 +38,9 @@ data:
 model:
   _target_: src.models.mae_learning_module.MaeLitModule
 
+  net:
+    _target_: src.models.components.mae_model.mae_vit_base_patch16
+
   optimizer:
     _target_: torch.optim.AdamW
     _partial_: true
@@ -49,6 +52,8 @@ model:
     _target_: torch.nn.MSELoss
 
   compile: false
+  
+  ckpt_path: ${paths.trained_models}/mae_pretrain_vit_base.pth
 
 #callbacks======================================================================
 

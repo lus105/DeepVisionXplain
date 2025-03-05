@@ -1,20 +1,18 @@
 from typing import Any
 
 import torch
+from torch import nn
 from lightning import LightningModule
-from timm.models.vision_transformer import vit_base_patch32_224
-
-from lightly.models import utils
-from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
-
 
 class MaeLitModule(LightningModule):
     def __init__(
         self,
+        net: nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         loss: torch.nn.modules.loss,
         compile: bool,
+        ckpt_path: str,
     ) -> None:
         """Initialize lightning module.
 
@@ -27,23 +25,7 @@ class MaeLitModule(LightningModule):
         """
         super().__init__()
         # model
-        decoder_dim = 512
-        vit = vit_base_patch32_224()
-        self.mask_ratio = 0.75
-        self.patch_size = vit.patch_embed.patch_size[0]
-        self.backbone = MaskedVisionTransformerTIMM(vit=vit)
-        self.sequence_length = self.backbone.sequence_length
-        self.decoder = MAEDecoderTIMM(
-            num_patches=vit.patch_embed.num_patches,
-            patch_size=self.patch_size,
-            embed_dim=vit.embed_dim,
-            decoder_embed_dim=decoder_dim,
-            decoder_depth=1,
-            decoder_num_heads=16,
-            mlp_ratio=4.0,
-            proj_drop_rate=0.0,
-            attn_drop_rate=0.0,
-        )
+        self.net = net
         # optimizer
         self.optimizer = optimizer
         # scheduler
@@ -52,26 +34,8 @@ class MaeLitModule(LightningModule):
         self.criterion = loss
         # compile model
         self.compile = compile
-
-    def forward_encoder(self, images, idx_keep=None):
-        return self.backbone.encode(images=images, idx_keep=idx_keep)
-
-    def forward_decoder(self, x_encoded, idx_keep, idx_mask):
-        # build decoder input
-        batch_size = x_encoded.shape[0]
-        x_decode = self.decoder.embed(x_encoded)
-        x_masked = utils.repeat_token(
-            self.decoder.mask_token, (batch_size, self.sequence_length)
-        )
-        x_masked = utils.set_at_index(x_masked, idx_keep, x_decode.type_as(x_masked))
-
-        # decoder forward pass
-        x_decoded = self.decoder.decode(x_masked)
-
-        # predict pixel values for masked tokens
-        x_pred = utils.get_at_index(x_decoded, idx_mask)
-        x_pred = self.decoder.predict(x_pred)
-        return x_pred
+        # checkpoint path
+        self.ckpt_path = ckpt_path
 
     def on_train_start(self) -> None:
         """Lightning hook that is called when training begins."""
@@ -92,23 +56,9 @@ class MaeLitModule(LightningModule):
         """
         views = batch[0]
         images = views[0]  # views contains only a single view
-        batch_size = images.shape[0]
-        idx_keep, idx_mask = utils.random_token_mask(
-            size=(batch_size, self.sequence_length),
-            mask_ratio=self.mask_ratio,
-            device=images.device,
-        )
-        x_encoded = self.forward_encoder(images=images, idx_keep=idx_keep)
-        x_pred = self.forward_decoder(
-            x_encoded=x_encoded, idx_keep=idx_keep, idx_mask=idx_mask
-        )
-
-        # get image patches for masked tokens
-        patches = utils.patchify(images, self.patch_size)
-        # must adjust idx_mask for missing class token
-        target = utils.get_at_index(patches, idx_mask - 1)
-
-        loss = self.criterion(x_pred, target)
+        outputs = self.net(images)
+        loss = outputs[0]
+        
         self.log("train/mae_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
@@ -119,7 +69,12 @@ class MaeLitModule(LightningModule):
         Args:
             stage (str): Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
         """
-        pass
+        if self.compile and stage == 'fit':
+            self.net = torch.compile(self.net)
+        if self.ckpt_path:
+            checkpoint = torch.load(self.ckpt_path, weights_only=False)
+            model_weights = checkpoint["model"]  # Extract the actual model state dict
+            self.net.load_state_dict(model_weights, strict=False)
 
     def configure_optimizers(self) -> dict[str, Any]:
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
