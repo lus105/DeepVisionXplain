@@ -12,7 +12,7 @@ tags: ["train", "contrastive", "seats"]
 #data===========================================================================
 
 data:
-  _target_: src.data.contrastive_learning_datamodule.ContrastiveDataModule
+  _target_: src.data.unsupervised_datamodule.UnsupervisedDataModule
 
   data_dir: ${oc.env:lear_good_data_path}
   batch_size: 32  

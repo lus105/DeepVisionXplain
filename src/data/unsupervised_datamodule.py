@@ -9,7 +9,7 @@ from src.utils import RankedLogger
 log = RankedLogger(__name__, rank_zero_only=True)
 
 
-class ContrastiveDataModule(LightningDataModule):
+class UnsupervisedDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = 'data/',
@@ -49,7 +49,7 @@ class ContrastiveDataModule(LightningDataModule):
         """Get the number of classes.
 
         Returns:
-            int: The number of classes (2).
+            int: The number of classes.
         """
         return self._num_classes
 
