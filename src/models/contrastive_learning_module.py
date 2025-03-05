@@ -22,7 +22,6 @@ class ContrastiveLitModule(LightningModule):
             scheduler (torch.optim.lr_scheduler): The learning rate scheduler to use for training.
             loss (torch.nn.modules.loss): Loss function.
             compile (bool): Compile model.
-            ckpt_path (string): Model chekpoint path.
         """
         super().__init__()
         # model
