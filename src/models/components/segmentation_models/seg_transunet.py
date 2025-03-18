@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNorm
+from torch.nn import Dropout, Softmax, Linear, Conv2d, LayerNorm
 from torch.nn.modules.utils import _pair
 from scipy import ndimage
 from collections import OrderedDict
@@ -242,7 +242,7 @@ ACT2FN = {"gelu": torch.nn.functional.gelu, "relu": torch.nn.functional.relu, "s
 
 class Attention(nn.Module):
     def __init__(self, config, vis):
-        super(Attention, self).__init__()
+        super().__init__()
         self.vis = vis
         self.num_attention_heads = config.transformer["num_heads"]
         self.attention_head_size = int(config.hidden_size / self.num_attention_heads)
@@ -289,7 +289,7 @@ class Attention(nn.Module):
 
 class Mlp(nn.Module):
     def __init__(self, config):
-        super(Mlp, self).__init__()
+        super().__init__()
         self.fc1 = Linear(config.hidden_size, config.transformer["mlp_dim"])
         self.fc2 = Linear(config.transformer["mlp_dim"], config.hidden_size)
         self.act_fn = ACT2FN["gelu"]
@@ -316,7 +316,7 @@ class Embeddings(nn.Module):
     """Construct the embeddings from patch, position embeddings.
     """
     def __init__(self, config, img_size, in_channels=3):
-        super(Embeddings, self).__init__()
+        super().__init__()
         self.hybrid = None
         self.config = config
         img_size = _pair(img_size)
@@ -360,7 +360,7 @@ class Embeddings(nn.Module):
 
 class Block(nn.Module):
     def __init__(self, config, vis):
-        super(Block, self).__init__()
+        super().__init__()
         self.hidden_size = config.hidden_size
         self.attention_norm = LayerNorm(config.hidden_size, eps=1e-6)
         self.ffn_norm = LayerNorm(config.hidden_size, eps=1e-6)
@@ -419,7 +419,7 @@ class Block(nn.Module):
 
 class Encoder(nn.Module):
     def __init__(self, config, vis):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.vis = vis
         self.layer = nn.ModuleList()
         self.encoder_norm = LayerNorm(config.hidden_size, eps=1e-6)
@@ -563,7 +563,7 @@ class DecoderCup(nn.Module):
 class VisionTransformer(nn.Module):
     def __init__(self, img_size=224, num_classes=21843, path_to_pretrained=None, zero_head=False, vis=False):
         config = get_r50_b16_config()
-        super(VisionTransformer, self).__init__()
+        super().__init__()
         self.num_classes = num_classes
         self.zero_head = zero_head
         self.classifier = config.classifier

@@ -76,10 +76,6 @@ model:
 
   net:
     _target_: src.models.components.base_model.BaseModel
-    model_name: segmentation_models_pytorch/Segformer
-    encoder_name: resnet50
-    encoder_weigths: imagenet
-    num_classes: 1
 
   optimizer:
     _target_: torch.optim.AdamW
@@ -114,13 +110,14 @@ callbacks:
   early_stopping:
     monitor: "val/iou"
     mode: "max"
+    patience: 7
 
 #trainer========================================================================
 
 trainer:
   min_epochs: 10
   max_epochs: 20
-  gradient_clip_val: 0.5
+  #gradient_clip_val: 0.5
   accelerator: gpu
 
 #logger=========================================================================
