@@ -1,0 +1,97 @@
+# @package _global_
+
+defaults:
+  - override /data: null
+  - override /model: null
+  - override /trainer: gpu
+
+tags: ["eval", "segmentation", "seats"]
+
+#data===========================================================================
+
+data:
+  _target_: src.data.segmentation_datamodule.SegmentationDataModule
+
+  data_dir: ${oc.env:lear_outline_data_path}
+  preprocessing_pipeline: null
+  overwrite_data: false
+
+  batch_size: 8  
+  num_workers: 3
+  pin_memory: false
+
+  train_transforms:
+    _target_: albumentations.Compose
+    transforms:
+      - _target_: albumentations.HorizontalFlip
+        p: 0.5
+      - _target_: albumentations.ShiftScaleRotate
+        p: 0.8
+        rotate_limit: [-5, 5]
+        scale_limit: [-0.03, 0.03]
+        shift_limit: [-0.02, 0.02]
+      - _target_: albumentations.OneOf
+        transforms:
+          - _target_: albumentations.RandomBrightnessContrast
+            brightness_limit: 0.1
+            contrast_limit: 0.1
+            p: 0.5
+          - _target_: albumentations.RandomGamma
+            gamma_limit: [85, 115]
+            p: 0.5
+      - _target_: albumentations.GaussNoise
+        std_range: [0.01, 0.10]
+        p: 0.2
+      - _target_: albumentations.MotionBlur
+        blur_limit: [3, 5]
+        p: 0.2
+      - _target_: albumentations.Resize
+        height: 768
+        width: 640
+      - _target_: albumentations.ToFloat
+        max_value: 255
+      - _target_: albumentations.pytorch.transforms.ToTensorV2
+        transpose_mask: True
+
+  val_test_transforms:
+    _target_: albumentations.Compose
+    transforms:
+      - _target_: albumentations.Resize
+        height: 768
+        width: 640
+      - _target_: albumentations.ToFloat
+        max_value: 255
+      - _target_: albumentations.pytorch.transforms.ToTensorV2
+        transpose_mask: True
+
+  save_predict_images: false
+  num_classes: 1
+
+#model==========================================================================
+
+model:
+  _target_: src.models.segmentation_module.SegmentationLitModule
+
+  net:
+    _target_: src.models.components.base_model.BaseModel
+
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 0.00006
+    weight_decay: 0.0
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: true
+    mode: min
+    factor: 0.1
+    patience: 5
+
+  loss:
+    _target_: segmentation_models_pytorch.losses.DiceLoss
+    mode: binary
+
+  compile: false
+
+  ckpt_path: ${paths.trained_models}/unet++.ckpt
