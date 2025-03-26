@@ -42,7 +42,7 @@ data:
             gamma_limit: [85, 115]
             p: 0.5
       - _target_: albumentations.GaussNoise
-        var_limit: [5, 20]
+        std_range: [0.01, 0.10]
         p: 0.2
       - _target_: albumentations.MotionBlur
         blur_limit: [3, 5]
