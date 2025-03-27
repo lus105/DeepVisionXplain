@@ -19,3 +19,7 @@
 #python src/train.py experiment=train_seat_seg +model.net.model_name=segmentation_models_pytorch/UnetPlusPlus +model.net.encoder_name=mobilenet_v2 model.optimizer.lr=0.00045 data.batch_size=8 model.loss._target_=segmentation_models_pytorch.losses.JaccardLoss trainer.max_epochs=50 logger=many_loggers
 #python src/train.py experiment=train_seat_seg +model.net.model_name=segmentation_models_pytorch/UnetPlusPlus +model.net.encoder_name=mobilenet_v2 model.optimizer.lr=0.00045 data.batch_size=8 model.loss._target_=segmentation_models_pytorch.losses.FocalLoss   trainer.max_epochs=50 logger=many_loggers
 #python src/train.py experiment=train_seat_seg +model.net.model_name=segmentation_models_pytorch/UnetPlusPlus +model.net.encoder_name=mobilenet_v2 model.optimizer.lr=0.00045 data.batch_size=8 model.loss._target_=segmentation_models_pytorch.losses.LovaszLoss  trainer.max_epochs=50 logger=many_loggers
+
+# Stage 4. Additional synth dataset.
+
+#python src/train.py experiment=train_seat_seg +model.net.model_name=segmentation_models_pytorch/UnetPlusPlus  +model.net.encoder_name=mobilenet_v2 model.optimizer.lr=0.00045 data.batch_size=8 trainer.max_epochs=50 logger=many_loggers data.data_dir="/media/gpu0/data/lukas/DeepVisionXplain/data/lear_outline_synth"  model.ckpt_path="/media/gpu0/data/lukas/DeepVisionXplain/trained_models/unet++.ckpt"
