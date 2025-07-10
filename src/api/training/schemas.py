@@ -7,7 +7,7 @@ class AvailableConfigsResponse(BaseModel):
 
 
 class StartTrainingRequest(BaseModel):
-    config_name: Optional[str] = "example.yaml"
+    config_name: str
 
 
 class TrainingStatusResponse(BaseModel):
