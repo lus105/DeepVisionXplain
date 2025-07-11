@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import subprocess
 from threading import Lock
 
@@ -7,6 +8,7 @@ from src.api.training.schemas import (
     TrainingStopResponse,
     TrainingStatusResponse,
     AvailableConfigsResponse,
+    TrainedModelsPathsResponse,
 )
 
 
@@ -49,7 +51,17 @@ class TrainingManager:
     def list_available_configs(
         self, config_dir: str = 'configs/experiment'
     ) -> AvailableConfigsResponse:
-        if not os.path.exists(config_dir):
+        config_path = Path(config_dir)
+        if not config_path.exists():
             return AvailableConfigsResponse(available_configs=[])
-        configs = [f for f in os.listdir(config_dir) if f.endswith('.yaml')]
+        
+        configs = [f.name for f in config_path.iterdir() if f.is_file() and f.suffix == '.yaml']
         return AvailableConfigsResponse(available_configs=configs)
+    
+    def get_models_path(self, config_dir: str = 'logs/train/runs', ) -> TrainedModelsPathsResponse:
+        config_path = Path(config_dir)
+        if not config_path.exists():
+            return TrainedModelsPathsResponse(model_paths=[])
+        
+        models_paths = [str(path.resolve()) for path in config_path.rglob('*.ckpt')]
+        return TrainedModelsPathsResponse(model_paths=models_paths)

@@ -22,3 +22,7 @@ class TrainingStatusResponse(BaseModel):
 
 class TrainingStopResponse(BaseModel):
     status: str
+
+
+class TrainedModelsPathsResponse(BaseModel):
+    model_paths: list[str]

@@ -8,6 +8,7 @@ from src.api.training.schemas import (
     TrainingStatusResponse,
     TrainingStartResponse,
     TrainingStopResponse,
+    TrainedModelsPathsResponse,
 )
 
 router = APIRouter()
@@ -32,3 +33,8 @@ def stop():
 @router.get('/status', response_model=TrainingStatusResponse)
 def status():
     return training_manager.get_status()
+
+
+@router.get('/trained_models', response_model=TrainedModelsPathsResponse)
+def trained_models():
+    return training_manager.get_models_path()
