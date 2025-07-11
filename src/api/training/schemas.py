@@ -6,17 +6,17 @@ class AvailableConfigsResponse(BaseModel):
     available_configs: list[str]
 
 
-class StartTrainingRequest(BaseModel):
+class TrainingStartRequest(BaseModel):
     config_name: str
-
-
-class TrainingStatusResponse(BaseModel):
-    running: bool
-    pid: Optional[int] = None
 
 
 class TrainingStartResponse(BaseModel):
     status: str
+    pid: Optional[int] = None
+
+
+class TrainingStatusResponse(BaseModel):
+    running: bool
     pid: Optional[int] = None
 
 

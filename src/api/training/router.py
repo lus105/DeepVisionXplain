@@ -4,7 +4,7 @@ from src.api.training.service import TrainingManager
 
 from src.api.training.schemas import (
     AvailableConfigsResponse,
-    StartTrainingRequest,
+    TrainingStartRequest,
     TrainingStatusResponse,
     TrainingStartResponse,
     TrainingStopResponse,
@@ -20,7 +20,7 @@ def list_configs():
 
 
 @router.post('/start', response_model=TrainingStartResponse)
-def start(req: StartTrainingRequest):
+def start(req: TrainingStartRequest):
     return training_manager.start_training(req.config_name)
 
 
