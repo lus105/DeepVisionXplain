@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from src.api.training.service import TrainingManager
 
 from src.api.training.schemas import (
-    AvailableConfigsResponse,
+    TrainingConfigsResponse,
     TrainingStartRequest,
     TrainingStatusResponse,
     TrainingStartResponse,
@@ -15,7 +15,7 @@ router = APIRouter()
 training_manager = TrainingManager()
 
 
-@router.get('/configs', response_model=AvailableConfigsResponse)
+@router.get('/configs', response_model=TrainingConfigsResponse)
 def list_configs():
     return training_manager.list_available_configs()
 

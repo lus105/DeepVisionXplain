@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class AvailableConfigsResponse(BaseModel):
+class TrainingConfigsResponse(BaseModel):
     available_configs: list[str]
 
 

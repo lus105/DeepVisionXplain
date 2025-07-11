@@ -7,7 +7,7 @@ from src.api.training.schemas import (
     TrainingStartResponse,
     TrainingStopResponse,
     TrainingStatusResponse,
-    AvailableConfigsResponse,
+    TrainingConfigsResponse,
     TrainedModelsPathsResponse,
 )
 
@@ -50,13 +50,13 @@ class TrainingManager:
 
     def list_available_configs(
         self, config_dir: str = 'configs/experiment'
-    ) -> AvailableConfigsResponse:
+    ) -> TrainingConfigsResponse:
         config_path = Path(config_dir)
         if not config_path.exists():
-            return AvailableConfigsResponse(available_configs=[])
+            return TrainingConfigsResponse(available_configs=[])
         
         configs = [f.name for f in config_path.iterdir() if f.is_file() and f.suffix == '.yaml']
-        return AvailableConfigsResponse(available_configs=configs)
+        return TrainingConfigsResponse(available_configs=configs)
     
     def get_models_path(self, config_dir: str = 'logs/train/runs', ) -> TrainedModelsPathsResponse:
         config_path = Path(config_dir)
