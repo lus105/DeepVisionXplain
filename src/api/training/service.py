@@ -4,6 +4,7 @@ import subprocess
 from threading import Lock
 
 from src.api.training.schemas import (
+    TrainingStatusEnum,
     TrainingStartResponse,
     TrainingStopResponse,
     TrainingStatusResponse,
@@ -31,15 +32,15 @@ class TrainingManager:
             except Exception as e:
                 return TrainingStartResponse(status=f'error: {str(e)}', pid=None)
 
-            return TrainingStartResponse(status='started', pid=self._process.pid)
+            return TrainingStartResponse(status=TrainingStatusEnum.STARTED, pid=self._process.pid)
 
     def stop_training(self) -> TrainingStopResponse:
         with self._lock:
             if self._process is not None and self._process.poll() is None:
                 self._process.terminate()
                 self._process = None
-                return TrainingStopResponse(status='stopped')
-            return TrainingStopResponse(status='not_running')
+                return TrainingStopResponse(status=TrainingStatusEnum.STOPPED)
+            return TrainingStopResponse(status=TrainingStatusEnum.NOT_RUNNING)
 
     def get_status(self) -> TrainingStatusResponse:
         with self._lock:
@@ -49,19 +50,23 @@ class TrainingManager:
             )
 
     def list_available_configs(
-        self, config_dir: str = 'configs/experiment'
+        self, config_dir: str = 'configs/experiment', config_ext: str = '.yaml'
     ) -> TrainingConfigsResponse:
         config_path = Path(config_dir)
         if not config_path.exists():
             return TrainingConfigsResponse(available_configs=[])
-        
-        configs = [f.name for f in config_path.iterdir() if f.is_file() and f.suffix == '.yaml']
+
+        configs = [
+            f.name for f in config_path.iterdir() if f.is_file() and f.suffix == config_ext
+        ]
         return TrainingConfigsResponse(available_configs=configs)
-    
-    def get_models_path(self, config_dir: str = 'logs/train/runs', ) -> TrainedModelsPathsResponse:
+
+    def get_models_path(
+        self, config_dir: str = 'logs/train/runs', weight_ext: str = '*.ckpt'
+    ) -> TrainedModelsPathsResponse:
         config_path = Path(config_dir)
         if not config_path.exists():
             return TrainedModelsPathsResponse(model_paths=[])
-        
-        models_paths = [str(path.resolve()) for path in config_path.rglob('*.ckpt')]
+
+        models_paths = [str(path.resolve()) for path in config_path.rglob(weight_ext)]
         return TrainedModelsPathsResponse(model_paths=models_paths)

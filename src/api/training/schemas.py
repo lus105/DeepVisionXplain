@@ -1,5 +1,14 @@
 from typing import Optional
+from enum import Enum
 from pydantic import BaseModel
+
+
+class TrainingStatusEnum(str, Enum):
+    STARTED = "started"
+    RUNNING = "running"
+    STOPPED = "stopped"
+    NOT_RUNNING = "not_running"
+    ERROR = "error"
 
 
 class TrainingConfigsResponse(BaseModel):
@@ -11,7 +20,7 @@ class TrainingStartRequest(BaseModel):
 
 
 class TrainingStartResponse(BaseModel):
-    status: str
+    status: TrainingStatusEnum | str
     pid: Optional[int] = None
 
 
@@ -21,7 +30,7 @@ class TrainingStatusResponse(BaseModel):
 
 
 class TrainingStopResponse(BaseModel):
-    status: str
+    status: TrainingStatusEnum
 
 
 class TrainedModelsPathsResponse(BaseModel):
