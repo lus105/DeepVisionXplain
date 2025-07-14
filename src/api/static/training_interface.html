@@ -270,6 +270,22 @@
                     </div>
                 </div>
 
+                <!-- Training Metrics -->
+                <div class="card">
+                    <h3>📊 Training Metrics</h3>
+                    <div style="margin-bottom: 15px;">
+                        <button class="btn btn-secondary" onclick="loadLatestMetrics()">
+                            <span id="latest-metrics-text">Load Latest Metrics</span>
+                            <span id="latest-metrics-spinner" class="loading" style="display: none;"></span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadRunsList()">
+                            <span id="runs-list-text">List All Runs</span>
+                            <span id="runs-list-spinner" class="loading" style="display: none;"></span>
+                        </button>
+                    </div>
+                    <div id="metrics-container" style="margin-top: 15px;"></div>
+                </div>
+
                 <!-- Trained Models -->
                 <div class="card">
                     <h3>Trained Models</h3>
@@ -491,6 +507,150 @@
             });
             
             container.appendChild(modelsList);
+        }
+
+        // Load latest training metrics
+        async function loadLatestMetrics() {
+            setLoading('latest-metrics-text', true);
+            
+            try {
+                const data = await apiRequest('/metrics/latest');
+                displayMetrics(data);
+            } catch (error) {
+                console.error('Failed to load latest metrics:', error);
+            } finally {
+                setLoading('latest-metrics-text', false);
+            }
+        }
+
+        // Load list of all training runs
+        async function loadRunsList() {
+            setLoading('runs-list-text', true);
+            
+            try {
+                const data = await apiRequest('/metrics/runs');
+                displayRunsList(data);
+            } catch (error) {
+                console.error('Failed to load runs list:', error);
+            } finally {
+                setLoading('runs-list-text', false);
+            }
+        }
+
+        // Load specific run metrics
+        async function loadRunMetrics(runId) {
+            try {
+                const data = await apiRequest(`/metrics/runs/${runId}`);
+                displayMetrics(data);
+            } catch (error) {
+                console.error('Failed to load run metrics:', error);
+            }
+        }
+
+        function displayMetrics(data) {
+            const container = document.getElementById('metrics-container');
+            
+            if (data.error) {
+                container.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                return;
+            }
+
+            if (!data.data || data.data.length === 0) {
+                container.innerHTML = '<p>No metrics data available.</p>';
+                return;
+            }
+
+            // Get the latest metrics (last row)
+            const latestMetrics = data.data[data.data.length - 1];
+            
+            let metricsHtml = `
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <h4>📈 Run: ${data.run_id}</h4>
+                    <p><strong>Total Epochs:</strong> ${data.max_epoch} | <strong>Total Steps:</strong> ${data.max_step} | <strong>Rows:</strong> ${data.total_rows}</p>
+                    <p><strong>Available Columns:</strong> ${data.available_columns.join(', ')}</p>
+                    <p><strong>Last Modified:</strong> ${new Date(data.last_modified).toLocaleString()}</p>
+                </div>
+                
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                    <h4>📊 Latest Metrics (Epoch ${latestMetrics.epoch}, Step ${latestMetrics.step})</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
+            `;
+
+            // Display all available metrics from the latest row
+            for (const [key, value] of Object.entries(latestMetrics)) {
+                if (key !== 'epoch' && key !== 'step' && value !== null) {
+                    const displayValue = typeof value === 'number' ? value.toFixed(4) : value;
+                    metricsHtml += `
+                        <div>
+                            <strong>${key}:</strong><br>
+                            ${displayValue}
+                        </div>
+                    `;
+                }
+            }
+
+            metricsHtml += `
+                    </div>
+                </div>
+            `;
+
+            // Add a button to view all data
+            metricsHtml += `
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="showFullMetricsData('${data.run_id}')">
+                        View Full Training History
+                    </button>
+                </div>
+            `;
+            
+            container.innerHTML = metricsHtml;
+        }
+
+        function displayRunsList(runs) {
+            const container = document.getElementById('metrics-container');
+            
+            if (!runs || runs.length === 0) {
+                container.innerHTML = '<p>No training runs found.</p>';
+                return;
+            }
+
+            let runsHtml = `
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                    <h4>🗂️ Available Training Runs</h4>
+                    <div style="margin-top: 10px;">
+            `;
+
+            runs.forEach(run => {
+                const statusColor = run.status === 'completed' ? '#10b981' : '#f59e0b';
+                runsHtml += `
+                    <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; margin: 8px 0; cursor: pointer; hover: background-color: #f9fafb;" onclick="loadRunMetrics('${run.run_id}')">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${run.run_id}</strong>
+                                <span style="color: ${statusColor}; margin-left: 10px;">● ${run.status}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #6b7280;">
+                                ${new Date(run.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                        ${run.has_metrics ? '<p style="font-size: 12px; color: #059669; margin-top: 4px;">✓ Has metrics data</p>' : '<p style="font-size: 12px; color: #dc2626; margin-top: 4px;">✗ No metrics data</p>'}
+                    </div>
+                `;
+            });
+
+            runsHtml += `
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = runsHtml;
+        }
+
+        function showFullMetricsData(runId) {
+            // This could open a modal or new page with full data visualization
+            // For now, just log to console
+            console.log(`Loading full data for run: ${runId}`);
+            loadRunMetrics(runId);
         }
 
         // Auto-refresh status every 30 seconds when page is visible
