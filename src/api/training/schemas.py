@@ -40,7 +40,6 @@ class TrainedModelsPathsResponse(BaseModel):
 # Metrics tracking schemas
 class RunInfo(BaseModel):
     """Basic information about a training run"""
-
     run_id: str
     created_at: str
     modified_at: str
@@ -51,7 +50,6 @@ class RunInfo(BaseModel):
 
 class MetricsResponse(BaseModel):
     """Response containing training metrics data"""
-
     run_id: str
     available_columns: list[str]
     total_rows: int
@@ -64,14 +62,12 @@ class MetricsResponse(BaseModel):
 
 class MetricsErrorResponse(BaseModel):
     """Error response for metrics operations"""
-
     error: str
     csv_file: Optional[str] = None
 
 
 class RunSummary(BaseModel):
     """Summary statistics for a training run"""
-
     run_id: str
     total_epochs: int
     total_steps: int
