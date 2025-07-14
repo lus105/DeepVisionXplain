@@ -8,6 +8,7 @@ defaults:
   - override /model: mnist
   - override /callbacks: default
   - override /trainer: default
+  - override /logger: csv
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -33,10 +34,3 @@ model:
 
 data:
   batch_size: 64
-
-logger:
-  wandb:
-    tags: ${tags}
-    group: "mnist"
-  aim:
-    experiment: "mnist"
