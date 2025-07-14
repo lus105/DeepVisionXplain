@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 
 class TrainingStatusEnum(str, Enum):
-    STARTED = "started"
-    RUNNING = "running"
-    STOPPED = "stopped"
-    NOT_RUNNING = "not_running"
-    ERROR = "error"
+    STARTED = 'started'
+    RUNNING = 'running'
+    STOPPED = 'stopped'
+    NOT_RUNNING = 'not_running'
+    ERROR = 'error'
 
 
 class TrainingConfigsResponse(BaseModel):
