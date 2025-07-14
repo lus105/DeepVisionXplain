@@ -49,7 +49,9 @@ def trained_models():
 
 
 # Metrics tracking endpoints
-@router.get('/metrics/latest', response_model=Union[MetricsResponse, MetricsErrorResponse])
+@router.get(
+    '/metrics/latest', response_model=Union[MetricsResponse, MetricsErrorResponse]
+)
 def get_latest_metrics():
     """Get metrics from the most recent training run."""
     return metrics_tracker.get_latest_run_metrics()
@@ -61,13 +63,19 @@ def list_training_runs():
     return metrics_tracker.list_available_runs()
 
 
-@router.get('/metrics/runs/{run_id}', response_model=Union[MetricsResponse, MetricsErrorResponse])
+@router.get(
+    '/metrics/runs/{run_id}',
+    response_model=Union[MetricsResponse, MetricsErrorResponse],
+)
 def get_run_metrics(run_id: str):
     """Get detailed metrics for a specific training run."""
     return metrics_tracker.get_run_metrics(run_id)
 
 
-@router.get('/metrics/runs/{run_id}/summary', response_model=Union[RunSummary, MetricsErrorResponse])
+@router.get(
+    '/metrics/runs/{run_id}/summary',
+    response_model=Union[RunSummary, MetricsErrorResponse],
+)
 def get_run_summary(run_id: str):
     """Get summary statistics for a specific training run."""
     return metrics_tracker.get_run_summary(run_id)
