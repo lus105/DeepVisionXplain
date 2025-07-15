@@ -33,7 +33,6 @@ model:
 data:
   batch_size: 64
   num_workers: 4
-  data_dir: ${oc.env:pcb_data_path}
 
 logger:
   wandb:

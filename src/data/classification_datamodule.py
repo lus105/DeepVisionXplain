@@ -15,7 +15,9 @@ log = RankedLogger(__name__, rank_zero_only=True)
 class ClassificationDataModule(LightningDataModule):
     def __init__(
         self,
-        data_dir: str = 'data/',
+        train_data_dir: str = 'data/train',
+        test_data_dir: str = 'data/test',
+        val_data_dir: str = 'data/val',
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -27,7 +29,9 @@ class ClassificationDataModule(LightningDataModule):
         """Initialize a `DirDataModule`.
 
         Args:
-            data_dir (str, optional): The data directory. Defaults to 'data/'.
+            train_data_dir (str, optional): Train data directory. Defaults to 'data/train'.
+            test_data_dir (str, optional): Test data directory. Defaults to 'data/test'.
+            val_data_dir (str, optional): Validation data directory. Defaults to 'data/val'.
             batch_size (int, optional): Batch size. Defaults to 64.
             num_workers (int, optional): Number of workers. Defaults to 0.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
@@ -38,7 +42,9 @@ class ClassificationDataModule(LightningDataModule):
         """
         super().__init__()
 
-        self.data_dir = data_dir
+        self.train_data_dir = train_data_dir
+        self.test_data_dir = test_data_dir
+        self.val_data_dir = val_data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
@@ -72,28 +78,27 @@ class ClassificationDataModule(LightningDataModule):
             stage (Optional[str], optional): The stage to setup. Either `"fit"`,
             `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
-        data_path = Path(self.data_dir)
 
         if stage in {'fit', 'validate', 'test'}:
             self.data_train = ImageFolder(
-                root = data_path / 'train',
+                root = Path(self.train_data_dir),
                 transform = self.train_transforms,
             )
 
             self.data_test = ImageFolder(
-                root = data_path / 'test',
+                root = Path(self.test_data_dir),
                 transform = self.val_test_transforms,
             )
 
             self.data_val = ImageFolder(
-                root = data_path / 'val',
+                root = Path(self.val_data_dir),
                 transform = self.val_test_transforms,
             )
 
         if stage == 'predict':
             self.data_predict = ImageLabelDataset(
-                img_dir = data_path / 'test',
-                label_dir = (data_path / 'test').parent / 'labels',
+                img_dir = Path(self.test_data_dir),
+                label_dir = Path(self.test_data_dir).parent / 'labels',
                 transform = self.val_test_transforms,
             )
 

@@ -1,5 +1,7 @@
 _target_: src.data.classification_datamodule.ClassificationDataModule
-data_dir: ${paths.data_dir}
+train_data_dir: ${paths.data_dir}/train
+test_data_dir: ${paths.data_dir}/test
+val_data_dir: ${paths.data_dir}/val
 batch_size: 64
 num_workers: 3
 pin_memory: false
