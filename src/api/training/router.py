@@ -30,7 +30,7 @@ def list_configs():
 
 @router.post('/start', response_model=TrainingStartResponse)
 def start(req: TrainingStartRequest):
-    return training_manager.start_training(req.config_name)
+    return training_manager.start_training(req)
 
 
 @router.post('/stop', response_model=TrainingStopResponse)

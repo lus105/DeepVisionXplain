@@ -17,6 +17,9 @@ class TrainingConfigsResponse(BaseModel):
 
 class TrainingStartRequest(BaseModel):
     config_name: str
+    train_data_dir: str
+    test_data_dir: str
+    val_data_dir: str
 
 
 class TrainingStartResponse(BaseModel):

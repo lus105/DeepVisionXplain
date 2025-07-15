@@ -5,6 +5,7 @@ from threading import Lock
 
 from src.api.training.schemas import (
     TrainingStatusEnum,
+    TrainingStartRequest,
     TrainingStartResponse,
     TrainingStopResponse,
     TrainingStatusResponse,
@@ -25,15 +26,15 @@ class TrainingManager:
         self._process = None
         self._lock = Lock()
 
-    def start_training(self, config: str = 'example.yaml') -> TrainingStartResponse:
+    def start_training(self, request: TrainingStartRequest) -> TrainingStartResponse:
         """
-        Starts the training process using the specified configuration file.
+        Starts the training process using the specified configuration file and data directories.
         If a training process is already running, returns a response indicating
         that training is already in progress. Otherwise, attempts to start a new
-        training subprocess with the given configuration.
+        training subprocess with the given configuration and data paths.
         Args:
-            config (str): The name of the configuration YAML file to use for training.
-            Defaults to 'example.yaml'.
+            request (TrainingStartRequest): The training request containing config name
+            and data directory paths.
         Returns:
             TrainingStartResponse: An object containing the status of the training
             start attempt and the process ID (pid) if applicable.
@@ -44,7 +45,13 @@ class TrainingManager:
                     status='already_running', pid=self._process.pid
                 )
 
-            cmd = ['python', 'src/train.py', f'experiment={config}']
+            cmd = [
+                'python', 'src/train.py', 
+                f'experiment={request.config_name}',
+                f'data.train_data_dir={request.train_data_dir}',
+                f'data.test_data_dir={request.test_data_dir}',
+                f'data.val_data_dir={request.val_data_dir}'
+            ]
             env = os.environ.copy()
             try:
                 self._process = subprocess.Popen(cmd, env=env)
