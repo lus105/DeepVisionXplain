@@ -13,7 +13,6 @@ model:
   ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--efficientnet_v2_s_downscaled_pcb
 
 data:
-  data_dir: ${oc.env:pcb_data_path}
   save_predict_images: true
 
 predict: True
