@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from shutil import copy2
 from .preproc_strategy import PreprocessingStep
-from ..utils import (
+from src.data.components.utils import (
     DatasetType,
     list_files,
     list_dirs,
