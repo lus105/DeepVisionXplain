@@ -81,25 +81,25 @@ class ClassificationDataModule(LightningDataModule):
 
         if stage in {'fit', 'validate', 'test'}:
             self.data_train = ImageFolder(
-                root = Path(self.train_data_dir),
-                transform = self.train_transforms,
+                root=Path(self.train_data_dir),
+                transform=self.train_transforms,
             )
 
             self.data_test = ImageFolder(
-                root = Path(self.test_data_dir),
-                transform = self.val_test_transforms,
+                root=Path(self.test_data_dir),
+                transform=self.val_test_transforms,
             )
 
             self.data_val = ImageFolder(
-                root = Path(self.val_data_dir),
-                transform = self.val_test_transforms,
+                root=Path(self.val_data_dir),
+                transform=self.val_test_transforms,
             )
 
         if stage == 'predict':
             self.data_predict = ImageLabelDataset(
-                img_dir = Path(self.test_data_dir),
-                label_dir = Path(self.test_data_dir).parent / 'labels',
-                transform = self.val_test_transforms,
+                img_dir=Path(self.test_data_dir),
+                label_dir=Path(self.test_data_dir).parent / 'labels',
+                transform=self.val_test_transforms,
             )
 
     def train_dataloader(self) -> DataLoader[Any]:
