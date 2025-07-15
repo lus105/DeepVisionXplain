@@ -6,11 +6,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose
 
-from src.data.components.preprocessing.preproc_pipeline_manager import (
-    PreprocessingPipeline,
-)
 from src.data.components.image_label_dataset import ImageLabelDataset
-from src.data.components.utils import clear_directory
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -20,8 +16,6 @@ class ClassificationDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = 'data/',
-        preprocessing_pipeline: PreprocessingPipeline = None,
-        overwrite_data: bool = False,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -34,7 +28,6 @@ class ClassificationDataModule(LightningDataModule):
 
         Args:
             data_dir (str, optional): The data directory. Defaults to 'data/'.
-            preprocessing_pipeline (PreprocessingPipeline, optional): Custom preprocessing pipeline. Defaults to None.
             batch_size (int, optional): Batch size. Defaults to 64.
             num_workers (int, optional): Number of workers. Defaults to 0.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
@@ -46,8 +39,6 @@ class ClassificationDataModule(LightningDataModule):
         super().__init__()
 
         self.data_dir = data_dir
-        self.preprocessing_pipeline = preprocessing_pipeline
-        self.overwrite_data = overwrite_data
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
@@ -61,8 +52,6 @@ class ClassificationDataModule(LightningDataModule):
         self.data_test: Optional[Dataset] = None
         self.data_predict: Optional[Dataset] = None
 
-        self.preprocessed_data: dict[Path] = {}
-
     @property
     def num_classes(self) -> int:
         """Get the number of classes.
@@ -74,25 +63,7 @@ class ClassificationDataModule(LightningDataModule):
 
     def prepare_data(self) -> None:
         """Data preparation hook."""
-        log.info(f'Preparing data in {self.data_dir}...')
-
-        data_path = Path(self.data_dir)
-        base_path = data_path.parent
-        last_subdir = data_path.name
-        output_path = base_path / f'{last_subdir}_processed'
-
-        initial_data = {'initial_data': self.data_dir}
-        if output_path.exists():
-            if self.overwrite_data:
-                clear_directory(output_path)
-                output_path.rmdir()
-                self.preprocessed_data = self.preprocessing_pipeline.run(initial_data)
-            else:
-                self.preprocessed_data = (
-                    self.preprocessing_pipeline.get_processed_data_path(initial_data)
-                )
-        else:
-            self.preprocessed_data = self.preprocessing_pipeline.run(initial_data)
+        pass
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Datamodule setup step.
@@ -101,27 +72,29 @@ class ClassificationDataModule(LightningDataModule):
             stage (Optional[str], optional): The stage to setup. Either `"fit"`,
             `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
+        data_path = Path(self.data_dir)
+
         if stage in {'fit', 'validate', 'test'}:
             self.data_train = ImageFolder(
-                root=self.preprocessed_data['train'],
-                transform=self.train_transforms,
+                root = data_path / 'train',
+                transform = self.train_transforms,
             )
 
             self.data_test = ImageFolder(
-                root=self.preprocessed_data['test'],
-                transform=self.val_test_transforms,
+                root = data_path / 'test',
+                transform = self.val_test_transforms,
             )
 
             self.data_val = ImageFolder(
-                root=self.preprocessed_data['val'],
-                transform=self.val_test_transforms,
+                root = data_path / 'val',
+                transform = self.val_test_transforms,
             )
 
         if stage == 'predict':
             self.data_predict = ImageLabelDataset(
-                img_dir=self.preprocessed_data['test'],
-                label_dir=self.preprocessed_data['test'].parent / 'labels',
-                transform=self.hparams.val_test_transforms,
+                img_dir = data_path / 'test',
+                label_dir = (data_path / 'test').parent / 'labels',
+                transform = self.val_test_transforms,
             )
 
     def train_dataloader(self) -> DataLoader[Any]:

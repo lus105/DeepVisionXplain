@@ -6,7 +6,7 @@ import numpy as np
 from typing import Generator
 
 from .preproc_strategy import PreprocessingStep
-from ..utils import (
+from src.data.components.utils import (
     list_files,
     find_file_by_name,
     IMAGE_EXTENSIONS,
