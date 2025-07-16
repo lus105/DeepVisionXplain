@@ -46,11 +46,12 @@ class TrainingManager:
                 )
 
             cmd = [
-                'python', 'src/train.py', 
+                'python',
+                'src/train.py',
                 f'experiment={request.config_name}',
                 f'data.train_data_dir={request.train_data_dir}',
                 f'data.test_data_dir={request.test_data_dir}',
-                f'data.val_data_dir={request.val_data_dir}'
+                f'data.val_data_dir={request.val_data_dir}',
             ]
             env = os.environ.copy()
             try:

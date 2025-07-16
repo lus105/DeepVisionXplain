@@ -55,7 +55,7 @@ class ClassificationLitModule(LightningModule):
             self.train_acc = Accuracy(task='multiclass', num_classes=self.num_classes)
             self.val_acc = Accuracy(task='multiclass', num_classes=self.num_classes)
             self.test_acc = Accuracy(task='multiclass', num_classes=self.num_classes)
-            
+
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
         # for averaging loss across batches
@@ -99,7 +99,7 @@ class ClassificationLitModule(LightningModule):
         """
         x, y = batch
         logits = self.forward(x)
-        
+
         if self.num_classes == 2:
             y = y.view(-1, 1).float()
             loss = self.criterion(logits, y)
@@ -108,7 +108,7 @@ class ClassificationLitModule(LightningModule):
             y = y.long()
             loss = self.criterion(logits, y)
             preds = torch.argmax(logits, dim=1)
-            
+
         return loss, preds, y
 
     def training_step(
@@ -199,18 +199,18 @@ class ClassificationLitModule(LightningModule):
             batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
             containing the input tensor of images and target labels.
             batch_idx (int): The index of the current batch.
-            
+
         Returns:
             torch.Tensor: A tensor of predictions.
         """
         x, y = batch
         logits = self.forward(x)
-        
+
         if self.is_binary:
             preds = (logits > 0.5).float()
         else:
             preds = torch.argmax(logits, dim=1)
-            
+
         return preds
 
     def setup(self, stage: str) -> None:
