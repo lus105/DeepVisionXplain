@@ -62,17 +62,17 @@ downscaled: mobilenet_v3_large. features.13.block.0 -> [1, 672, 14, 14]
 Train cnn/vit model:
 ```bash
 # train cnn
-python src/train.py experiment=train_cnn
+python src/train.py experiment=train_cnn_multi
 # train vit
-python src/train.py experiment=train_vit
+python src/train.py experiment=train_vit_multi
 ```
 Train cnn/vit model with hparams search:
 ```bash
 # train cnn
-python src/train.py hparams_search=cnn_optuna experiment=train_cnn
+python src/train.py hparams_search=cnn_optuna experiment=train_cnn_multi
 
 # train vit
-python src/train.py hparams_search=vit_optuna experiment=train_vit
+python src/train.py hparams_search=vit_optuna experiment=train_vit_multi
 ```
 
 Run explainability segmentation evaluation for all models:
