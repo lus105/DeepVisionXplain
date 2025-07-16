@@ -2,7 +2,7 @@
 
 defaults:
   - override /data: classification_dir
-  - override /model: cnn_multi_effnet_v2_s_down
+  - override /model: cnn
   - override /callbacks: default
   - override /trainer: default
   - override /logger: csv
@@ -18,12 +18,17 @@ trainer:
   accelerator: gpu
 
 data:
-  batch_size: 8
+  batch_size: 32
   num_workers: 4
-  num_classes: 2
+  num_classes: 6
 
 model:
   net:
-    multi_head: false
+    _target_: src.models.components.base_model.BaseModel
+    model_name: torchvision.models/mobilenet_v3_large
+    #weights: IMAGENET1K_V1
+    num_classes: ${data.num_classes}
+  loss:
+    _target_: torch.nn.CrossEntropyLoss
   ckpt_path: null
   num_classes: ${data.num_classes}

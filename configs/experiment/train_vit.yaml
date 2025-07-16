@@ -2,7 +2,7 @@
 
 defaults:
   - override /data: classification_dir
-  - override /model: vit_multi_tiny
+  - override /model: vit
   - override /callbacks: default
   - override /trainer: default
   - override /logger: csv
@@ -19,13 +19,16 @@ trainer:
 data:
   batch_size: 64
   num_workers: 4
-  num_classes: 2
+  num_classes: 6
 
 model:
   net:
-    multi_head: false
-  optimizer:
-    lr: 5e-5
-  compile: false
+    _target_: src.models.components.base_model.BaseModel
+    model_name: timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k
+    pretrained: True
+    num_classes: ${data.num_classes}
+    img_size: 224
+  loss:
+    _target_: torch.nn.CrossEntropyLoss
   ckpt_path: null
   num_classes: ${data.num_classes}

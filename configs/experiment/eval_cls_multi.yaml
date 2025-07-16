@@ -11,3 +11,4 @@ model:
   net:
     multi_head: false
   ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--efficientnet_v2_s_downscaled_pcb
+  num_classes: ${data.num_classes}

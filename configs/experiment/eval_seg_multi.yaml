@@ -7,12 +7,14 @@ defaults:
 
 tags: ["eval", "segmentation"]
 
+data:
+  save_predict_images: true
+  num_classes: 2
+
 model:
   net:
     multi_head: true
   ckpt_path: ${paths.trained_models}/models--DeepVisionXplain--efficientnet_v2_s_downscaled_pcb
-
-data:
-  save_predict_images: true
+  num_classes: ${data.num_classes}
 
 predict: True
