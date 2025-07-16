@@ -25,8 +25,8 @@ data:
 model:
   net:
     _target_: src.models.components.base_model.BaseModel
-    model_name: torchvision.models/mobilenet_v3_large
-    #weights: IMAGENET1K_V1
+    model_name: timm/mobilenetv3_large_100.ra_in1k
+    pretrained: True
     num_classes: ${data.num_classes}
   loss:
     _target_: torch.nn.CrossEntropyLoss
