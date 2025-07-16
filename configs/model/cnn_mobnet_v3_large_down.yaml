@@ -1,5 +1,5 @@
 defaults:
-  - cnn
+  - cnn_multi
   - _self_
 
 net:
