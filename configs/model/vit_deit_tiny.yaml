@@ -1,5 +1,5 @@
 defaults:
-  - vit
+  - vit_multi
   - _self_
 
 net:
