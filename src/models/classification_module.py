@@ -206,7 +206,7 @@ class ClassificationLitModule(LightningModule):
         x, y = batch
         logits = self.forward(x)
 
-        if self.is_binary:
+        if self.num_classes == 2:
             preds = (logits > 0.5).float()
         else:
             preds = torch.argmax(logits, dim=1)
