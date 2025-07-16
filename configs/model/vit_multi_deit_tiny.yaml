@@ -1,0 +1,15 @@
+defaults:
+  - vit
+  - _self_
+
+net:
+  _target_: src.models.components.vit_rollout_multihead.VitRolloutMultihead
+  backbone: timm/deit_tiny_patch16_224.fb_in1k
+  multi_head: False
+  pretrained: True
+  output_size: 1
+  return_nodes: "attn_drop"
+  head_name: "head"
+  img_size: 224
+  discard_ratio: 0.2
+  head_fusion: "mean"

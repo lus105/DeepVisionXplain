@@ -1,0 +1,10 @@
+defaults:
+  - cnn
+  - _self_
+
+net:
+  _target_: src.models.components.cnn_cam_multihead.CNNCAMMultihead
+  backbone: torchvision.models/mobilenet_v3_large
+  multi_head: False
+  return_node: "features.16"
+  weights: "IMAGENET1K_V1"

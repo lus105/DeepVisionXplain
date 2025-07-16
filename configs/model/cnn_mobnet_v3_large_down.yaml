@@ -1,7 +1,0 @@
-defaults:
-  - cnn_multi
-  - _self_
-
-net:
-  backbone: torchvision.models/mobilenet_v3_large
-  return_node: "features.13.block.0"
