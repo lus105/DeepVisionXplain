@@ -2,7 +2,7 @@
 
 defaults:
   - override /data: classification_dir
-  - override /model: cnn_effnet_v2_s_down
+  - override /model: cnn_multi_effnet_v2_s_down
   - override /trainer: gpu
 
 tags: ["eval", "segmentation"]

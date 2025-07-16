@@ -1,7 +1,0 @@
-defaults:
-  - cnn_multi
-  - _self_
-
-net:
-  backbone: torchvision.models/efficientnet_v2_s
-  return_node: "features.7"
