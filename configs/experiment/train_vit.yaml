@@ -5,7 +5,7 @@
 
 defaults:
   - override /data: classification_dir
-  - override /model: vit_tiny
+  - override /model: vit_multi_tiny
   - override /callbacks: default
   - override /trainer: default
   - override /logger: many_loggers

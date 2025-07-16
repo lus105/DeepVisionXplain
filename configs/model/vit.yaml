@@ -1,0 +1,19 @@
+_target_: src.models.classification_module.ClassificationLitModule
+
+net:
+  _target_: ???
+
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: true
+  lr: 5e-5
+  weight_decay: 0.0
+
+scheduler: null
+
+loss:
+  _target_: torch.nn.BCELoss
+
+compile: false
+
+ckpt_path: ???
