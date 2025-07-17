@@ -5,12 +5,13 @@ val_data_dir: ${paths.data_dir}/val
 batch_size: 64
 num_workers: 3
 pin_memory: false
+image_size: [224, 224]
 
 train_transforms:
   _target_: torchvision.transforms.Compose
   transforms:
     - _target_: torchvision.transforms.Resize
-      size: [224, 224]
+      size: ${data.image_size}
     - _target_: torchvision.transforms.RandomHorizontalFlip
       p: 0.5
     - _target_: torchvision.transforms.RandomVerticalFlip
@@ -21,7 +22,7 @@ val_test_transforms:
   _target_: torchvision.transforms.Compose
   transforms:
     - _target_: torchvision.transforms.Resize
-      size: [224, 224]
+      size: ${data.image_size}
     - _target_: torchvision.transforms.ToTensor
 
 save_predict_images: false
