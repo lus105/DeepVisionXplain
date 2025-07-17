@@ -3,6 +3,7 @@ import os
 import numpy as np
 import cv2
 from pathlib import Path
+from torch import nn
 
 
 def weight_load(
@@ -32,6 +33,30 @@ def weight_load(
     }
 
     return model_weights
+
+
+def export_model_to_onnx(
+    model: nn.Module,
+    onnx_path: str,
+    input_shape: tuple = (1, 3, 224, 224),
+    input_names: list = ['input'],
+    output_names: list = ['output'],
+    opset_version: int = 20,
+) -> None:
+    model.eval()
+    dummy_input = torch.randn(*input_shape)
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_path,
+        input_names=input_names,
+        output_names=output_names,
+        dynamic_axes={
+            'input': {0: 'batch_size'},
+            'output': {0: 'batch_size'},
+        },
+        opset_version=opset_version,
+    )
 
 
 def save_images(

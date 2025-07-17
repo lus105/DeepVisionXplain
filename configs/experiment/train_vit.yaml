@@ -27,8 +27,10 @@ model:
     model_name: timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k
     pretrained: True
     num_classes: ${data.num_classes}
-    img_size: 224
+    img_size: ${data.image_size}
   loss:
     _target_: torch.nn.CrossEntropyLoss
   ckpt_path: null
   num_classes: ${data.num_classes}
+
+export_to_onnx: True

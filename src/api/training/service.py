@@ -119,7 +119,7 @@ class TrainingManager:
         return TrainingConfigsResponse(available_configs=configs)
 
     def get_models_path(
-        self, config_dir: str = 'logs/train/runs', weight_ext: str = '*.ckpt'
+        self, config_dir: str = 'logs/train/runs', weight_ext: str = '*.onnx'
     ) -> TrainedModelsPathsResponse:
         """
         Retrieves the absolute paths of all model weight files within a specified directory.

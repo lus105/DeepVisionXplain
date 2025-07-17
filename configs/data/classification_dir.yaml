@@ -6,6 +6,7 @@ batch_size: 64
 num_workers: 3
 pin_memory: false
 image_size: [224, 224]
+channels: 3
 
 train_transforms:
   _target_: torchvision.transforms.Compose

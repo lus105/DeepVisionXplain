@@ -32,3 +32,5 @@ model:
     _target_: torch.nn.CrossEntropyLoss
   ckpt_path: null
   num_classes: ${data.num_classes}
+
+export_to_onnx: True

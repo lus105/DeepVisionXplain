@@ -18,6 +18,7 @@ from src.utils import (
     task_wrapper,
     log_gpu_memory_metadata,
 )
+from src.models.components.nn_utils import export_model_to_onnx
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
@@ -91,6 +92,17 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         log.info(f'Best ckpt path: {ckpt_path}')
 
     test_metrics = trainer.callback_metrics
+
+    if cfg.get('export_to_onnx'):
+        onnx_path = trainer.checkpoint_callback.best_model_path.replace('.ckpt', '.onnx')
+        image_size = cfg.get('data').get('image_size')
+        channels = cfg.get('data').get('channels')
+        export_model_to_onnx(
+            model=model.net,
+            onnx_path=onnx_path,
+            input_shape=(1, channels, image_size[0], image_size[1]),
+        )
+        log.info(f'Model exported to {onnx_path}')
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
