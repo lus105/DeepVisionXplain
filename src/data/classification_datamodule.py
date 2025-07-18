@@ -58,6 +58,7 @@ class ClassificationDataModule(LightningDataModule):
         self.save_predict_images = save_predict_images
         self._num_classes = num_classes
         self.channels = channels
+        self._class_names: Optional[list[str]] = None
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
@@ -71,6 +72,15 @@ class ClassificationDataModule(LightningDataModule):
             int: The number of classes (2).
         """
         return self._num_classes
+    
+    @property
+    def class_names(self):
+        """Automatically extract class names from the dataset."""
+
+        if self._class_names is None and hasattr(self.data_train, 'classes'):
+            self._class_names = self.data_train.classes
+
+        return self._class_names
 
     def prepare_data(self) -> None:
         """Data preparation hook."""

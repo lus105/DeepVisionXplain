@@ -94,13 +94,16 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     test_metrics = trainer.callback_metrics
 
     if cfg.get('export_to_onnx'):
-        onnx_path = trainer.checkpoint_callback.best_model_path.replace('.ckpt', '.onnx')
+        onnx_path = trainer.checkpoint_callback.best_model_path.replace(
+            '.ckpt', '.onnx'
+        )
         image_size = cfg.get('data').get('image_size')
         channels = cfg.get('data').get('channels')
         export_model_to_onnx(
             model=model.net,
             onnx_path=onnx_path,
             input_shape=(1, channels, image_size[0], image_size[1]),
+            class_names=datamodule.class_names
         )
         log.info(f'Model exported to {onnx_path}')
 
