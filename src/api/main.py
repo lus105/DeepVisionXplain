@@ -1,13 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from pathlib import Path
 from src.api.training import router
-
-# Get the directory where this file is located
-API_DIR = Path(__file__).parent
-STATIC_DIR = API_DIR / 'static'
 
 
 app = FastAPI(
@@ -25,15 +19,6 @@ app.add_middleware(
     allow_methods=['GET', 'POST'],  # Only allow needed methods
     allow_headers=['*'],  # Allows all headers
 )
-
-
-# Serve the training interface
-@app.get('/', response_class=FileResponse)
-async def get_training_interface():
-    """Serve the training interface HTML page"""
-    html_file = STATIC_DIR / 'training_interface.html'
-    return FileResponse(html_file)
-
 
 app.include_router(router.router, prefix='/training', tags=['Training'])
 
