@@ -25,26 +25,31 @@ metrics_tracker = MetricsTracker()
 
 @router.get('/configs', response_model=TrainingConfigsResponse)
 def list_configs():
+    """List all available training configurations."""
     return training_manager.list_available_configs()
 
 
 @router.post('/start', response_model=TrainingStartResponse)
 def start(req: TrainingStartRequest):
+    """Start a new training session."""
     return training_manager.start_training(req)
 
 
 @router.post('/stop', response_model=TrainingStopResponse)
 def stop():
+    """Stop the current training session."""
     return training_manager.stop_training()
 
 
 @router.get('/status', response_model=TrainingStatusResponse)
 def status():
+    """Get the current training status."""
     return training_manager.get_status()
 
 
 @router.get('/trained_models', response_model=TrainedModelsPathsResponse)
 def trained_models():
+    """Get paths to all trained models."""
     return training_manager.get_models_path()
 
 

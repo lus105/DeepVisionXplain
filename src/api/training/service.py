@@ -23,6 +23,10 @@ class TrainingManager:
     """
 
     def __init__(self):
+        """
+        Initializes the service instance by setting up a process placeholder and
+        a thread lock for synchronization.
+        """
         self._process = None
         self._lock = Lock()
 
@@ -34,10 +38,10 @@ class TrainingManager:
         training subprocess with the given configuration and data paths.
         Args:
             request (TrainingStartRequest): The training request containing config name
-            and data directory paths.
+                and data directory paths.
         Returns:
             TrainingStartResponse: An object containing the status of the training
-            start attempt and the process ID (pid) if applicable.
+                start attempt and the process ID (pid) if applicable.
         """
         with self._lock:
             if self._process is not None and self._process.poll() is None:
@@ -85,7 +89,7 @@ class TrainingManager:
 
         Returns:
             TrainingStatusResponse: An object containing the running status of the
-            training process and its process ID (pid) if it is running.
+                training process and its process ID (pid) if it is running.
         """
         with self._lock:
             running = self._process is not None and self._process.poll() is None
@@ -105,7 +109,7 @@ class TrainingManager:
                 Defaults to '.yaml'.
         Returns:
             TrainingConfigsResponse: An object containing a list of available configuration file names.
-        If the specified directory does not exist, returns an empty list of available configurations.
+                If the specified directory does not exist, returns an empty list of available configurations.
         """
         config_path = Path(config_dir)
         if not config_path.exists():
