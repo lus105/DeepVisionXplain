@@ -62,6 +62,6 @@ def export_model_to_onnx(
     if class_names:
         model_onnx = onnx.load(onnx_path)
         class_names_json = json.dumps(class_names)
-        meta = onnx.StringStringEntryProto(key="class_names", value=class_names_json)
+        meta = onnx.StringStringEntryProto(key='class_names', value=class_names_json)
         model_onnx.metadata_props.append(meta)
         onnx.save(model_onnx, onnx_path)

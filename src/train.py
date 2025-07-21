@@ -103,7 +103,7 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
             model=model.net,
             onnx_path=onnx_path,
             input_shape=(1, channels, image_size[0], image_size[1]),
-            class_names=datamodule.class_names
+            class_names=datamodule.class_names,
         )
         log.info(f'Model exported to {onnx_path}')
 

@@ -43,7 +43,7 @@ class MetricsTracker:
         Args:
             run_id (str): The unique identifier of the training run.
         Returns:
-            Union[MetricsResponse, MetricsErrorResponse]: 
+            Union[MetricsResponse, MetricsErrorResponse]:
                 - MetricsResponse containing parsed metrics if successful.
                 - MetricsErrorResponse with an error message if the run or metrics CSV is not found.
         """
@@ -180,7 +180,7 @@ class MetricsTracker:
             csv_file (Path): Path to the CSV file containing metrics data.
             run_id (str): Identifier for the training run.
         Returns:
-            Union[MetricsResponse, MetricsErrorResponse]: 
+            Union[MetricsResponse, MetricsErrorResponse]:
                 - MetricsResponse: If the CSV is successfully parsed, containing run ID,
                 available columns, total rows, max epoch, max step, parsed data,
                     CSV file path, and last modified timestamp.
