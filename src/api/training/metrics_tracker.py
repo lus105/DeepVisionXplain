@@ -13,10 +13,22 @@ from src.api.training.schemas import (
 
 class MetricsTracker:
     def __init__(self, logs_base_path: str = 'logs/train/runs'):
+        """
+        Initializes the object with a base path for storing log files.
+
+        Args:
+            logs_base_path (str, optional): The base directory path where training
+                logs will be saved. Defaults to 'logs/train/runs'.
+        """
         self.logs_base_path = Path(logs_base_path)
 
     def get_latest_run_metrics(self) -> Union[MetricsResponse, MetricsErrorResponse]:
-        """Get metrics from the most recent training run."""
+        """
+        Retrieves the metrics for the most recent training run.
+        Returns:
+            MetricsResponse: The metrics of the latest training run if available.
+            MetricsErrorResponse: An error response if no training runs are found.
+        """
         latest_run = self._find_latest_run()
         if not latest_run:
             return MetricsErrorResponse(error='No training runs found')
@@ -26,7 +38,15 @@ class MetricsTracker:
     def get_run_metrics(
         self, run_id: str
     ) -> Union[MetricsResponse, MetricsErrorResponse]:
-        """Get metrics for a specific training run."""
+        """
+        Retrieves the metrics for a specific training run.
+        Args:
+            run_id (str): The unique identifier of the training run.
+        Returns:
+            Union[MetricsResponse, MetricsErrorResponse]: 
+                - MetricsResponse containing parsed metrics if successful.
+                - MetricsErrorResponse with an error message if the run or metrics CSV is not found.
+        """
         run_path = self.logs_base_path / run_id
         if not run_path.exists():
             return MetricsErrorResponse(error=f'Run {run_id} not found')
@@ -39,7 +59,16 @@ class MetricsTracker:
         return self._parse_csv_metrics(csv_file, run_id)
 
     def list_available_runs(self) -> list[RunInfo]:
-        """List all available training runs with basic info."""
+        """
+        Retrieves a list of available training runs from the logs base directory.
+        Iterates through each subdirectory in the logs base path, collects run information
+        using the `_get_run_info` method, and returns a list of `RunInfo` objects sorted
+        by creation time in descending order (newest first).
+        Returns:
+            list[RunInfo]: A list of `RunInfo` objects representing available runs,
+                sorted by creation time (newest first). Returns an empty list if the logs
+                base path does not exist.
+        """
         if not self.logs_base_path.exists():
             return []
 
@@ -54,7 +83,15 @@ class MetricsTracker:
         return sorted(runs, key=lambda x: x.created_at, reverse=True)
 
     def get_run_summary(self, run_id: str) -> Union[RunSummary, MetricsErrorResponse]:
-        """Get summary statistics for a training run."""
+        """
+        Generate a summary of training run metrics, including best and final values.
+        Args:
+            run_id (str): The unique identifier for the training run.
+        Returns:
+            Union[RunSummary, MetricsErrorResponse]: A RunSummary object containing
+                the run's best and final metrics, or a MetricsErrorResponse if metrics
+                retrieval fails.
+        """
         metrics = self.get_run_metrics(run_id)
         if isinstance(metrics, MetricsErrorResponse):
             return metrics
@@ -92,7 +129,12 @@ class MetricsTracker:
         )
 
     def _find_latest_run(self) -> Optional[Path]:
-        """Find the most recent training run directory."""
+        """
+        Finds the most recently modified run directory within the logs base path.
+        Returns:
+            Optional[Path]: The path to the most recently modified run directory,
+                or None if the logs base path does not exist or contains no directories.
+        """
         if not self.logs_base_path.exists():
             return None
 
@@ -104,7 +146,15 @@ class MetricsTracker:
         return max(run_dirs, key=lambda d: d.stat().st_mtime)
 
     def _find_metrics_csv(self, run_path: Path) -> Optional[Path]:
-        """Find the metrics CSV file in a run directory."""
+        """
+        Searches for a metrics CSV file within the specified run directory using
+        common Lightning log patterns.
+        Args:
+            run_path (Path): The root directory to search for metrics CSV files.
+        Returns:
+            Optional[Path]: The path to the most recently modified metrics CSV
+                file if found, otherwise None.
+        """
         # Common patterns for Lightning CSV logs
         patterns = [
             'csv/version_*/metrics.csv',
@@ -124,7 +174,18 @@ class MetricsTracker:
     def _parse_csv_metrics(
         self, csv_file: Path, run_id: str
     ) -> Union[MetricsResponse, MetricsErrorResponse]:
-        """Parse metrics from CSV file with dynamic column handling."""
+        """
+        Parses a CSV file containing training metrics and returns a structured response.
+        Args:
+            csv_file (Path): Path to the CSV file containing metrics data.
+            run_id (str): Identifier for the training run.
+        Returns:
+            Union[MetricsResponse, MetricsErrorResponse]: 
+                - MetricsResponse: If the CSV is successfully parsed, containing run ID,
+                available columns, total rows, max epoch, max step, parsed data,
+                    CSV file path, and last modified timestamp.
+                - MetricsErrorResponse: If parsing fails, containing an error message and the CSV file path.
+        """
         try:
             df = pd.read_csv(csv_file)
 
@@ -169,7 +230,16 @@ class MetricsTracker:
             )
 
     def _get_run_info(self, run_dir: Path) -> Optional[RunInfo]:
-        """Get basic information about a training run."""
+        """
+        Retrieves information about a training run located in the specified directory.
+        Args:
+            run_dir (Path): The path to the directory containing the run data.
+        Returns:
+            Optional[RunInfo]: An instance of RunInfo containing details about the run,
+                such as run ID, creation and modification timestamps, status, presence of metrics,
+                and the path to the metrics file if available. Returns None if any error occurs
+                during retrieval.
+        """
         try:
             stat = run_dir.stat()
 
