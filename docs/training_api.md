@@ -59,7 +59,7 @@ Stops the currently running training process.
 
 #### Get Status
 ```http
-GET training/status
+GET /training/status
 ```
 Returns current training process status.
 
