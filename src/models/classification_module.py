@@ -2,17 +2,10 @@ from typing import Any
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric, MetricCollection
+from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
-from torchmetrics.classification import (
-    BinaryAccuracy,
-    BinaryF1Score,
-    BinaryPrecision,
-    BinaryRecall,
-    BinaryJaccardIndex,
-)
 
-from .components.nn_utils import weight_load, save_images
+from .components.utils import weight_load
 
 
 class ClassificationLitModule(LightningModule):
@@ -24,6 +17,7 @@ class ClassificationLitModule(LightningModule):
         loss: torch.nn.modules.loss,
         compile: bool,
         ckpt_path: str,
+        num_classes: int = None,
     ) -> None:
         """Initialize lightning module.
 
@@ -34,6 +28,7 @@ class ClassificationLitModule(LightningModule):
             loss (torch.nn.modules.loss): Loss function.
             compile (bool): Compile model.
             ckpt_path (string): Model chekpoint path.
+            num_classes (int, optional): Number of classes.
         """
         super().__init__()
         # model
@@ -48,27 +43,25 @@ class ClassificationLitModule(LightningModule):
         self.compile = compile
         # checkpoint path
         self.ckpt_path = ckpt_path
+        # number of classes
+        self.num_classes = num_classes
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task='binary')
-        self.val_acc = Accuracy(task='binary')
-        self.test_acc = Accuracy(task='binary')
+        if self.num_classes == 2:
+            self.train_acc = Accuracy(task='binary')
+            self.val_acc = Accuracy(task='binary')
+            self.test_acc = Accuracy(task='binary')
+        else:
+            self.train_acc = Accuracy(task='multiclass', num_classes=self.num_classes)
+            self.val_acc = Accuracy(task='multiclass', num_classes=self.num_classes)
+            self.test_acc = Accuracy(task='multiclass', num_classes=self.num_classes)
+
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
         # for averaging loss across batches
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
         self.test_loss = MeanMetric()
-        # segmentation metrics collection
-        self.seg_metrics = MetricCollection(
-            {
-                'accuracy': BinaryAccuracy(),
-                'f1_score': BinaryF1Score(),
-                'precision': BinaryPrecision(),
-                'recall': BinaryRecall(),
-                'jaccard': BinaryJaccardIndex(),
-            }
-        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -106,9 +99,16 @@ class ClassificationLitModule(LightningModule):
         """
         x, y = batch
         logits = self.forward(x)
-        y = y.view(-1, 1).float()
-        loss = self.criterion(logits, y)
-        preds = (logits > 0.5).float()
+
+        if self.num_classes == 2:
+            y = y.view(-1, 1).float()
+            loss = self.criterion(logits, y)
+            preds = (logits > 0.5).float()
+        else:
+            y = y.long()
+            loss = self.criterion(logits, y)
+            preds = torch.argmax(logits, dim=1)
+
         return loss, preds, y
 
     def training_step(
@@ -192,43 +192,26 @@ class ClassificationLitModule(LightningModule):
 
     def predict_step(
         self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
-    ) -> None:
+    ) -> torch.Tensor:
         """Perform a single predict step on a batch of data from the test set.
 
         Args:
             batch (Tuple[torch.Tensor, torch.Tensor]): A batch of data (a tuple)
             containing the input tensor of images and target labels.
             batch_idx (int): The index of the current batch.
+
+        Returns:
+            torch.Tensor: A tensor of predictions.
         """
         x, y = batch
-        out, map = self.forward(x)
-        preds = (out > 0.5).float()
+        logits = self.forward(x)
 
-        for i, pred in enumerate(preds):
-            image = x[i]
-            label = y[i].squeeze(0)
-            map_segmentation = map[i] if pred == 1 else torch.zeros_like(map[i])
-            if pred == 1:
-                map_segmentation = (map_segmentation - map_segmentation.min()) / (
-                    map_segmentation.max() - map_segmentation.min()
-                )
-                if self.trainer.datamodule.hparams.save_predict_images:
-                    filename = f'img_batch_{batch_idx}_sample_{i}.png'
-                    save_images(
-                        image,
-                        map_segmentation,
-                        label,
-                        f'{self.trainer.default_root_dir}/images/{filename}',
-                    )
+        if self.num_classes == 2:
+            preds = (logits > 0.5).float()
+        else:
+            preds = torch.argmax(logits, dim=1)
 
-            map_segmentation = (map_segmentation > 0.5).float()
-            self.seg_metrics(map_segmentation, label)
-
-    def on_predict_epoch_end(self) -> None:
-        """Lightning hook that is called when a predict epoch ends."""
-        metrics_dict = self.seg_metrics.compute()
-        for metric_name, metric_value in metrics_dict.items():
-            print(f'test/{metric_name}: {metric_value}')
+        return preds
 
     def setup(self, stage: str) -> None:
         """Lightning hook that is called at the beginning of fit (train + validate), validate,

@@ -17,3 +17,5 @@ loss:
 compile: false
 
 ckpt_path: ???
+
+num_classes: ???

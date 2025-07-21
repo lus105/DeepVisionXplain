@@ -1,10 +1,6 @@
-import rootutils
 import numpy as np
 import onnxruntime as ort
-
-rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
-
-from notebooks.helpers.inference_base import InferenceBase
+from .inference_base import InferenceBase
 
 
 class InferenceOnnx(InferenceBase):

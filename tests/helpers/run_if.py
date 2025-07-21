@@ -135,6 +135,6 @@ class RunIf:
         reasons = [rs for cond, rs in zip(conditions, reasons) if cond]
         return pytest.mark.skipif(
             condition=any(conditions),
-            reason=f"Requires: [{' + '.join(reasons)}]",
+            reason=f'Requires: [{" + ".join(reasons)}]',
             **kwargs,
         )

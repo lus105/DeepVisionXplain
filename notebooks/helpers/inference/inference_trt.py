@@ -1,12 +1,8 @@
-import rootutils
 import numpy as np
 import pycuda.driver as cuda
 import pycuda.autoinit
 import tensorrt as trt
-
-rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
-
-from notebooks.helpers.inference_base import InferenceBase
+from .inference_base import InferenceBase
 
 
 # https://stackoverflow.com/questions/59280745/inference-with-tensorrt-engine-file-on-python

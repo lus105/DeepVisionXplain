@@ -31,3 +31,4 @@ ruff
 ipywidgets
 ipykernel
 pandas
+fastapi[standard]

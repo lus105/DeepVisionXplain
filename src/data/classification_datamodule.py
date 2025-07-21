@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose
 
-from src.data.components.image_label_dataset import ImageLabelDataset
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -21,6 +20,8 @@ class ClassificationDataModule(LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
+        image_size: tuple = (224, 224),
+        channels: int = 3,
         train_transforms: Compose = None,
         val_test_transforms: Compose = None,
         save_predict_images: bool = False,
@@ -35,6 +36,8 @@ class ClassificationDataModule(LightningDataModule):
             batch_size (int, optional): Batch size. Defaults to 64.
             num_workers (int, optional): Number of workers. Defaults to 0.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
+            image_size (tuple, optional): Image size. Defaults to (224, 224).
+            channels (int, optional): Number of channels in the images. Defaults to 3.
             train_transforms (Compose, optional): Train split transformations. Defaults to None.
             val_test_transforms (Compose, optional): Validation and test split transformations. Defaults to None.
             save_predict_images (bool, optional): Save images in predict mode? Defaults to False.
@@ -48,11 +51,13 @@ class ClassificationDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
+        self.image_size = image_size
         self.train_transforms = train_transforms
         self.val_test_transforms = val_test_transforms
         self.save_predict_images = save_predict_images
         self._num_classes = num_classes
-
+        self.channels = channels
+        self._class_names: Optional[list[str]] = None
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
@@ -66,6 +71,15 @@ class ClassificationDataModule(LightningDataModule):
             int: The number of classes (2).
         """
         return self._num_classes
+
+    @property
+    def class_names(self):
+        """Automatically extract class names from the dataset."""
+
+        if self._class_names is None and hasattr(self.data_train, 'classes'):
+            self._class_names = self.data_train.classes
+
+        return self._class_names
 
     def prepare_data(self) -> None:
         """Data preparation hook."""
@@ -94,11 +108,9 @@ class ClassificationDataModule(LightningDataModule):
                 root=Path(self.val_data_dir),
                 transform=self.val_test_transforms,
             )
-
-        if stage == 'predict':
-            self.data_predict = ImageLabelDataset(
-                img_dir=Path(self.test_data_dir),
-                label_dir=Path(self.test_data_dir).parent / 'labels',
+        elif stage == 'predict':
+            self.data_predict = ImageFolder(
+                root=Path(self.test_data_dir),
                 transform=self.val_test_transforms,
             )
 

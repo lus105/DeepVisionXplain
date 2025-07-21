@@ -42,5 +42,8 @@ train: True
 # lightning chooses best weights based on the metric specified in checkpoint callback
 test: True
 
+# export model to ONNX format after training
+export_to_onnx: False
+
 # seed for random number generators in pytorch, numpy and python.random
 seed: null
