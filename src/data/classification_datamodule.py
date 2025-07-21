@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose
 
-from src.data.components.image_label_dataset import ImageLabelDataset
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -72,7 +71,7 @@ class ClassificationDataModule(LightningDataModule):
             int: The number of classes (2).
         """
         return self._num_classes
-    
+
     @property
     def class_names(self):
         """Automatically extract class names from the dataset."""
@@ -107,13 +106,6 @@ class ClassificationDataModule(LightningDataModule):
 
             self.data_val = ImageFolder(
                 root=Path(self.val_data_dir),
-                transform=self.val_test_transforms,
-            )
-
-        if stage == 'predict':
-            self.data_predict = ImageLabelDataset(
-                img_dir=Path(self.test_data_dir),
-                label_dir=Path(self.test_data_dir).parent / 'labels',
                 transform=self.val_test_transforms,
             )
 
