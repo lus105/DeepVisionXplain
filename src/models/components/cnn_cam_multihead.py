@@ -1,10 +1,13 @@
 from typing import Union
+import rootutils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from .base_model import get_model
+rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
+
+from src.models.components.base_model import get_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -186,3 +189,16 @@ class CNNCAMMultihead(nn.Module):
             return output, cam
         else:
             return output
+
+
+if __name__ == '__main__':
+    # Example usage
+    model = CNNCAMMultihead(
+        backbone='torchvision.models/efficientnet_v2_s',
+        multi_head=True,
+        return_node='features.6.0.block.0',
+        weights='IMAGENET1K_V1'
+    )
+    input_tensor = torch.randn(1, 3, 224, 224)
+    output, cam = model(input_tensor)
+    print(f'Output shape: {output.shape}, CAM shape: {cam.shape}')
