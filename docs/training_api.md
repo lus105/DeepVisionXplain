@@ -13,6 +13,8 @@ cd DeepVisionXplain
 fastapi dev src/api/main.py
 # Production mode
 fastapi run src/api/main.py
+# Open documentation
+http://127.0.0.1:8000/docs
 ```
 
 
