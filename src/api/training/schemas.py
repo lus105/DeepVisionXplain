@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class TrainingStatusEnum(str, Enum):
     """Enumeration of possible training statuses."""
+
     STARTED = 'started'
     RUNNING = 'running'
     STOPPED = 'stopped'
@@ -14,11 +15,13 @@ class TrainingStatusEnum(str, Enum):
 
 class TrainingConfigsResponse(BaseModel):
     """Response containing available training configurations."""
+
     available_configs: list[str]
 
 
 class TrainingStartRequest(BaseModel):
     """Request to start a training session."""
+
     config_name: str
     train_data_dir: str
     test_data_dir: str
@@ -27,23 +30,27 @@ class TrainingStartRequest(BaseModel):
 
 class TrainingStartResponse(BaseModel):
     """Response after starting a training session."""
+
     status: TrainingStatusEnum | str
     pid: Optional[int] = None
 
 
 class TrainingStatusResponse(BaseModel):
     """Response containing current training status."""
+
     running: bool
     pid: Optional[int] = None
 
 
 class TrainingStopResponse(BaseModel):
     """Response after stopping a training session."""
+
     status: TrainingStatusEnum
 
 
 class TrainedModelsPathsResponse(BaseModel):
     """Response containing paths to trained models."""
+
     model_paths: list[str]
 
 

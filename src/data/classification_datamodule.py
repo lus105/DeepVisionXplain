@@ -108,6 +108,11 @@ class ClassificationDataModule(LightningDataModule):
                 root=Path(self.val_data_dir),
                 transform=self.val_test_transforms,
             )
+        elif stage == 'predict':
+            self.data_predict = ImageFolder(
+                root=Path(self.test_data_dir),
+                transform=self.val_test_transforms,
+            )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.

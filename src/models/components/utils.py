@@ -43,6 +43,17 @@ def export_model_to_onnx(
     opset_version: int = 20,
     class_names: list[str] = None,
 ) -> None:
+    """
+    Exports a PyTorch model to the ONNX format, with optional class names metadata.
+    Args:
+        model (nn.Module): The PyTorch model to export.
+        onnx_path (str): The file path where the ONNX model will be saved.
+        input_shape (tuple, optional): The shape of the dummy input tensor for tracing. Defaults to (1, 3, 224, 224).
+        input_names (list, optional): Names for the model's input nodes. Defaults to ['input'].
+        output_names (list, optional): Names for the model's output nodes. Defaults to ['output'].
+        opset_version (int, optional): The ONNX opset version to use. Defaults to 20.
+        class_names (list[str], optional): List of class names to add as metadata. Defaults to None.
+    """
     model.eval()
     dummy_input = torch.randn(*input_shape)
     torch.onnx.export(
