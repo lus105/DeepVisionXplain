@@ -1,10 +1,13 @@
 from typing import Union
+import rootutils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from .base_model import get_model
+rootutils.setup_root(__file__, indicator=['.git', 'pyproject.toml'], pythonpath=True)
+
+from src.models.components.base_model import get_model
 from src.utils import RankedLogger
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -192,3 +195,18 @@ class VitRolloutMultihead(nn.Module):
             return output, map
         else:
             return output
+
+if __name__ == '__main__':
+    # Example usage
+    model = VitRolloutMultihead(
+        backbone='timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k',
+        multi_head=True,
+        pretrained=True,
+        output_size=10,
+        img_size=224,
+        discard_ratio=0.2,
+        head_fusion='mean'
+    )
+    input_tensor = torch.randn(1, 3, 224, 224)
+    output, attention_map = model(input_tensor)
+    print(f'Output shape: {output.shape}, Attention map shape: {attention_map.shape}')
