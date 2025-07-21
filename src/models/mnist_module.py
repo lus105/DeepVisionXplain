@@ -5,7 +5,7 @@ from lightning.pytorch import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 
-from .components.nn_utils import weight_load
+from .components.utils import weight_load
 
 
 class MNISTLitModule(LightningModule):

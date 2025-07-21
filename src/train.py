@@ -18,7 +18,7 @@ from src.utils import (
     task_wrapper,
     log_gpu_memory_metadata,
 )
-from src.models.components.nn_utils import export_model_to_onnx
+from src.models.components.utils import export_model_to_onnx
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
