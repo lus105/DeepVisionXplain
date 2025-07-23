@@ -6,8 +6,6 @@ from threading import Lock
 from src.api.training.schemas import (
     TrainingStatusEnum,
     TrainingStartRequest,
-    TrainingStartResponse,
-    TrainingStopResponse,
     TrainingStatusResponse,
     TrainingConfigsResponse,
     TrainedModelsPathsResponse,
@@ -30,7 +28,7 @@ class TrainingManager:
         self._process = None
         self._lock = Lock()
 
-    def start_training(self, request: TrainingStartRequest) -> TrainingStartResponse:
+    def start_training(self, request: TrainingStartRequest) -> TrainingStatusResponse:
         """
         Starts the training process using the specified configuration file and data directories.
         If a training process is already running, returns a response indicating
@@ -40,13 +38,12 @@ class TrainingManager:
             request (TrainingStartRequest): The training request containing config name
                 and data directory paths.
         Returns:
-            TrainingStartResponse: An object containing the status of the training
-                start attempt and the process ID (pid) if applicable.
+            TrainingStatusResponse: An object containing the status of the training.
         """
         with self._lock:
             if self._process is not None and self._process.poll() is None:
-                return TrainingStartResponse(
-                    status='already_running', pid=self._process.pid
+                return TrainingStatusResponse(
+                    status=TrainingStatusEnum.RUNNING
                 )
 
             cmd = [
@@ -61,18 +58,18 @@ class TrainingManager:
             try:
                 self._process = subprocess.Popen(cmd, env=env)
             except Exception as e:
-                return TrainingStartResponse(status=f'error: {str(e)}', pid=None)
+                return TrainingStatusResponse(status=f'error: {str(e)}')
 
-            return TrainingStartResponse(
-                status=TrainingStatusEnum.STARTED, pid=self._process.pid
+            return TrainingStatusResponse(
+                status=TrainingStatusEnum.STARTED
             )
 
-    def stop_training(self) -> TrainingStopResponse:
+    def stop_training(self) -> TrainingStatusResponse:
         """
         Stops the ongoing training process if it is currently running.
 
         Returns:
-            TrainingStopResponse: An object indicating the result of the stop operation.
+            TrainingStatusResponse: An object indicating the result of the stop operation.
                 - If a training process was running, it is terminated and the status is set to STOPPED.
                 - If no training process was running, the status is set to NOT_RUNNING.
         """
@@ -80,8 +77,8 @@ class TrainingManager:
             if self._process is not None and self._process.poll() is None:
                 self._process.terminate()
                 self._process = None
-                return TrainingStopResponse(status=TrainingStatusEnum.STOPPED)
-            return TrainingStopResponse(status=TrainingStatusEnum.NOT_RUNNING)
+                return TrainingStatusResponse(status=TrainingStatusEnum.STOPPED)
+            return TrainingStatusResponse(status=TrainingStatusEnum.NOT_RUNNING)
 
     def get_status(self) -> TrainingStatusResponse:
         """
@@ -93,9 +90,8 @@ class TrainingManager:
         """
         with self._lock:
             running = self._process is not None and self._process.poll() is None
-            return TrainingStatusResponse(
-                running=running, pid=self._process.pid if running else None
-            )
+            return TrainingStatusResponse(status=TrainingStatusEnum.RUNNING
+                                          if running else TrainingStatusEnum.NOT_RUNNING)
 
     def list_available_configs(
         self, config_dir: str = 'configs/experiment', config_ext: str = '.yaml'

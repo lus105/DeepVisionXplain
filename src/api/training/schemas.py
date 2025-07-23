@@ -10,7 +10,6 @@ class TrainingStatusEnum(str, Enum):
     RUNNING = 'running'
     STOPPED = 'stopped'
     NOT_RUNNING = 'not_running'
-    ERROR = 'error'
 
 
 class TrainingConfigsResponse(BaseModel):
@@ -28,24 +27,10 @@ class TrainingStartRequest(BaseModel):
     val_data_dir: str
 
 
-class TrainingStartResponse(BaseModel):
-    """Response after starting a training session."""
-
-    status: TrainingStatusEnum | str
-    pid: Optional[int] = None
-
-
 class TrainingStatusResponse(BaseModel):
     """Response containing current training status."""
 
-    running: bool
-    pid: Optional[int] = None
-
-
-class TrainingStopResponse(BaseModel):
-    """Response after stopping a training session."""
-
-    status: TrainingStatusEnum
+    status: TrainingStatusEnum | str
 
 
 class TrainedModelsPathsResponse(BaseModel):

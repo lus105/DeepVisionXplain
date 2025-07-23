@@ -9,8 +9,6 @@ from src.api.training.schemas import (
     TrainingConfigsResponse,
     TrainingStartRequest,
     TrainingStatusResponse,
-    TrainingStartResponse,
-    TrainingStopResponse,
     TrainedModelsPathsResponse,
     # Metrics schemas
     MetricsResponse,
@@ -36,13 +34,13 @@ def list_configs(training_manager: TrainingManager = Depends(get_training_manage
     return training_manager.list_available_configs()
 
 
-@router.post('/start', response_model=TrainingStartResponse)
+@router.post('/start', response_model=TrainingStatusResponse)
 def start(req: TrainingStartRequest, training_manager: TrainingManager = Depends(get_training_manager)):
     """Start a new training session."""
     return training_manager.start_training(req)
 
 
-@router.post('/stop', response_model=TrainingStopResponse)
+@router.post('/stop', response_model=TrainingStatusResponse)
 def stop(training_manager: TrainingManager = Depends(get_training_manager)):
     """Stop the current training session."""
     return training_manager.stop_training()
