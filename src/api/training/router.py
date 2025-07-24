@@ -10,14 +10,13 @@ from src.api.training.schemas import (
     TrainingStartRequest,
     TrainingStatusResponse,
     TrainedModelsPathsResponse,
+    AvailableDatasetsResponse,
     # Metrics schemas
     MetricsResponse,
     MetricsErrorResponse,
     RunInfo,
     RunSummary,
 )
-
-router = APIRouter()
 
 @lru_cache()
 def get_training_manager() -> TrainingManager:
@@ -27,6 +26,7 @@ def get_training_manager() -> TrainingManager:
 def get_metrics_tracker() -> MetricsTracker:
     return MetricsTracker()
 
+router = APIRouter()
 
 @router.get('/configs', response_model=TrainingConfigsResponse)
 def list_configs(training_manager: TrainingManager = Depends(get_training_manager)):
@@ -56,6 +56,12 @@ def status(training_manager: TrainingManager = Depends(get_training_manager)):
 def trained_models(training_manager: TrainingManager = Depends(get_training_manager)):
     """Get paths to all trained models."""
     return training_manager.get_models_path()
+
+
+@router.get('/datasets', response_model=AvailableDatasetsResponse)
+def datasets(training_manager: TrainingManager = Depends(get_training_manager)):
+    """Get available datasets with their actual paths."""
+    return training_manager.get_datasets()
 
 
 # Metrics tracking endpoints

@@ -39,6 +39,22 @@ class TrainedModelsPathsResponse(BaseModel):
     model_paths: list[str]
 
 
+class DatasetInfo(BaseModel):
+    """Information about a dataset with actual directory paths"""
+    
+    dataset_name: str
+    train_path: str | None
+    test_path: str | None
+    val_path: str | None
+    dataset_base_path: str
+
+
+class AvailableDatasetsResponse(BaseModel):
+    """Response containing available datasets with their actual paths"""
+    
+    datasets: list[DatasetInfo]
+
+
 # Metrics tracking schemas
 class RunInfo(BaseModel):
     """Basic information about a training run"""
