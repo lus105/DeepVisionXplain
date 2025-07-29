@@ -72,11 +72,8 @@ def export_model_to_onnx(
     if class_names:
         onnx_path_obj = Path(onnx_path)
         json_path = onnx_path_obj.with_suffix('.json')
-        
-        metadata = {
-            'class_names': class_names,
-            'model_path': onnx_path_obj.name
-        }
-        
+
+        metadata = {'class_names': class_names, 'model_path': onnx_path_obj.name}
+
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)

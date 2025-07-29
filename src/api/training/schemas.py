@@ -41,7 +41,7 @@ class TrainedModelsPathsResponse(BaseModel):
 
 class DatasetInfo(BaseModel):
     """Information about a dataset with actual directory paths"""
-    
+
     dataset_name: str
     train_path: str | None
     test_path: str | None
@@ -51,7 +51,7 @@ class DatasetInfo(BaseModel):
 
 class AvailableDatasetsResponse(BaseModel):
     """Response containing available datasets with their actual paths"""
-    
+
     datasets: list[DatasetInfo]
 
 
