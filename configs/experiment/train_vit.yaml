@@ -18,7 +18,7 @@ trainer:
 
 data:
   batch_size: 64
-  num_workers: 4
+  num_workers: 1
   num_classes: 6
 
 model:
