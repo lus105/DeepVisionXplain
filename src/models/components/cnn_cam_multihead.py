@@ -197,7 +197,7 @@ if __name__ == '__main__':
         backbone='torchvision.models/efficientnet_v2_s',
         multi_head=True,
         return_node='features.6.0.block.0',
-        weights='IMAGENET1K_V1'
+        weights='IMAGENET1K_V1',
     )
     input_tensor = torch.randn(1, 3, 224, 224)
     output, cam = model(input_tensor)

@@ -196,6 +196,7 @@ class VitRolloutMultihead(nn.Module):
         else:
             return output
 
+
 if __name__ == '__main__':
     # Example usage
     model = VitRolloutMultihead(
@@ -205,7 +206,7 @@ if __name__ == '__main__':
         output_size=10,
         img_size=224,
         discard_ratio=0.2,
-        head_fusion='mean'
+        head_fusion='mean',
     )
     input_tensor = torch.randn(1, 3, 224, 224)
     output, attention_map = model(input_tensor)

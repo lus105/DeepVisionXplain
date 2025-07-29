@@ -20,10 +20,12 @@ app.add_middleware(
     allow_headers=['*'],  # Allows all headers
 )
 
-@app.get("/ping")
+
+@app.get('/ping')
 async def ping():
     """Health check endpoint"""
-    return {"status": "ok"}
+    return {'status': 'ok'}
+
 
 app.include_router(router.router, prefix='/training', tags=['Training'])
 

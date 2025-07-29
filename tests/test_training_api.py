@@ -179,16 +179,16 @@ class TestTrainingAPI:
     def test_list_configs_endpoint(self):
         """Test the configs listing endpoint."""
         from src.api.training.router import get_training_manager
-        
+
         # Mock the dependency override
         mock_manager = Mock()
         mock_manager.list_available_configs.return_value = Mock(
             available_configs=['config1.yaml', 'config2.yaml']
         )
-        
+
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
-        
+
         try:
             response = self.client.get('/training/configs')
 
@@ -203,12 +203,12 @@ class TestTrainingAPI:
     def test_start_training_endpoint(self):
         """Test the training start endpoint."""
         from src.api.training.router import get_training_manager
-        
+
         mock_manager = Mock()
         mock_manager.start_training.return_value = Mock(
             status=TrainingStatusEnum.STARTED
         )
-        
+
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
@@ -232,10 +232,12 @@ class TestTrainingAPI:
     def test_stop_training_endpoint(self):
         """Test the training stop endpoint."""
         from src.api.training.router import get_training_manager
-        
+
         mock_manager = Mock()
-        mock_manager.stop_training.return_value = Mock(status=TrainingStatusEnum.STOPPED)
-        
+        mock_manager.stop_training.return_value = Mock(
+            status=TrainingStatusEnum.STOPPED
+        )
+
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
@@ -252,10 +254,10 @@ class TestTrainingAPI:
     def test_status_endpoint(self):
         """Test the training status endpoint."""
         from src.api.training.router import get_training_manager
-        
+
         mock_manager = Mock()
         mock_manager.get_status.return_value = Mock(status=TrainingStatusEnum.RUNNING)
-        
+
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
@@ -272,12 +274,12 @@ class TestTrainingAPI:
     def test_trained_models_endpoint(self):
         """Test the trained models paths endpoint."""
         from src.api.training.router import get_training_manager
-        
+
         mock_manager = Mock()
         mock_manager.get_models_path.return_value = Mock(
             model_paths=['/path/to/model1.onnx', '/path/to/model2.onnx']
         )
-        
+
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
@@ -295,7 +297,7 @@ class TestTrainingAPI:
     def test_latest_metrics_endpoint(self):
         """Test the latest metrics endpoint."""
         from src.api.training.router import get_metrics_tracker
-        
+
         mock_tracker = Mock()
         mock_tracker.get_latest_run_metrics.return_value = Mock(
             run_id='test_run',
@@ -307,7 +309,7 @@ class TestTrainingAPI:
             csv_file='path/to/metrics.csv',
             last_modified='2023-01-01T00:00:00',
         )
-        
+
         # Override the dependency
         app.dependency_overrides[get_metrics_tracker] = lambda: mock_tracker
 
@@ -325,7 +327,7 @@ class TestTrainingAPI:
     def test_list_runs_endpoint(self):
         """Test the list training runs endpoint."""
         from src.api.training.router import get_metrics_tracker
-        
+
         mock_tracker = Mock()
         mock_tracker.list_available_runs.return_value = [
             Mock(
@@ -345,7 +347,7 @@ class TestTrainingAPI:
                 metrics_file=None,
             ),
         ]
-        
+
         # Override the dependency
         app.dependency_overrides[get_metrics_tracker] = lambda: mock_tracker
 

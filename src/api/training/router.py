@@ -18,15 +18,19 @@ from src.api.training.schemas import (
     RunSummary,
 )
 
+
 @lru_cache()
 def get_training_manager() -> TrainingManager:
     return TrainingManager()
+
 
 @lru_cache()
 def get_metrics_tracker() -> MetricsTracker:
     return MetricsTracker()
 
+
 router = APIRouter()
+
 
 @router.get('/configs', response_model=TrainingConfigsResponse)
 def list_configs(training_manager: TrainingManager = Depends(get_training_manager)):
@@ -35,7 +39,10 @@ def list_configs(training_manager: TrainingManager = Depends(get_training_manage
 
 
 @router.post('/start', response_model=TrainingStatusResponse)
-def start(req: TrainingStartRequest, training_manager: TrainingManager = Depends(get_training_manager)):
+def start(
+    req: TrainingStartRequest,
+    training_manager: TrainingManager = Depends(get_training_manager),
+):
     """Start a new training session."""
     return training_manager.start_training(req)
 
@@ -83,7 +90,9 @@ def list_training_runs(metrics_tracker: MetricsTracker = Depends(get_metrics_tra
     '/metrics/runs/{run_id}',
     response_model=Union[MetricsResponse, MetricsErrorResponse],
 )
-def get_run_metrics(run_id: str, metrics_tracker: MetricsTracker = Depends(get_metrics_tracker)):
+def get_run_metrics(
+    run_id: str, metrics_tracker: MetricsTracker = Depends(get_metrics_tracker)
+):
     """Get detailed metrics for a specific training run."""
     return metrics_tracker.get_run_metrics(run_id)
 
@@ -92,6 +101,8 @@ def get_run_metrics(run_id: str, metrics_tracker: MetricsTracker = Depends(get_m
     '/metrics/runs/{run_id}/summary',
     response_model=Union[RunSummary, MetricsErrorResponse],
 )
-def get_run_summary(run_id: str, metrics_tracker: MetricsTracker = Depends(get_metrics_tracker)):
+def get_run_summary(
+    run_id: str, metrics_tracker: MetricsTracker = Depends(get_metrics_tracker)
+):
     """Get summary statistics for a specific training run."""
     return metrics_tracker.get_run_summary(run_id)
