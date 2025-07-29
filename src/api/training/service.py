@@ -6,11 +6,11 @@ from threading import Lock
 from src.api.training.schemas import (
     TrainingStatusEnum,
     TrainingStartRequest,
-    TrainingStartResponse,
-    TrainingStopResponse,
     TrainingStatusResponse,
     TrainingConfigsResponse,
     TrainedModelsPathsResponse,
+    DatasetInfo,
+    AvailableDatasetsResponse,
 )
 
 
@@ -30,7 +30,7 @@ class TrainingManager:
         self._process = None
         self._lock = Lock()
 
-    def start_training(self, request: TrainingStartRequest) -> TrainingStartResponse:
+    def start_training(self, request: TrainingStartRequest) -> TrainingStatusResponse:
         """
         Starts the training process using the specified configuration file and data directories.
         If a training process is already running, returns a response indicating
@@ -40,13 +40,12 @@ class TrainingManager:
             request (TrainingStartRequest): The training request containing config name
                 and data directory paths.
         Returns:
-            TrainingStartResponse: An object containing the status of the training
-                start attempt and the process ID (pid) if applicable.
+            TrainingStatusResponse: An object containing the status of the training.
         """
         with self._lock:
             if self._process is not None and self._process.poll() is None:
-                return TrainingStartResponse(
-                    status='already_running', pid=self._process.pid
+                return TrainingStatusResponse(
+                    status=TrainingStatusEnum.RUNNING
                 )
 
             cmd = [
@@ -61,18 +60,18 @@ class TrainingManager:
             try:
                 self._process = subprocess.Popen(cmd, env=env)
             except Exception as e:
-                return TrainingStartResponse(status=f'error: {str(e)}', pid=None)
+                return TrainingStatusResponse(status=f'error: {str(e)}')
 
-            return TrainingStartResponse(
-                status=TrainingStatusEnum.STARTED, pid=self._process.pid
+            return TrainingStatusResponse(
+                status=TrainingStatusEnum.STARTED
             )
 
-    def stop_training(self) -> TrainingStopResponse:
+    def stop_training(self) -> TrainingStatusResponse:
         """
         Stops the ongoing training process if it is currently running.
 
         Returns:
-            TrainingStopResponse: An object indicating the result of the stop operation.
+            TrainingStatusResponse: An object indicating the result of the stop operation.
                 - If a training process was running, it is terminated and the status is set to STOPPED.
                 - If no training process was running, the status is set to NOT_RUNNING.
         """
@@ -80,8 +79,8 @@ class TrainingManager:
             if self._process is not None and self._process.poll() is None:
                 self._process.terminate()
                 self._process = None
-                return TrainingStopResponse(status=TrainingStatusEnum.STOPPED)
-            return TrainingStopResponse(status=TrainingStatusEnum.NOT_RUNNING)
+                return TrainingStatusResponse(status=TrainingStatusEnum.STOPPED)
+            return TrainingStatusResponse(status=TrainingStatusEnum.NOT_RUNNING)
 
     def get_status(self) -> TrainingStatusResponse:
         """
@@ -93,9 +92,8 @@ class TrainingManager:
         """
         with self._lock:
             running = self._process is not None and self._process.poll() is None
-            return TrainingStatusResponse(
-                running=running, pid=self._process.pid if running else None
-            )
+            return TrainingStatusResponse(status=TrainingStatusEnum.RUNNING
+                                          if running else TrainingStatusEnum.NOT_RUNNING)
 
     def list_available_configs(
         self, config_dir: str = 'configs/experiment', config_ext: str = '.yaml'
@@ -143,3 +141,47 @@ class TrainingManager:
 
         models_paths = [str(path.resolve()) for path in config_path.rglob(weight_ext)]
         return TrainedModelsPathsResponse(model_paths=models_paths)
+    
+    def get_datasets(self, data_base_dir: str = 'data') -> AvailableDatasetsResponse:
+        """
+        Lists available datasets with their actual train/test/val directory paths.
+        Each dataset should be a directory containing train/, test/, and optionally val/ subdirectories.
+        
+        Args:
+            data_base_dir (str): The base directory to search for datasets.
+                Defaults to 'data'.
+        
+        Returns:
+            AvailableDatasetsResponse: An object containing a list of available datasets
+                with their actual directory paths.
+        """
+        base_path = Path(data_base_dir)
+        if not base_path.exists():
+            return AvailableDatasetsResponse(datasets=[])
+        
+        datasets = []
+        
+        # Iterate through all directories in the base path
+        for dataset_dir in base_path.iterdir():
+            if dataset_dir.is_dir():
+                # Check for required subdirectories
+                train_dir = dataset_dir / 'train'
+                test_dir = dataset_dir / 'test'
+                val_dir = dataset_dir / 'val'
+                
+                has_train = train_dir.exists() and train_dir.is_dir()
+                has_test = test_dir.exists() and test_dir.is_dir()
+                has_val = val_dir.exists() and val_dir.is_dir()
+                
+                # Include dataset if it has at least train and test directories
+                if has_train and has_test:
+                    dataset_info = DatasetInfo(
+                        dataset_name=dataset_dir.name,
+                        train_path=str(train_dir.resolve()) if has_train else None,
+                        test_path=str(test_dir.resolve()) if has_test else None,
+                        val_path=str(val_dir.resolve()) if has_val else None,
+                        dataset_base_path=str(dataset_dir.resolve())
+                    )
+                    datasets.append(dataset_info)
+        
+        return AvailableDatasetsResponse(datasets=datasets)

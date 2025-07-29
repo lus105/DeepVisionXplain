@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 import torch
 from torch import nn
-import onnx
 
 
 def weight_load(
@@ -69,10 +68,15 @@ def export_model_to_onnx(
         opset_version=opset_version,
     )
 
-    # Add class names to metadata
+    # Save class names to separate JSON file
     if class_names:
-        model_onnx = onnx.load(onnx_path)
-        class_names_json = json.dumps(class_names)
-        meta = onnx.StringStringEntryProto(key='class_names', value=class_names_json)
-        model_onnx.metadata_props.append(meta)
-        onnx.save(model_onnx, onnx_path)
+        onnx_path_obj = Path(onnx_path)
+        json_path = onnx_path_obj.with_suffix('.json')
+        
+        metadata = {
+            'class_names': class_names,
+            'model_path': onnx_path_obj.name
+        }
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)

@@ -6,6 +6,11 @@ A FastAPI-based service for managing deep learning model training process.
 
 The Training API provides endpoints to start, stop, monitor training processes, and retrieve training metrics. It uses a background subprocess approach to run training scripts while maintaining API responsiveness.
 
+Architecture diagram:
+<p align="center">
+  <img src="res/architecture_diagram.png"/>
+</p>
+
 ## Run service
 ```bash
 cd DeepVisionXplain

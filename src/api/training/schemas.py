@@ -10,7 +10,6 @@ class TrainingStatusEnum(str, Enum):
     RUNNING = 'running'
     STOPPED = 'stopped'
     NOT_RUNNING = 'not_running'
-    ERROR = 'error'
 
 
 class TrainingConfigsResponse(BaseModel):
@@ -28,30 +27,32 @@ class TrainingStartRequest(BaseModel):
     val_data_dir: str
 
 
-class TrainingStartResponse(BaseModel):
-    """Response after starting a training session."""
-
-    status: TrainingStatusEnum | str
-    pid: Optional[int] = None
-
-
 class TrainingStatusResponse(BaseModel):
     """Response containing current training status."""
 
-    running: bool
-    pid: Optional[int] = None
-
-
-class TrainingStopResponse(BaseModel):
-    """Response after stopping a training session."""
-
-    status: TrainingStatusEnum
+    status: TrainingStatusEnum | str
 
 
 class TrainedModelsPathsResponse(BaseModel):
     """Response containing paths to trained models."""
 
     model_paths: list[str]
+
+
+class DatasetInfo(BaseModel):
+    """Information about a dataset with actual directory paths"""
+    
+    dataset_name: str
+    train_path: str | None
+    test_path: str | None
+    val_path: str | None
+    dataset_base_path: str
+
+
+class AvailableDatasetsResponse(BaseModel):
+    """Response containing available datasets with their actual paths"""
+    
+    datasets: list[DatasetInfo]
 
 
 # Metrics tracking schemas
