@@ -35,7 +35,6 @@ class TestTrainingManager:
         response = self.manager.start_training(request)
 
         assert response.status == TrainingStatusEnum.STARTED
-        assert response.pid == 12345
         mock_popen.assert_called_once()
 
     @patch('subprocess.Popen')
@@ -56,8 +55,7 @@ class TestTrainingManager:
 
         response = self.manager.start_training(request)
 
-        assert response.status == 'already_running'
-        assert response.pid == 12345
+        assert response.status == TrainingStatusEnum.RUNNING
         mock_popen.assert_not_called()
 
     @patch('subprocess.Popen')
@@ -75,7 +73,6 @@ class TestTrainingManager:
         response = self.manager.start_training(request)
 
         assert 'error:' in response.status
-        assert response.pid is None
 
     def test_stop_training_running_process(self):
         """Test stopping a running training process."""
@@ -105,15 +102,13 @@ class TestTrainingManager:
 
         response = self.manager.get_status()
 
-        assert response.running is True
-        assert response.pid == 12345
+        assert response.status == TrainingStatusEnum.RUNNING
 
     def test_get_status_not_running(self):
         """Test status check with no running process."""
         response = self.manager.get_status()
 
-        assert response.running is False
-        assert response.pid is None
+        assert response.status == TrainingStatusEnum.NOT_RUNNING
 
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.iterdir')
@@ -177,26 +172,45 @@ class TestTrainingAPI:
         """Set up test client."""
         self.client = TestClient(app)
 
-    @patch('src.api.training.router.training_manager.list_available_configs')
-    def test_list_configs_endpoint(self, mock_list_configs):
+    def teardown_method(self):
+        """Clean up after each test."""
+        app.dependency_overrides.clear()
+
+    def test_list_configs_endpoint(self):
         """Test the configs listing endpoint."""
-        mock_list_configs.return_value = Mock(
+        from src.api.training.router import get_training_manager
+        
+        # Mock the dependency override
+        mock_manager = Mock()
+        mock_manager.list_available_configs.return_value = Mock(
             available_configs=['config1.yaml', 'config2.yaml']
         )
+        
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
+        
+        try:
+            response = self.client.get('/training/configs')
 
-        response = self.client.get('/training/configs')
+            assert response.status_code == 200
+            data = response.json()
+            assert 'available_configs' in data
+            assert len(data['available_configs']) == 2
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
-        assert response.status_code == 200
-        data = response.json()
-        assert 'available_configs' in data
-        assert len(data['available_configs']) == 2
-
-    @patch('src.api.training.router.training_manager.start_training')
-    def test_start_training_endpoint(self, mock_start_training):
+    def test_start_training_endpoint(self):
         """Test the training start endpoint."""
-        mock_start_training.return_value = Mock(
-            status=TrainingStatusEnum.STARTED, pid=12345
+        from src.api.training.router import get_training_manager
+        
+        mock_manager = Mock()
+        mock_manager.start_training.return_value = Mock(
+            status=TrainingStatusEnum.STARTED
         )
+        
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
         payload = {
             'config_name': 'test_config',
@@ -205,54 +219,85 @@ class TestTrainingAPI:
             'val_data_dir': 'data/val',
         }
 
-        response = self.client.post('/training/start', json=payload)
+        try:
+            response = self.client.post('/training/start', json=payload)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data['status'] == 'started'
-        assert data['pid'] == 12345
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'started'
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
-    @patch('src.api.training.router.training_manager.stop_training')
-    def test_stop_training_endpoint(self, mock_stop_training):
+    def test_stop_training_endpoint(self):
         """Test the training stop endpoint."""
-        mock_stop_training.return_value = Mock(status=TrainingStatusEnum.STOPPED)
+        from src.api.training.router import get_training_manager
+        
+        mock_manager = Mock()
+        mock_manager.stop_training.return_value = Mock(status=TrainingStatusEnum.STOPPED)
+        
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
-        response = self.client.post('/training/stop')
+        try:
+            response = self.client.post('/training/stop')
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data['status'] == 'stopped'
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'stopped'
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
-    @patch('src.api.training.router.training_manager.get_status')
-    def test_status_endpoint(self, mock_get_status):
+    def test_status_endpoint(self):
         """Test the training status endpoint."""
-        mock_get_status.return_value = Mock(running=True, pid=12345)
+        from src.api.training.router import get_training_manager
+        
+        mock_manager = Mock()
+        mock_manager.get_status.return_value = Mock(status=TrainingStatusEnum.RUNNING)
+        
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
-        response = self.client.get('/training/status')
+        try:
+            response = self.client.get('/training/status')
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data['running'] is True
-        assert data['pid'] == 12345
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'running'
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
-    @patch('src.api.training.router.training_manager.get_models_path')
-    def test_trained_models_endpoint(self, mock_get_models_path):
+    def test_trained_models_endpoint(self):
         """Test the trained models paths endpoint."""
-        mock_get_models_path.return_value = Mock(
+        from src.api.training.router import get_training_manager
+        
+        mock_manager = Mock()
+        mock_manager.get_models_path.return_value = Mock(
             model_paths=['/path/to/model1.onnx', '/path/to/model2.onnx']
         )
+        
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
-        response = self.client.get('/training/trained_models')
+        try:
+            response = self.client.get('/training/trained_models')
 
-        assert response.status_code == 200
-        data = response.json()
-        assert 'model_paths' in data
-        assert len(data['model_paths']) == 2
+            assert response.status_code == 200
+            data = response.json()
+            assert 'model_paths' in data
+            assert len(data['model_paths']) == 2
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
-    @patch('src.api.training.router.metrics_tracker.get_latest_run_metrics')
-    def test_latest_metrics_endpoint(self, mock_get_latest_metrics):
+    def test_latest_metrics_endpoint(self):
         """Test the latest metrics endpoint."""
-        mock_get_latest_metrics.return_value = Mock(
+        from src.api.training.router import get_metrics_tracker
+        
+        mock_tracker = Mock()
+        mock_tracker.get_latest_run_metrics.return_value = Mock(
             run_id='test_run',
             available_columns=['epoch', 'loss'],
             total_rows=100,
@@ -262,18 +307,27 @@ class TestTrainingAPI:
             csv_file='path/to/metrics.csv',
             last_modified='2023-01-01T00:00:00',
         )
+        
+        # Override the dependency
+        app.dependency_overrides[get_metrics_tracker] = lambda: mock_tracker
 
-        response = self.client.get('/training/metrics/latest')
+        try:
+            response = self.client.get('/training/metrics/latest')
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data['run_id'] == 'test_run'
-        assert 'available_columns' in data
+            assert response.status_code == 200
+            data = response.json()
+            assert data['run_id'] == 'test_run'
+            assert 'available_columns' in data
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
-    @patch('src.api.training.router.metrics_tracker.list_available_runs')
-    def test_list_runs_endpoint(self, mock_list_runs):
+    def test_list_runs_endpoint(self):
         """Test the list training runs endpoint."""
-        mock_list_runs.return_value = [
+        from src.api.training.router import get_metrics_tracker
+        
+        mock_tracker = Mock()
+        mock_tracker.list_available_runs.return_value = [
             Mock(
                 run_id='run1',
                 created_at='2025-07-21T10:19:24.784042',
@@ -291,12 +345,19 @@ class TestTrainingAPI:
                 metrics_file=None,
             ),
         ]
+        
+        # Override the dependency
+        app.dependency_overrides[get_metrics_tracker] = lambda: mock_tracker
 
-        response = self.client.get('/training/metrics/runs')
+        try:
+            response = self.client.get('/training/metrics/runs')
 
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == 2
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data) == 2
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
 
     def test_invalid_training_start_request(self):
         """Test training start with invalid request data."""
