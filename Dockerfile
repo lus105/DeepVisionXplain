@@ -1,79 +1,54 @@
-ARG CUDA_VERSION="12.5.1"
-ARG OS_VERSION="22.04"
-FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${OS_VERSION}
+ARG PYTORCH_VERSION="2.7.1"
+ARG CUDA_VERSION="12.6"
+ARG CUDNN_VERSION="9"
+
+FROM pytorch/pytorch:${PYTORCH_VERSION}-cuda${CUDA_VERSION}-cudnn${CUDNN_VERSION}-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
-
-# --------------------------------- packages -------------------------------- #
-
-SHELL ["/bin/bash", "-c"]
-ARG PYTHON_VERSION="3.11"
-ARG PYTHON_MAJOR="3"
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        vim \
-        htop \
-        iotop \
-        git \
-        git-lfs \
-        python${PYTHON_VERSION} \
-        python${PYTHON_VERSION}-dev \
-        python${PYTHON_MAJOR}-pip \
-        python${PYTHON_MAJOR}-setuptools \
-        python${PYTHON_MAJOR}-wheel \
-        python-is-python3 && \
-    rm -rf /var/lib/apt/lists/*
-
-# ---------------------------------- nvtop ---------------------------------- #
-
-ARG OS_VERSION
-RUN if [[ ${OS_VERSION} > "18.04" ]] ; then \
-    apt-get update && \
-    apt-get install -y --no-install-recommends nvtop ; else \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        cmake \
-        libncurses5-dev \
-        libncursesw5-dev && \
-    git clone https://github.com/Syllo/nvtop.git && \
-    mkdir -p nvtop/build && \
-    cd nvtop/build && \
-    cmake .. && \
-    make && \
-    make install && \
-    cd ../../ && \
-    rm -rf nvtop ; fi
+ENV TZ=Europe/Istanbul
 
 # ------------------------------ python checks ------------------------------ #
 
-ENV PYTHONUNBUFFERED=1
-RUN python3 --version
-RUN pip3 --version
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+# ------------------------------ working directory -------------------------- #
+
+WORKDIR /app
+COPY . /app
+
+# --------------------------------- packages -------------------------------- #
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        vim \
+        htop \
+        iotop \
+    && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------- user & group ------------------------------ #
 
-ARG USER_ID
-ARG GROUP_ID
-ARG NAME
-RUN groupadd --gid ${GROUP_ID} ${NAME}
-RUN useradd \
-    --no-log-init \
-    --create-home \
-    --uid ${USER_ID} \
-    --gid ${GROUP_ID} \
-    -s /bin/sh ${NAME}
-
-ARG WORKDIR_PATH
-WORKDIR ${WORKDIR_PATH}
+RUN adduser --disabled-password --gecos '' appuser \
+    && chown -R appuser:appuser /app \
+    && chmod +x /app/scripts/startup_service.sh
+USER appuser
 
 # ------------------------------- requirements ------------------------------ #
 
-RUN mkdir /app
-COPY . /app
-# The --root-user-action option is available as of pip v22.1.
-RUN python3 -m pip install --no-cache-dir --upgrade pip && \
-    python3 -m pip install \
-        --no-cache-dir \
-        --root-user-action ignore \
-        -r /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --user -r /app/requirements.txt
+
+# ------------------------------- ports ------------------------------------ #
+
+EXPOSE 8000
+
+# --------------------------- health check --------------------------------- #
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/ping || exit 1
+
+# ------------------------------- entry point ----------------------------- #
+
+CMD ["/app/scripts/startup_service.sh"]

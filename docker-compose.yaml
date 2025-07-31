@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  deepvisionxplain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTORCH_VERSION: "2.7.1"
+        CUDA_VERSION: "12.6"
+        CUDNN_VERSION: "9"
+    
+    container_name: deepvisionxplain-api
+    
+    ports:
+      - "8000:8000"
+    
+    volumes:
+      # Mount config and data directories
+      - ./configs:/app/configs
+      - ./data:/app/data
+      - ./logs:/app/logs
+    
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_VISIBLE_DEVICES=0
+      - TZ=Europe/Istanbul
+    
+    # Enable GPU support (requires nvidia-docker)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+    # Alternative GPU syntax for older Docker Compose versions
+    # runtime: nvidia
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    
+    restart: unless-stopped
+
+networks:
+  deepvision_network:
+    driver: bridge
