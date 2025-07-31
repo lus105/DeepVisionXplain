@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 import PIL.Image
+import torch
 from torch import nn
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms import functional as F
@@ -33,11 +34,11 @@ class ResizeAndExtrapolateBorders(nn.Module):
             raise ValueError('If size is a sequence, it should have 2 values')
         self.dest_h, self.dest_w = size
         self.replicate_borders = replicate_borders
-        self.inpaint_color = inpaint_color
+        self.inpaint_color = tuple(inpaint_color)
         self.interpolation = interpolation
         self.antialias = antialias
 
-    def forward(self, img: nn.Tensor | PIL.Image.Image) -> nn.Tensor | PIL.Image.Image:
+    def forward(self, img: torch.Tensor | PIL.Image.Image) -> torch.Tensor | PIL.Image.Image:
         """
         Resizes and pads an input image or tensor to fit the target dimensions
         while preserving aspect ratio.
@@ -46,9 +47,9 @@ class ResizeAndExtrapolateBorders(nn.Module):
         The resized image is then padded to exactly match the target size.
         Padding can be applied using either border replication or a constant fill color.
         Args:
-            img (nn.Tensor | PIL.Image.Image): The input image or tensor to be transformed.
+            img (torch.Tensor | PIL.Image.Image): The input image or tensor to be transformed.
         Returns:
-            nn.Tensor | PIL.Image.Image: The resized and padded image or tensor.
+            torch.Tensor | PIL.Image.Image: The resized and padded image or tensor.
         """
         orig_w, orig_h = get_image_size(img)
 
