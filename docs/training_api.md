@@ -11,7 +11,16 @@ Architecture diagram:
   <img src="res/architecture_diagram.png"/>
 </p>
 
-## Run service
+## Run service (using Docker)
+```bash
+cd DeepVisionXplain
+# Build and run the Docker container
+docker-compose up --build
+# Open documentation
+http://127.0.0.1:8000/docs
+```
+
+## Run service (from source)
 ```bash
 cd DeepVisionXplain
 # Development mode

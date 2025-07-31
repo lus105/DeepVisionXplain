@@ -26,12 +26,14 @@ RUN apt-get update \
         vim \
         htop \
         iotop \
+        dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------- user & group ------------------------------ #
 
 RUN adduser --disabled-password --gecos '' appuser \
     && chown -R appuser:appuser /app \
+    && dos2unix /app/scripts/startup_service.sh \
     && chmod +x /app/scripts/startup_service.sh
 USER appuser
 
