@@ -10,8 +10,6 @@ services:
         CUDA_VERSION: "12.6"
         CUDNN_VERSION: "9"
     
-    container_name: deepvisionxplain-api
-    
     ports:
       - "8000:8000"
     
