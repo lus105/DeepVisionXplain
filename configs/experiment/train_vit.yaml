@@ -7,7 +7,7 @@ defaults:
   - override /trainer: default
   - override /logger: csv
 
-tags: ["train", "vit", "classification"]
+tags: ["classification", "train", "vit"]
 
 seed: 12345
 
