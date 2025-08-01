@@ -39,7 +39,7 @@ def export_model_to_onnx(
     input_shape: tuple = (1, 3, 224, 224),
     input_names: list = ['input'],
     output_names: list = ['output'],
-    opset_version: int = 20,
+    opset_version: int = 19,
     class_names: list[str] = None,
 ) -> None:
     """
@@ -50,7 +50,7 @@ def export_model_to_onnx(
         input_shape (tuple, optional): The shape of the dummy input tensor for tracing. Defaults to (1, 3, 224, 224).
         input_names (list, optional): Names for the model's input nodes. Defaults to ['input'].
         output_names (list, optional): Names for the model's output nodes. Defaults to ['output'].
-        opset_version (int, optional): The ONNX opset version to use. Defaults to 20.
+        opset_version (int, optional): The ONNX opset version to use. Defaults to 19.
         class_names (list[str], optional): List of class names to add as metadata. Defaults to None.
     """
     model.eval()

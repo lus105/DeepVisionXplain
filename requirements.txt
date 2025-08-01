@@ -32,3 +32,4 @@ ipywidgets
 ipykernel
 pandas
 fastapi[standard]
+uvicorn
