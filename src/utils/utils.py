@@ -212,7 +212,7 @@ def instantiate_callbacks(callbacks_cfg: DictConfig, has_wandb: bool) -> list[Ca
                     continue
 
             # Skip rich progress bar in Docker
-            if 'rich_progress_bar' in cb_conf._target_.lower():
+            if 'richprogressbar' in cb_conf._target_.lower().replace('_', ''):
                 if is_running_in_docker():
                     log.info(
                         f'Skipping RichProgressBar callback <{name}> in Docker environment'

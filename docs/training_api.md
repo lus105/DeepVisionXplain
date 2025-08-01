@@ -14,6 +14,8 @@ Architecture diagram:
 ## Run service (using Docker)
 ```bash
 cd DeepVisionXplain
+# Create .env file (from .env.example) and specify required paths
+
 # Build and run the Docker container
 docker-compose up --build
 # Open documentation
