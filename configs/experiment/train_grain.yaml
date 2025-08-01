@@ -55,4 +55,8 @@ model:
   ckpt_path: null
   num_classes: ${data.num_classes}
 
+callbacks:
+  model_checkpoint:
+    filename: "${tags[0]}_epoch_{epoch:03d}"
+
 export_to_onnx: True
