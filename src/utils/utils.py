@@ -1,3 +1,4 @@
+import os
 import warnings
 import subprocess
 from importlib.util import find_spec
@@ -210,10 +211,27 @@ def instantiate_callbacks(callbacks_cfg: DictConfig, has_wandb: bool) -> list[Ca
                     )
                     continue
 
+            # Skip rich progress bar in Docker
+            if 'rich_progress_bar' in cb_conf._target_.lower():
+                if is_running_in_docker():
+                    log.info(
+                        f'Skipping RichProgressBar callback <{name}> in Docker environment'
+                    )
+                    continue
+
             log.info(f'Instantiating callback <{cb_conf._target_}>')
             callbacks.append(hydra.utils.instantiate(cb_conf))
 
     return callbacks
+
+
+def is_running_in_docker() -> bool:
+    """Check if code is running inside a Docker container."""
+    return (
+        os.path.exists('/.dockerenv')
+        or os.getenv('DOCKER_ENV') is not None
+        or os.getenv('CONTAINER') is not None
+    )
 
 
 def instantiate_loggers(logger_cfg: DictConfig) -> list[Logger]:

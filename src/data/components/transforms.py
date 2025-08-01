@@ -38,7 +38,9 @@ class ResizeAndExtrapolateBorders(nn.Module):
         self.interpolation = interpolation
         self.antialias = antialias
 
-    def forward(self, img: torch.Tensor | PIL.Image.Image) -> torch.Tensor | PIL.Image.Image:
+    def forward(
+        self, img: torch.Tensor | PIL.Image.Image
+    ) -> torch.Tensor | PIL.Image.Image:
         """
         Resizes and pads an input image or tensor to fit the target dimensions
         while preserving aspect ratio.
