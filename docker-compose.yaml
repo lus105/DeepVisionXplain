@@ -25,7 +25,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - CUDA_VISIBLE_DEVICES=0
-      - TZ=Europe/Istanbul
+      - TZ=Europe/Vilnius
     
     # Enable GPU support (requires nvidia-docker)
     deploy:

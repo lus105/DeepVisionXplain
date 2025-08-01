@@ -5,7 +5,7 @@ ARG CUDNN_VERSION="9"
 FROM pytorch/pytorch:${PYTORCH_VERSION}-cuda${CUDA_VERSION}-cudnn${CUDNN_VERSION}-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Europe/Istanbul
+ENV TZ=Europe/Vilnius
 
 # ------------------------------ python checks ------------------------------ #
 
@@ -27,9 +27,17 @@ RUN apt-get update \
         htop \
         iotop \
         dos2unix \
+        tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-# ------------------------------- user & group ------------------------------ #
+# ------------------------------- timezone setup --------------------------- #
+
+RUN ln -fs /usr/share/zoneinfo/Europe/Vilnius /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
+
+ENV TZ=Europe/Vilnius
+
+# ------------------------------- user & group ----------------------------- #
 
 RUN adduser --disabled-password --gecos '' appuser \
     && chown -R appuser:appuser /app \
@@ -37,7 +45,7 @@ RUN adduser --disabled-password --gecos '' appuser \
     && chmod +x /app/scripts/startup_service.sh
 USER appuser
 
-# ------------------------------- requirements ------------------------------ #
+# ------------------------------- requirements ----------------------------- #
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir --user -r /app/requirements.txt
