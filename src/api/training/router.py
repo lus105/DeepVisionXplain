@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from typing import Union
 from functools import lru_cache
 
-from src.api.training.service import TrainingManager
-from src.api.training.metrics_tracker import MetricsTracker
+from src.api.training.service_trainer import TrainingManager
+from src.api.training.service_metrics_tracker import MetricsTracker
 
 from src.api.training.schemas import (
     TrainingConfigsResponse,

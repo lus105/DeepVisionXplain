@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
 from src.api.main import app
-from src.api.training.service import TrainingManager
+from src.api.training.service_trainer import TrainingManager
 from src.api.training.schemas import (
     TrainingStartRequest,
     TrainingStatusEnum,
