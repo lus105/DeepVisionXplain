@@ -45,5 +45,8 @@ test: True
 # export model to ONNX format after training
 export_to_onnx: False
 
+# model name, used to identify the model in the logs and output directory
+model_name: "model"
+
 # seed for random number generators in pytorch, numpy and python.random
 seed: null

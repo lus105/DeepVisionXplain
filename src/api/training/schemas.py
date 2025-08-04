@@ -22,6 +22,7 @@ class TrainingStartRequest(BaseModel):
     """Request to start a training session."""
 
     config_name: str
+    model_name: str
     train_data_dir: str
     test_data_dir: str
     val_data_dir: str

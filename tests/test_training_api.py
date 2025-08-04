@@ -27,6 +27,7 @@ class TestTrainingManager:
 
         request = TrainingStartRequest(
             config_name='test_config',
+            model_name='test_model',
             train_data_dir='data/train',
             test_data_dir='data/test',
             val_data_dir='data/val',
@@ -48,6 +49,7 @@ class TestTrainingManager:
 
         request = TrainingStartRequest(
             config_name='test_config',
+            model_name='test_model',
             train_data_dir='data/train',
             test_data_dir='data/test',
             val_data_dir='data/val',
@@ -65,6 +67,7 @@ class TestTrainingManager:
 
         request = TrainingStartRequest(
             config_name='test_config',
+            model_name='test_model',
             train_data_dir='data/train',
             test_data_dir='data/test',
             val_data_dir='data/val',
@@ -214,6 +217,7 @@ class TestTrainingAPI:
 
         payload = {
             'config_name': 'test_config',
+            'model_name': 'test_model',
             'train_data_dir': 'data/train',
             'test_data_dir': 'data/test',
             'val_data_dir': 'data/val',

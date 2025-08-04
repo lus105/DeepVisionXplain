@@ -50,6 +50,7 @@ class TrainingManager:
                 'python',
                 'src/train.py',
                 f'experiment={request.config_name}',
+                f'model_name={request.model_name}',
                 f'data.train_data_dir={request.train_data_dir}',
                 f'data.test_data_dir={request.test_data_dir}',
                 f'data.val_data_dir={request.val_data_dir}',
