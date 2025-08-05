@@ -40,7 +40,6 @@ def export_model_to_onnx(
     input_names: list = ['input'],
     output_names: list = ['output'],
     opset_version: int = 19,
-    class_names: list[str] = None,
 ) -> None:
     """
     Exports a PyTorch model to the ONNX format, with optional class names metadata.
@@ -51,7 +50,6 @@ def export_model_to_onnx(
         input_names (list, optional): Names for the model's input nodes. Defaults to ['input'].
         output_names (list, optional): Names for the model's output nodes. Defaults to ['output'].
         opset_version (int, optional): The ONNX opset version to use. Defaults to 19.
-        class_names (list[str], optional): List of class names to add as metadata. Defaults to None.
     """
     model.eval()
     dummy_input = torch.randn(*input_shape)
@@ -67,13 +65,3 @@ def export_model_to_onnx(
         },
         opset_version=opset_version,
     )
-
-    # Save class names to separate JSON file
-    if class_names:
-        onnx_path_obj = Path(onnx_path)
-        json_path = onnx_path_obj.with_suffix('.json')
-
-        metadata = {'class_names': class_names, 'model_path': onnx_path_obj.name}
-
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False)

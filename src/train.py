@@ -17,6 +17,7 @@ from src.utils import (
     log_hyperparameters,
     task_wrapper,
     log_gpu_memory_metadata,
+    save_model_metadata,
 )
 from src.models.components.utils import export_model_to_onnx
 
@@ -99,13 +100,22 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         )
         image_size = cfg.get('data').get('image_size')
         channels = cfg.get('data').get('channels')
+
         export_model_to_onnx(
             model=model.net,
             onnx_path=onnx_path,
             input_shape=(1, channels, image_size[0], image_size[1]),
-            class_names=datamodule.class_names,
         )
         log.info(f'Model exported to {onnx_path}')
+
+        save_model_metadata(
+            model_path=onnx_path,
+            dataset_name=datamodule.dataset_name,
+            class_names=datamodule.class_names,
+            train_metrics=train_metrics,
+            test_metrics=test_metrics,
+        )
+        log.info('Model metadata saved!')
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
