@@ -397,6 +397,8 @@ def _extract_hydra_info() -> tuple[str | None, str | None]:
             for override in hydra_cfg.overrides.task:
                 if override.startswith('experiment='):
                     experiment_name = override.split('=', 1)[1]
+                    if experiment_name.endswith('.yaml'):
+                        experiment_name = experiment_name.rsplit('.', 1)[0]
                     break
 
         # Extract run ID from output directory
