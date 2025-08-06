@@ -6,10 +6,12 @@ app = FastAPI(
     title='NN Training API', description='API for managing training processes.'
 )
 
+
 @app.get('/ping')
 async def ping():
     """Health check endpoint"""
     return {'status': 'ok'}
+
 
 app.include_router(router.router, prefix='/training', tags=['Training'])
 

@@ -9,7 +9,7 @@ from src.api.training.schemas import (
     TrainingConfigsResponse,
     TrainingStartRequest,
     TrainingStatusResponse,
-    TrainedModelsPathsResponse,
+    TrainedModelsInfoResponse,
     AvailableDatasetsResponse,
     # Metrics schemas
     MetricsResponse,
@@ -59,10 +59,10 @@ def status(training_manager: TrainingManager = Depends(get_training_manager)):
     return training_manager.get_status()
 
 
-@router.get('/trained_models', response_model=TrainedModelsPathsResponse)
+@router.get('/trained_models', response_model=TrainedModelsInfoResponse)
 def trained_models(training_manager: TrainingManager = Depends(get_training_manager)):
-    """Get paths to all trained models."""
-    return training_manager.get_models_path()
+    """Get metadata info about trained models."""
+    return training_manager.get_models_info()
 
 
 @router.get('/datasets', response_model=AvailableDatasetsResponse)
