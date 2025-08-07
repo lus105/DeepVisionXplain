@@ -164,33 +164,33 @@ class TestTrainingManager:
         # Mock JSON data matching TrainedModelInfo schema
         mock_json_load.side_effect = [
             {
-                "run_id": "2025-08-06_11-06-14",
-                "model_name": "classification_model",
-                "model_path": "C:\\path\\to\\model.onnx",
-                "dataset_name": "grain",
-                "config_name": "train_grain",
-                "class_names": ["broken", "healthy"],
-                "train_metrics": {"loss": 1.0, "acc": 0.75},
-                "test_metrics": {"loss": 2.5, "acc": 0.29}
+                'run_id': '2025-08-06_11-06-14',
+                'model_name': 'classification_model',
+                'model_path': 'C:\\path\\to\\model.onnx',
+                'dataset_name': 'grain',
+                'config_name': 'train_grain',
+                'class_names': ['broken', 'healthy'],
+                'train_metrics': {'loss': 1.0, 'acc': 0.75},
+                'test_metrics': {'loss': 2.5, 'acc': 0.29},
             },
             {
-                "run_id": "2025-08-06_12-00-00",
-                "model_name": "another_model",
-                "model_path": "C:\\path\\to\\another_model.onnx",
-                "dataset_name": "test_dataset",
-                "config_name": "test_config",
-                "class_names": ["class1", "class2"],
-                "train_metrics": {"loss": 0.8, "acc": 0.85},
-                "test_metrics": {"loss": 1.2, "acc": 0.82}
-            }
+                'run_id': '2025-08-06_12-00-00',
+                'model_name': 'another_model',
+                'model_path': 'C:\\path\\to\\another_model.onnx',
+                'dataset_name': 'test_dataset',
+                'config_name': 'test_config',
+                'class_names': ['class1', 'class2'],
+                'train_metrics': {'loss': 0.8, 'acc': 0.85},
+                'test_metrics': {'loss': 1.2, 'acc': 0.82},
+            },
         ]
 
         response = self.manager.get_models_info()
 
         assert len(response.models_info) == 2
-        assert response.models_info[0].run_id == "2025-08-06_11-06-14"
-        assert response.models_info[0].model_name == "classification_model"
-        assert response.models_info[1].run_id == "2025-08-06_12-00-00"
+        assert response.models_info[0].run_id == '2025-08-06_11-06-14'
+        assert response.models_info[0].model_name == 'classification_model'
+        assert response.models_info[1].run_id == '2025-08-06_12-00-00'
 
 
 class TestTrainingAPI:
@@ -306,19 +306,17 @@ class TestTrainingAPI:
 
         mock_manager = Mock()
         mock_model_info = TrainedModelInfo(
-            run_id="2025-08-06_11-06-14",
-            model_name="classification_model",
-            model_path="C:\\path\\to\\model.onnx",
-            dataset_name="grain",
-            config_name="train_grain",
-            class_names=["broken", "healthy"],
-            train_metrics={"loss": 1.0, "acc": 0.75},
-            test_metrics={"loss": 2.5, "acc": 0.29}
+            run_id='2025-08-06_11-06-14',
+            model_name='classification_model',
+            model_path='C:\\path\\to\\model.onnx',
+            dataset_name='grain',
+            config_name='train_grain',
+            class_names=['broken', 'healthy'],
+            train_metrics={'loss': 1.0, 'acc': 0.75},
+            test_metrics={'loss': 2.5, 'acc': 0.29},
         )
-        
-        mock_manager.get_models_info.return_value = Mock(
-            models_info=[mock_model_info]
-        )
+
+        mock_manager.get_models_info.return_value = Mock(models_info=[mock_model_info])
 
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
@@ -330,8 +328,8 @@ class TestTrainingAPI:
             data = response.json()
             assert 'models_info' in data
             assert len(data['models_info']) == 1
-            assert data['models_info'][0]['run_id'] == "2025-08-06_11-06-14"
-            assert data['models_info'][0]['model_name'] == "classification_model"
+            assert data['models_info'][0]['run_id'] == '2025-08-06_11-06-14'
+            assert data['models_info'][0]['model_name'] == 'classification_model'
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
