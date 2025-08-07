@@ -333,6 +333,7 @@ def log_gpu_memory_metadata() -> None:
 
 def save_model_metadata(
     model_path: str,
+    host_model_path: str,
     dataset_name: str,
     class_names: list[str],
     train_metrics: dict[str, Any],
@@ -343,6 +344,7 @@ def save_model_metadata(
     class names, and evaluation metrics.
     Args:
         model_path (str): Path to the saved model file.
+        host_model_path (str): Path to the model file on the host system.
         dataset_name (str): Name of the dataset used for training.
         class_names (list[str]): List of class names corresponding to the model's output.
         train_metrics (dict[str, Any]): Dictionary of training metrics (may include tensors).
@@ -365,7 +367,7 @@ def save_model_metadata(
     metadata = {
         'run_id': run_id,
         'model_name': Path(model_path).stem,
-        'model_path': str(Path(model_path)),
+        'model_path': str(Path(host_model_path)),
         'dataset_name': dataset_name,
         'config_name': experiment_name,
         'class_names': class_names,

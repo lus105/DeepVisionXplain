@@ -1,4 +1,6 @@
+import os
 from typing import Any, Optional
+from dotenv import load_dotenv
 
 import hydra
 import lightning.pytorch as L
@@ -18,6 +20,7 @@ from src.utils import (
     task_wrapper,
     log_gpu_memory_metadata,
     save_model_metadata,
+    is_running_in_docker,
 )
 from src.models.components.utils import export_model_to_onnx
 
@@ -108,8 +111,17 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         )
         log.info(f'Model exported to {onnx_path}')
 
+        host_log_dir = os.getenv('host_log_dir')
+        container_log_dir = os.getenv('container_log_dir')
+
+        if is_running_in_docker() and host_log_dir and container_log_dir:
+            host_onnx_path = onnx_path.replace(container_log_dir, host_log_dir)
+        else:
+            host_onnx_path = onnx_path
+
         save_model_metadata(
             model_path=onnx_path,
+            host_model_path=host_onnx_path,
             dataset_name=datamodule.dataset_name,
             class_names=datamodule.class_names,
             train_metrics=train_metrics,
@@ -133,6 +145,9 @@ def main(cfg: DictConfig) -> Optional[float]:
     Returns:
         Optional[float]: optimized metric value.
     """
+    # load environment variables from .env file
+    load_dotenv()
+
     # train the model
     metric_dict, _ = train(cfg)
 
