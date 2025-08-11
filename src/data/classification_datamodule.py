@@ -81,6 +81,16 @@ class ClassificationDataModule(LightningDataModule):
 
         return self._class_names
 
+    @property
+    def dataset_name(self) -> str:
+        """Get the dataset name from the parent folder containing train/test/val subdirectories.
+
+        Returns:
+            str: The name of the dataset (parent folder name).
+        """
+        dataset_path = Path(self.train_data_dir).parent
+        return dataset_path.name
+
     def prepare_data(self) -> None:
         """Data preparation hook."""
         pass

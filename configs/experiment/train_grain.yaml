@@ -16,6 +16,7 @@ trainer:
   max_epochs: 20
   gradient_clip_val: 0.5
   accelerator: gpu
+  precision: "bf16"
 
 data:
   batch_size: 32
@@ -57,6 +58,6 @@ model:
 
 callbacks:
   model_checkpoint:
-    filename: "${tags[0]}_epoch_{epoch:03d}"
+    filename: "${tags[0]}_${model_name}"
 
 export_to_onnx: True

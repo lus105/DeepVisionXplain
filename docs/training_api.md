@@ -25,6 +25,8 @@ http://127.0.0.1:8000/docs
 ## Run service (from source)
 ```bash
 cd DeepVisionXplain
+# Activate conda environment
+conda activate DeepVisionXplain
 # Development mode
 fastapi dev src/api/main.py
 # Production mode
@@ -60,6 +62,7 @@ Starts a new training process with specified configuration.
 ```json
 {
   "config_name": "experiment_config.yaml",
+  "model_name": "default",
   "train_data_dir": "data/train",
   "test_data_dir": "data/test", 
   "val_data_dir": "data/val"

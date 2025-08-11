@@ -18,9 +18,9 @@ services:
     
     volumes:
       # Mount config and data directories
-      - ${config_dir}:/app/configs
-      - ${data_dir}:/app/data
-      - ${log_dir}:/app/logs
+      - ${host_config_dir}:/app/configs
+      - ${host_data_dir}:/app/data
+      - ${host_log_dir}:/app/logs
     
     environment:
       - PYTHONPATH=/app

@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 import subprocess
 from threading import Lock
@@ -8,7 +9,8 @@ from src.api.training.schemas import (
     TrainingStartRequest,
     TrainingStatusResponse,
     TrainingConfigsResponse,
-    TrainedModelsPathsResponse,
+    TrainedModelInfo,
+    TrainedModelsInfoResponse,
     DatasetInfo,
     AvailableDatasetsResponse,
 )
@@ -50,6 +52,7 @@ class TrainingManager:
                 'python',
                 'src/train.py',
                 f'experiment={request.config_name}',
+                f'model_name={request.model_name}',
                 f'data.train_data_dir={request.train_data_dir}',
                 f'data.test_data_dir={request.test_data_dir}',
                 f'data.val_data_dir={request.val_data_dir}',
@@ -119,27 +122,45 @@ class TrainingManager:
         ]
         return TrainingConfigsResponse(available_configs=configs)
 
-    def get_models_path(
-        self, config_dir: str = 'logs/train/runs', weight_ext: str = '*.onnx'
-    ) -> TrainedModelsPathsResponse:
+    def get_models_info(
+        self, log_dir: str = 'logs/train/runs', file_ext: str = '*.json'
+    ) -> TrainedModelsInfoResponse:
         """
-        Retrieves the absolute paths of all model weight files within a specified directory.
+        Retrieves information about trained models by scanning JSON files in the
+        specified log directory.
         Args:
-            config_dir (str): The root directory to search for model weight files.
+            log_dir (str): The directory path where model JSON files are stored.
                 Defaults to 'logs/train/runs'.
-            weight_ext (str): The file extension pattern to match model weight files.
-                Defaults to '*.ckpt'.
+            file_ext (str): The file extension pattern to search for JSON files.
+                Defaults to '*.json'.
         Returns:
-            TrainedModelsPathsResponse: An object containing a list of absolute
-                paths to the found model weight files.
-            If the specified directory does not exist, returns an empty list.
+            TrainedModelsInfoResponse: An object containing a list of validated
+            model information.
         """
-        config_path = Path(config_dir)
-        if not config_path.exists():
-            return TrainedModelsPathsResponse(model_paths=[])
+        log_path = Path(log_dir)
+        if not log_path.exists():
+            return TrainedModelsInfoResponse(models_info=[])
 
-        models_paths = [str(path.resolve()) for path in config_path.rglob(weight_ext)]
-        return TrainedModelsPathsResponse(model_paths=models_paths)
+        models_info = []
+        json_files = log_path.rglob(file_ext)
+
+        for json_file in json_files:
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    model_data = json.load(f)
+
+                    # Validate the JSON data against the TrainedModelInfo schema
+                    validated_model = TrainedModelInfo(**model_data)
+                    models_info.append(validated_model)
+
+            except (json.JSONDecodeError, FileNotFoundError, PermissionError) as e:
+                # Skip files that can't be read or parsed
+                continue
+            except Exception as e:
+                # Skip files that don't match the expected schema
+                continue
+
+        return TrainedModelsInfoResponse(models_info=models_info)
 
     def get_datasets(self, data_base_dir: str = 'data') -> AvailableDatasetsResponse:
         """

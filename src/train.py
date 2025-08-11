@@ -1,4 +1,6 @@
+import os
 from typing import Any, Optional
+from dotenv import load_dotenv
 
 import hydra
 import lightning.pytorch as L
@@ -17,6 +19,8 @@ from src.utils import (
     log_hyperparameters,
     task_wrapper,
     log_gpu_memory_metadata,
+    save_model_metadata,
+    is_running_in_docker,
 )
 from src.models.components.utils import export_model_to_onnx
 
@@ -99,13 +103,31 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         )
         image_size = cfg.get('data').get('image_size')
         channels = cfg.get('data').get('channels')
+
         export_model_to_onnx(
             model=model.net,
             onnx_path=onnx_path,
             input_shape=(1, channels, image_size[0], image_size[1]),
-            class_names=datamodule.class_names,
         )
         log.info(f'Model exported to {onnx_path}')
+
+        host_log_dir = os.getenv('host_log_dir')
+        container_log_dir = os.getenv('container_log_dir')
+
+        if is_running_in_docker() and host_log_dir and container_log_dir:
+            host_onnx_path = onnx_path.replace(container_log_dir, host_log_dir)
+        else:
+            host_onnx_path = onnx_path
+
+        save_model_metadata(
+            model_path=onnx_path,
+            host_model_path=host_onnx_path,
+            dataset_name=datamodule.dataset_name,
+            class_names=datamodule.class_names,
+            train_metrics=train_metrics,
+            test_metrics=test_metrics,
+        )
+        log.info('Model metadata saved!')
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
@@ -123,6 +145,9 @@ def main(cfg: DictConfig) -> Optional[float]:
     Returns:
         Optional[float]: optimized metric value.
     """
+    # load environment variables from .env file
+    load_dotenv()
+
     # train the model
     metric_dict, _ = train(cfg)
 

@@ -22,6 +22,7 @@ class TrainingStartRequest(BaseModel):
     """Request to start a training session."""
 
     config_name: str
+    model_name: str
     train_data_dir: str
     test_data_dir: str
     val_data_dir: str
@@ -33,10 +34,23 @@ class TrainingStatusResponse(BaseModel):
     status: TrainingStatusEnum | str
 
 
-class TrainedModelsPathsResponse(BaseModel):
-    """Response containing paths to trained models."""
+class TrainedModelInfo(BaseModel):
+    """Information about a single trained model."""
 
-    model_paths: list[str]
+    run_id: str
+    model_name: str
+    model_path: str
+    dataset_name: str
+    config_name: str
+    class_names: list[str]
+    train_metrics: dict
+    test_metrics: dict
+
+
+class TrainedModelsInfoResponse(BaseModel):
+    """Response containing information about trained models."""
+
+    models_info: list[TrainedModelInfo]
 
 
 class DatasetInfo(BaseModel):

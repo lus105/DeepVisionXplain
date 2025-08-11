@@ -1,10 +1,13 @@
 import os
+from pathlib import Path
+import json
 import warnings
 import subprocess
 from importlib.util import find_spec
 from typing import Any, Callable, Optional
 
 import hydra
+from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch import Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
@@ -326,3 +329,126 @@ def log_gpu_memory_metadata() -> None:
         log.info(f'GPU memory info: card {i} : total : {total_gb:.2f} GB')
         log.info(f'GPU memory info: card {i} : free  : {free_gb:.2f} GB')
         log.info(f'GPU memory info: card {i} : used  : {used_gb:.2f} GB')
+
+
+def save_model_metadata(
+    model_path: str,
+    host_model_path: str,
+    dataset_name: str,
+    class_names: list[str],
+    train_metrics: dict[str, Any],
+    test_metrics: dict[str, Any],
+) -> None:
+    """
+    Saves metadata related to a trained model, including configuration, dataset,
+    class names, and evaluation metrics.
+    Args:
+        model_path (str): Path to the saved model file.
+        host_model_path (str): Path to the model file on the host system.
+        dataset_name (str): Name of the dataset used for training.
+        class_names (list[str]): List of class names corresponding to the model's output.
+        train_metrics (dict[str, Any]): Dictionary of training metrics (may include tensors).
+        test_metrics (dict[str, Any]): Dictionary of test metrics (may include tensors).
+    Returns:
+        None
+    """
+    # Initialize default values
+    run_id = None
+    experiment_name = None
+
+    # Extract Hydra configuration if available
+    run_id, experiment_name = _extract_hydra_info()
+
+    # Convert tensor metrics to serializable format
+    train_metrics = _convert_metrics_to_serializable(train_metrics)
+    test_metrics = _convert_metrics_to_serializable(test_metrics)
+
+    # Build metadata dictionary
+    metadata = {
+        'run_id': run_id,
+        'model_name': Path(model_path).stem,
+        'model_path': str(Path(host_model_path)),
+        'dataset_name': dataset_name,
+        'config_name': experiment_name,
+        'class_names': class_names,
+        'train_metrics': train_metrics,
+        'test_metrics': test_metrics,
+    }
+
+    # Save to JSON file
+    _save_metadata_to_file(model_path, metadata)
+
+
+def _extract_hydra_info() -> tuple[str | None, str | None]:
+    """
+    Extracts the Hydra run ID and experiment name from the current Hydra configuration.
+    Returns:
+        tuple[str | None, str | None]: A tuple containing:
+            - run_id (str | None): The run ID extracted from the Hydra output
+                directory name, or None if unavailable.
+            - experiment_name (str | None): The experiment name extracted from
+                Hydra overrides, or None if unavailable.
+    """
+    try:
+        hydra_cfg = HydraConfig.get()
+
+        # Extract experiment name from overrides
+        experiment_name = None
+        if hydra_cfg.overrides.task:
+            log.info(f'Experiment overrides: {hydra_cfg.overrides.task}')
+            for override in hydra_cfg.overrides.task:
+                if override.startswith('experiment='):
+                    experiment_name = override.split('=', 1)[1]
+                    if experiment_name.endswith('.yaml'):
+                        experiment_name = experiment_name.rsplit('.', 1)[0]
+                    break
+
+        # Extract run ID from output directory
+        run_id = None
+        if hydra_cfg.runtime.output_dir:
+            output_path = Path(hydra_cfg.runtime.output_dir)
+            run_id = output_path.name  # Gets "2025-08-05_14-30-15"
+
+        return run_id, experiment_name
+
+    except Exception:
+        log.info('No Hydra configuration found (running outside Hydra context)')
+        return None, None
+
+
+def _convert_metrics_to_serializable(metrics: dict[str, Any]) -> dict[str, Any]:
+    """
+    Converts a dictionary of metrics to a serializable format.
+
+    For each value in the input dictionary, if the value has an 'item' method
+    (e.g., PyTorch tensors or NumPy scalars), the method is called to extract its
+    underlying Python scalar. Otherwise, the value is left unchanged.
+
+    Args:
+        metrics (dict[str, Any]): Dictionary containing metric names and their
+            corresponding values.
+
+    Returns:
+        dict[str, Any]: A new dictionary with the same keys as `metrics`, where
+            values are converted to serializable types if possible.
+    """
+    return {k: v.item() if hasattr(v, 'item') else v for k, v in metrics.items()}
+
+
+def _save_metadata_to_file(model_path: str, metadata: dict[str, Any]) -> None:
+    """
+    Saves the provided metadata dictionary to a JSON file alongside the given model path.
+    Args:
+        model_path (str): The file path to the model. The metadata will be saved
+            with the same name but a '.json' extension.
+        metadata (dict[str, Any]): The metadata to be saved as a JSON file.
+    Returns:
+        None
+    """
+    model_path_obj = Path(model_path)
+    metadata_path = model_path_obj.with_suffix('.json')
+
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+    log.info(f'Saved model metadata to: {metadata_path}')

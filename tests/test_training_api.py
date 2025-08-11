@@ -3,10 +3,11 @@ from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
 from src.api.main import app
-from src.api.training.service import TrainingManager
+from src.api.training.service_trainer import TrainingManager
 from src.api.training.schemas import (
     TrainingStartRequest,
     TrainingStatusEnum,
+    TrainedModelInfo,
 )
 
 
@@ -27,6 +28,7 @@ class TestTrainingManager:
 
         request = TrainingStartRequest(
             config_name='test_config',
+            model_name='test_model',
             train_data_dir='data/train',
             test_data_dir='data/test',
             val_data_dir='data/val',
@@ -48,6 +50,7 @@ class TestTrainingManager:
 
         request = TrainingStartRequest(
             config_name='test_config',
+            model_name='test_model',
             train_data_dir='data/train',
             test_data_dir='data/test',
             val_data_dir='data/val',
@@ -65,6 +68,7 @@ class TestTrainingManager:
 
         request = TrainingStartRequest(
             config_name='test_config',
+            model_name='test_model',
             train_data_dir='data/train',
             test_data_dir='data/test',
             val_data_dir='data/val',
@@ -146,23 +150,47 @@ class TestTrainingManager:
 
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.rglob')
-    def test_get_models_path(self, mock_rglob, mock_exists):
-        """Test retrieving trained model paths."""
+    @patch('builtins.open')
+    @patch('json.load')
+    def test_get_models_info(self, mock_json_load, mock_open, mock_rglob, mock_exists):
+        """Test retrieving trained model information."""
         mock_exists.return_value = True
 
-        # Mock model paths
-        mock_path1 = Mock()
-        mock_path1.resolve.return_value = Path('/abs/path/model1.onnx')
-        mock_path2 = Mock()
-        mock_path2.resolve.return_value = Path('/abs/path/model2.onnx')
+        # Mock JSON files
+        mock_file1 = Mock()
+        mock_file2 = Mock()
+        mock_rglob.return_value = [mock_file1, mock_file2]
 
-        mock_rglob.return_value = [mock_path1, mock_path2]
+        # Mock JSON data matching TrainedModelInfo schema
+        mock_json_load.side_effect = [
+            {
+                'run_id': '2025-08-06_11-06-14',
+                'model_name': 'classification_model',
+                'model_path': 'C:\\path\\to\\model.onnx',
+                'dataset_name': 'grain',
+                'config_name': 'train_grain',
+                'class_names': ['broken', 'healthy'],
+                'train_metrics': {'loss': 1.0, 'acc': 0.75},
+                'test_metrics': {'loss': 2.5, 'acc': 0.29},
+            },
+            {
+                'run_id': '2025-08-06_12-00-00',
+                'model_name': 'another_model',
+                'model_path': 'C:\\path\\to\\another_model.onnx',
+                'dataset_name': 'test_dataset',
+                'config_name': 'test_config',
+                'class_names': ['class1', 'class2'],
+                'train_metrics': {'loss': 0.8, 'acc': 0.85},
+                'test_metrics': {'loss': 1.2, 'acc': 0.82},
+            },
+        ]
 
-        response = self.manager.get_models_path()
+        response = self.manager.get_models_info()
 
-        assert len(response.model_paths) == 2
-        assert str(Path('/abs/path/model1.onnx')) in response.model_paths
-        assert str(Path('/abs/path/model2.onnx')) in response.model_paths
+        assert len(response.models_info) == 2
+        assert response.models_info[0].run_id == '2025-08-06_11-06-14'
+        assert response.models_info[0].model_name == 'classification_model'
+        assert response.models_info[1].run_id == '2025-08-06_12-00-00'
 
 
 class TestTrainingAPI:
@@ -214,6 +242,7 @@ class TestTrainingAPI:
 
         payload = {
             'config_name': 'test_config',
+            'model_name': 'test_model',
             'train_data_dir': 'data/train',
             'test_data_dir': 'data/test',
             'val_data_dir': 'data/val',
@@ -272,13 +301,22 @@ class TestTrainingAPI:
             app.dependency_overrides.clear()
 
     def test_trained_models_endpoint(self):
-        """Test the trained models paths endpoint."""
+        """Test the trained models info endpoint."""
         from src.api.training.router import get_training_manager
 
         mock_manager = Mock()
-        mock_manager.get_models_path.return_value = Mock(
-            model_paths=['/path/to/model1.onnx', '/path/to/model2.onnx']
+        mock_model_info = TrainedModelInfo(
+            run_id='2025-08-06_11-06-14',
+            model_name='classification_model',
+            model_path='C:\\path\\to\\model.onnx',
+            dataset_name='grain',
+            config_name='train_grain',
+            class_names=['broken', 'healthy'],
+            train_metrics={'loss': 1.0, 'acc': 0.75},
+            test_metrics={'loss': 2.5, 'acc': 0.29},
         )
+
+        mock_manager.get_models_info.return_value = Mock(models_info=[mock_model_info])
 
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
@@ -288,8 +326,10 @@ class TestTrainingAPI:
 
             assert response.status_code == 200
             data = response.json()
-            assert 'model_paths' in data
-            assert len(data['model_paths']) == 2
+            assert 'models_info' in data
+            assert len(data['models_info']) == 1
+            assert data['models_info'][0]['run_id'] == '2025-08-06_11-06-14'
+            assert data['models_info'][0]['model_name'] == 'classification_model'
         finally:
             # Clean up the override
             app.dependency_overrides.clear()

@@ -3,3 +3,4 @@
 !src/
 !scripts/
 !pyproject.toml
+!.env
