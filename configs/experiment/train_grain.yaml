@@ -58,6 +58,6 @@ model:
 
 callbacks:
   model_checkpoint:
-    filename: "${tags[0]}_${model_name}"
+    filename: "${model_name}"
 
 export_to_onnx: True
