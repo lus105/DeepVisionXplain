@@ -214,25 +214,24 @@ class TrainingManager:
         """
         Delete a trained model by run ID. This removes the entire run directory
         including all associated files (checkpoints, logs, metrics, etc.).
-        
+
         Args:
             run_id (str): The run ID (timestamp-based directory name) of the model to delete.
             log_dir (str): The directory path where model runs are stored.
                 Defaults to 'logs/train/runs'.
-        
+
         Returns:
             DeleteModelResponse: A response indicating success or failure of the deletion operation.
         """
         log_path = Path(log_dir)
         run_path = log_path / run_id
-        
+
         # Check if the run directory exists
         if not run_path.exists() or not run_path.is_dir():
             return DeleteModelResponse(
-                success=False,
-                error=f'Model run {run_id} not found'
+                success=False, error=f'Model run {run_id} not found'
             )
-        
+
         try:
             # Remove the entire run directory and all its contents
             shutil.rmtree(run_path)
@@ -240,10 +239,9 @@ class TrainingManager:
         except PermissionError:
             return DeleteModelResponse(
                 success=False,
-                error=f'Permission denied: Cannot delete model run {run_id}'
+                error=f'Permission denied: Cannot delete model run {run_id}',
             )
         except Exception as e:
             return DeleteModelResponse(
-                success=False,
-                error=f'Failed to delete model run {run_id}: {str(e)}'
+                success=False, error=f'Failed to delete model run {run_id}: {str(e)}'
             )

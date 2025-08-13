@@ -60,8 +60,8 @@ def status(training_manager: TrainingManager = Depends(get_training_manager)):
     return training_manager.get_status()
 
 
-@router.get('/trained_models', response_model=TrainedModelsInfoResponse)
-def trained_models(training_manager: TrainingManager = Depends(get_training_manager)):
+@router.get('/models', response_model=TrainedModelsInfoResponse)
+def models(training_manager: TrainingManager = Depends(get_training_manager)):
     """Get metadata info about trained models."""
     return training_manager.get_models_info()
 

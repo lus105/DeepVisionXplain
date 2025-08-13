@@ -378,7 +378,7 @@ class TestTrainingAPI:
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
 
         try:
-            response = self.client.get('/training/trained_models')
+            response = self.client.get('/training/models')
 
             assert response.status_code == 200
             data = response.json()
@@ -473,9 +473,7 @@ class TestTrainingAPI:
         from src.api.training.router import get_training_manager
 
         mock_manager = Mock()
-        mock_manager.delete_model.return_value = DeleteModelResponse(
-            success=True
-        )
+        mock_manager.delete_model.return_value = DeleteModelResponse(success=True)
 
         # Override the dependency
         app.dependency_overrides[get_training_manager] = lambda: mock_manager
@@ -497,8 +495,7 @@ class TestTrainingAPI:
 
         mock_manager = Mock()
         mock_manager.delete_model.return_value = DeleteModelResponse(
-            success=False,
-            error='Model run non-existent-run not found'
+            success=False, error='Model run non-existent-run not found'
         )
 
         # Override the dependency
@@ -522,7 +519,7 @@ class TestTrainingAPI:
         mock_manager = Mock()
         mock_manager.delete_model.return_value = DeleteModelResponse(
             success=False,
-            error='Permission denied: Cannot delete model run test-run-id'
+            error='Permission denied: Cannot delete model run test-run-id',
         )
 
         # Override the dependency
