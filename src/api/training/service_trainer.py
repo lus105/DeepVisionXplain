@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 from pathlib import Path
 import subprocess
 from threading import Lock
@@ -13,6 +14,7 @@ from src.api.training.schemas import (
     TrainedModelsInfoResponse,
     DatasetInfo,
     AvailableDatasetsResponse,
+    DeleteModelResponse,
 )
 
 
@@ -153,10 +155,10 @@ class TrainingManager:
                     validated_model = TrainedModelInfo(**model_data)
                     models_info.append(validated_model)
 
-            except (json.JSONDecodeError, FileNotFoundError, PermissionError) as e:
+            except (json.JSONDecodeError, FileNotFoundError, PermissionError):
                 # Skip files that can't be read or parsed
                 continue
-            except Exception as e:
+            except Exception:
                 # Skip files that don't match the expected schema
                 continue
 
@@ -205,3 +207,43 @@ class TrainingManager:
                     datasets.append(dataset_info)
 
         return AvailableDatasetsResponse(datasets=datasets)
+
+    def delete_model(
+        self, run_id: str, log_dir: str = 'logs/train/runs'
+    ) -> DeleteModelResponse:
+        """
+        Delete a trained model by run ID. This removes the entire run directory
+        including all associated files (checkpoints, logs, metrics, etc.).
+        
+        Args:
+            run_id (str): The run ID (timestamp-based directory name) of the model to delete.
+            log_dir (str): The directory path where model runs are stored.
+                Defaults to 'logs/train/runs'.
+        
+        Returns:
+            DeleteModelResponse: A response indicating success or failure of the deletion operation.
+        """
+        log_path = Path(log_dir)
+        run_path = log_path / run_id
+        
+        # Check if the run directory exists
+        if not run_path.exists() or not run_path.is_dir():
+            return DeleteModelResponse(
+                success=False,
+                error=f'Model run {run_id} not found'
+            )
+        
+        try:
+            # Remove the entire run directory and all its contents
+            shutil.rmtree(run_path)
+            return DeleteModelResponse(success=True)
+        except PermissionError:
+            return DeleteModelResponse(
+                success=False,
+                error=f'Permission denied: Cannot delete model run {run_id}'
+            )
+        except Exception as e:
+            return DeleteModelResponse(
+                success=False,
+                error=f'Failed to delete model run {run_id}: {str(e)}'
+            )

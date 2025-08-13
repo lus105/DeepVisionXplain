@@ -11,6 +11,7 @@ from src.api.training.schemas import (
     TrainingStatusResponse,
     TrainedModelsInfoResponse,
     AvailableDatasetsResponse,
+    DeleteModelResponse,
     # Metrics schemas
     MetricsResponse,
     MetricsErrorResponse,
@@ -69,6 +70,14 @@ def trained_models(training_manager: TrainingManager = Depends(get_training_mana
 def datasets(training_manager: TrainingManager = Depends(get_training_manager)):
     """Get available datasets with their actual paths."""
     return training_manager.get_datasets()
+
+
+@router.delete('/models/{run_id}', response_model=DeleteModelResponse)
+def delete_model(
+    run_id: str, training_manager: TrainingManager = Depends(get_training_manager)
+):
+    """Delete a trained model by run ID."""
+    return training_manager.delete_model(run_id)
 
 
 # Metrics tracking endpoints

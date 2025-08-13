@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
@@ -8,6 +7,7 @@ from src.api.training.schemas import (
     TrainingStartRequest,
     TrainingStatusEnum,
     TrainedModelInfo,
+    DeleteModelResponse,
 )
 
 
@@ -191,6 +191,62 @@ class TestTrainingManager:
         assert response.models_info[0].run_id == '2025-08-06_11-06-14'
         assert response.models_info[0].model_name == 'classification_model'
         assert response.models_info[1].run_id == '2025-08-06_12-00-00'
+
+    @patch('src.api.training.service_trainer.shutil.rmtree')
+    @patch('src.api.training.service_trainer.Path.is_dir')
+    @patch('src.api.training.service_trainer.Path.exists')
+    def test_delete_model_success(self, mock_exists, mock_is_dir, mock_rmtree):
+        """Test successful model deletion."""
+        mock_exists.return_value = True
+        mock_is_dir.return_value = True
+
+        response = self.manager.delete_model('2025-08-06_11-06-14')
+
+        assert response.success is True
+        assert response.error is None
+        mock_rmtree.assert_called_once()
+
+    @patch('src.api.training.service_trainer.Path.exists')
+    def test_delete_model_not_found(self, mock_exists):
+        """Test deletion of non-existent model."""
+        mock_exists.return_value = False
+
+        response = self.manager.delete_model('non-existent-run')
+
+        assert response.success is False
+        assert 'not found' in response.error
+        assert isinstance(response, DeleteModelResponse)
+
+    @patch('src.api.training.service_trainer.shutil.rmtree')
+    @patch('src.api.training.service_trainer.Path.is_dir')
+    @patch('src.api.training.service_trainer.Path.exists')
+    def test_delete_model_permission_error(self, mock_exists, mock_is_dir, mock_rmtree):
+        """Test deletion with permission error."""
+        mock_exists.return_value = True
+        mock_is_dir.return_value = True
+        mock_rmtree.side_effect = PermissionError('Access denied')
+
+        response = self.manager.delete_model('2025-08-06_11-06-14')
+
+        assert response.success is False
+        assert 'Permission denied' in response.error
+        assert isinstance(response, DeleteModelResponse)
+
+    @patch('src.api.training.service_trainer.shutil.rmtree')
+    @patch('src.api.training.service_trainer.Path.is_dir')
+    @patch('src.api.training.service_trainer.Path.exists')
+    def test_delete_model_unexpected_error(self, mock_exists, mock_is_dir, mock_rmtree):
+        """Test deletion with unexpected error."""
+        mock_exists.return_value = True
+        mock_is_dir.return_value = True
+        mock_rmtree.side_effect = Exception('Unexpected error')
+
+        response = self.manager.delete_model('2025-08-06_11-06-14')
+
+        assert response.success is False
+        assert 'Failed to delete' in response.error
+        assert 'Unexpected error' in response.error
+        assert isinstance(response, DeleteModelResponse)
 
 
 class TestTrainingAPI:
@@ -411,3 +467,74 @@ class TestTrainingAPI:
         response = self.client.post('/training/start', json=payload)
 
         assert response.status_code == 422  # Validation error
+
+    def test_delete_model_endpoint_success(self):
+        """Test the model deletion endpoint with successful deletion."""
+        from src.api.training.router import get_training_manager
+
+        mock_manager = Mock()
+        mock_manager.delete_model.return_value = DeleteModelResponse(
+            success=True
+        )
+
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
+
+        try:
+            response = self.client.delete('/training/models/test-run-id')
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data['success'] is True
+            assert data.get('error') is None
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
+
+    def test_delete_model_endpoint_not_found(self):
+        """Test the model deletion endpoint with model not found."""
+        from src.api.training.router import get_training_manager
+
+        mock_manager = Mock()
+        mock_manager.delete_model.return_value = DeleteModelResponse(
+            success=False,
+            error='Model run non-existent-run not found'
+        )
+
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
+
+        try:
+            response = self.client.delete('/training/models/non-existent-run')
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data['success'] is False
+            assert 'not found' in data['error']
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
+
+    def test_delete_model_endpoint_permission_error(self):
+        """Test the model deletion endpoint with permission error."""
+        from src.api.training.router import get_training_manager
+
+        mock_manager = Mock()
+        mock_manager.delete_model.return_value = DeleteModelResponse(
+            success=False,
+            error='Permission denied: Cannot delete model run test-run-id'
+        )
+
+        # Override the dependency
+        app.dependency_overrides[get_training_manager] = lambda: mock_manager
+
+        try:
+            response = self.client.delete('/training/models/test-run-id')
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data['success'] is False
+            assert 'Permission denied' in data['error']
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()

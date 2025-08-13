@@ -110,3 +110,10 @@ class RunSummary(BaseModel):
     best_metrics: dict  # Best values for each metric
     final_metrics: dict  # Final values from last epoch
     available_columns: list[str]
+
+
+class DeleteModelResponse(BaseModel):
+    """Response for model deletion operation"""
+
+    success: bool
+    error: Optional[str] = None
