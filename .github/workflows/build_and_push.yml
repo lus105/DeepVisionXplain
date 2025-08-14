@@ -63,4 +63,3 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
-            deepvisionxplain.labels=${{ steps.meta.outputs.labels }}
