@@ -43,7 +43,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
@@ -63,8 +63,4 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
-        env:
-          # Provide dummy values for CI
-          host_config_dir: /tmp/configs
-          host_data_dir: /tmp/data
-          host_log_dir: /tmp/logs
+            deepvisionxplain.labels=${{ steps.meta.outputs.labels }}
