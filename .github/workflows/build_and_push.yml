@@ -50,7 +50,7 @@ jobs:
         uses: docker/bake-action@v5
         with:
           files: |
-            docker-compose.yaml
+            docker-compose.build.yaml
           # Push images instead of just building
           push: true
           # Apply extra settings across all targets
