@@ -130,6 +130,39 @@ Returns paths to trained model files (searches for `*.onnx` files in `logs/train
 }
 ```
 
+#### Delete Trained Model
+```http
+DELETE /training/models/{run_id}
+```
+Deletes a trained model by run ID. This removes the entire run directory including all associated files (checkpoints, logs, metrics, etc.).
+
+**Parameters:**
+- `run_id` - The timestamp-based directory name (e.g., "2025-08-13_15-09-42")
+
+**Response:**
+```json
+{
+  "success": true,
+  "error": null
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Model run {run_id} not found"
+}
+```
+
+**Error Response (Permission Denied):**
+```json
+{
+  "success": false,
+  "error": "Permission denied: Cannot delete model run {run_id}"
+}
+```
+
 #### Get Available Datasets
 ```http
 GET /training/datasets
@@ -306,6 +339,11 @@ curl -X POST "http://localhost:8000/training/stop"
 ### Get available datasets:
 ```bash
 curl "http://localhost:8000/training/datasets"
+```
+
+### Delete a trained model:
+```bash
+curl -X DELETE "http://localhost:8000/training/models/2025-08-13_15-09-42"
 ```
 
 ### Get latest training metrics:
