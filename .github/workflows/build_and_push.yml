@@ -1,0 +1,62 @@
+name: Build & Push (Compose ➜ GHCR)
+
+on:
+  push:
+    branches: [ workflow_test ]
+    tags:
+      - 'v*'       # also build/push on version tags (e.g., v1.2.3)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write   # required to push to ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Setup Buildx (BuildKit)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Log in to GitHub Container Registry
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PASSWORD }}
+
+      # Derive tags & labels
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha
+            type=ref,event=tag
+          labels: |
+            org.opencontainers.image.source=${{ github.repository }}
+
+      # Build & push using Bake with your compose file
+      - name: Build and push
+        uses: docker/bake-action@v5
+        with:
+          files: |
+            docker-compose.yaml
+          # Push images instead of just building
+          push: true
+          # Apply extra settings across all targets
+          set: |
+            *.platform=linux/amd64
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+            deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
+            deepvisionxplain.labels=${{ steps.meta.outputs.labels }}
