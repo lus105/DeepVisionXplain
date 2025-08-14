@@ -1,15 +1,14 @@
-name: Build & Push (Compose ➜ GHCR)
+name: Build & Push to GHCR
 
 on:
   push:
     branches: [ workflow_test ]
     tags:
       - 'v*'       # also build/push on version tags (e.g., v1.2.3)
-  workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write   # required to push to ghcr.io
+  packages: write
 
 jobs:
   build:
@@ -37,7 +36,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+            ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
@@ -48,7 +47,7 @@ jobs:
         uses: docker/bake-action@v5
         with:
           files: |
-            docker-compose.build.yaml
+            docker-compose.yaml
           # Push images instead of just building
           push: true
           # Apply extra settings across all targets
@@ -57,3 +56,8 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
+        env:
+          # Provide dummy values for CI
+          host_config_dir: /tmp/configs
+          host_data_dir: /tmp/data
+          host_log_dir: /tmp/logs
