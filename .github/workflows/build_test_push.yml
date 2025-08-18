@@ -2,11 +2,11 @@ name: Test and Deploy
 
 on:
   push:
-    branches: [workflow_test]
+    branches: [main]
     tags:
       - 'v*'
   pull_request:
-    branches: [workflow_test, "release/*", "dev"]
+    branches: [main, "release/*", "dev"]
 
 permissions:
   contents: read
@@ -105,6 +105,6 @@ jobs:
         with:
           package-name: 'deepvisionxplain'
           package-type: 'container'
-          min-versions-to-keep: 3
+          min-versions-to-keep: 4
           delete-only-untagged-versions: false
           token: ${{ secrets.PASSWORD }}
