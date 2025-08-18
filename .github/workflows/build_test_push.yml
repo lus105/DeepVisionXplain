@@ -66,7 +66,7 @@ jobs:
       # Run tests inside the built container
       - name: Run tests in container
         run: |
-          docker run --rm test-image:latest pytest -v
+          docker run --rm test-image:latest python -m pytest -v
 
       # Only push if tests passed
       - name: Push Docker image
