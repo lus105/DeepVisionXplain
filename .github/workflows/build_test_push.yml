@@ -1,0 +1,110 @@
+name: Test and Deploy
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, "release/*", "dev"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "windows-latest"]
+        python-version: ["3.11"]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        shell: bash
+
+      - name: Install sh (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: pip install sh
+
+      - name: List dependencies
+        run: python -m pip list
+
+      - name: Run pytest
+        run: pytest -v
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    # Only run on pushes to main/workflow_test or tags, not on PRs
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PASSWORD }}
+      
+      - name: Create dummy .env for CI
+        run: |
+          echo "host_config_dir=/tmp/configs" >> .env
+          echo "host_data_dir=/tmp/data" >> .env
+          echo "host_log_dir=/tmp/logs" >> .env
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/bake-action@v5
+        with:
+          files: |
+            docker-compose.yaml
+          push: true
+          set: |
+            *.platform=linux/amd64
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+            deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
+
+  cleanup-old-packages:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Delete old packages
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'deepvisionxplain'
+          package-type: 'container'
+          min-versions-to-keep: 4
+          delete-only-untagged-versions: false
+          token: ${{ secrets.PASSWORD }}
