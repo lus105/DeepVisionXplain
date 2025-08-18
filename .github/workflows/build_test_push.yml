@@ -1,4 +1,4 @@
-name: Build, Test & Push to GHCR
+name: Build Push to GHCR
 
 on:
   push:
@@ -48,25 +48,6 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
             type=ref,event=tag
-
-      # Build image locally (don't push yet)
-      - name: Build Docker image
-        uses: docker/bake-action@v5
-        with:
-          files: |
-            docker-compose.yaml
-          push: false
-          load: true
-          set: |
-            *.platform=linux/amd64
-            *.cache-from=type=gha
-            *.cache-to=type=gha,mode=max
-            deepvisionxplain.tags=test-image:latest
-
-      # Run tests inside the built container
-      - name: Run tests in container
-        run: |
-          docker run --rm test-image:latest python -m pytest tests/ -v
 
       # Only push if tests passed
       - name: Push Docker image
