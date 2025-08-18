@@ -1,4 +1,4 @@
-name: Build Push to GHCR
+name: Build & Push to GHCR
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 jobs:
-  build-test-push:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -45,19 +45,19 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha
-            type=ref,event=tag
+            type=raw,value=latest
 
-      # Only push if tests passed
-      - name: Push Docker image
+      # Build & push using Bake with your compose file
+      - name: Build and push
         uses: docker/bake-action@v5
         with:
           files: |
             docker-compose.yaml
+          # Push images instead of just building
           push: true
+          # Apply extra settings across all targets
           set: |
             *.platform=linux/amd64
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            deepvisionxplain.tags=test-image:latest
+            deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
