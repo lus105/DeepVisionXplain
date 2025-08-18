@@ -90,4 +90,6 @@ jobs:
           push: true
           set: |
             *.platform=linux/amd64
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
             deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
