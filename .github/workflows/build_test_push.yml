@@ -65,7 +65,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PASSWORD }}
       
       - name: Create dummy .env for CI
         run: |
@@ -93,3 +93,18 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             deepvisionxplain.tags=${{ steps.meta.outputs.tags }}
+
+  cleanup-old-packages:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Delete old packages
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'deepvisionxplain'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: false
+          token: ${{ secrets.PASSWORD }}
