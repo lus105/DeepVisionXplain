@@ -33,7 +33,7 @@ jobs:
       # Create dummy .env file for CI
       - name: Create dummy .env for CI
         run: |
-          echo "host_config_dir=/tmp/configs" > .env
+          echo "host_config_dir=/tmp/configs" >> .env
           echo "host_data_dir=/tmp/data" >> .env
           echo "host_log_dir=/tmp/logs" >> .env
 
