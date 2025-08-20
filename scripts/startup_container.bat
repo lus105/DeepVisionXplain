@@ -47,7 +47,7 @@ echo Using: %DC_CMD%
 echo Compose file: "%SCRIPT_DIR%%COMPOSE_FILE%"
 
 rem --- 4) Bring the stack up (absolute -f path so caller CWD never matters) ---
-%DC_CMD% -f "%SCRIPT_DIR%%COMPOSE_FILE%" up
+%DC_CMD% -f "%SCRIPT_DIR%%COMPOSE_FILE%" up --pull always
 set "RC=%ERRORLEVEL%"
 
 if not "%RC%"=="0" (
