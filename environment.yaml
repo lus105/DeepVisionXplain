@@ -32,7 +32,6 @@ dependencies:
       - opencv-python
       - matplotlib
       - scikit-learn
-      - pynvml
       - ruff
       - segmentation-models-pytorch
       - ipywidgets

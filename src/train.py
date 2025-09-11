@@ -18,7 +18,6 @@ from src.utils import (
     instantiate_loggers,
     log_hyperparameters,
     task_wrapper,
-    log_gpu_memory_metadata,
     save_model_metadata,
     is_running_in_docker,
 )
@@ -40,7 +39,6 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     Returns:
         Tuple[Dict[str, Any], Dict[str, Any]]: metrics and dict with all instantiated objects.
     """
-    log_gpu_memory_metadata()
 
     # set seed for random number generators in pytorch, numpy and python.random
     if cfg.get('seed'):
