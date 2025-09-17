@@ -20,10 +20,8 @@ trainer:
 data:
   batch_size: 8
   num_workers: 1
-  num_classes: 2
 
 model:
   net:
     multi_head: false
   ckpt_path: null
-  num_classes: ${data.num_classes}

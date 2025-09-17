@@ -17,7 +17,7 @@ class ClassificationLitModule(LightningModule):
         loss: torch.nn.modules.loss,
         compile: bool,
         ckpt_path: str,
-        num_classes: int = None,
+        num_classes: int,
     ) -> None:
         """Initialize lightning module.
 
@@ -28,7 +28,7 @@ class ClassificationLitModule(LightningModule):
             loss (torch.nn.modules.loss): Loss function.
             compile (bool): Compile model.
             ckpt_path (string): Model chekpoint path.
-            num_classes (int, optional): Number of classes.
+            num_classes (int): Number of classes.
         """
         super().__init__()
         # model
@@ -220,6 +220,7 @@ class ClassificationLitModule(LightningModule):
         Args:
             stage (str): Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
         """
+        self.net.load_model(num_classes=self.num_classes)
         if self.compile and stage == 'fit':
             self.net = torch.compile(self.net)
         if self.ckpt_path:

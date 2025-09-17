@@ -19,7 +19,6 @@ trainer:
 data:
   batch_size: 64
   num_workers: 1
-  num_classes: 2
 
 model:
   net:
@@ -28,4 +27,3 @@ model:
     lr: 5e-5
   compile: false
   ckpt_path: null
-  num_classes: ${data.num_classes}

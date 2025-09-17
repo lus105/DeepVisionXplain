@@ -25,7 +25,6 @@ class ClassificationDataModule(LightningDataModule):
         train_transforms: Compose = None,
         val_test_transforms: Compose = None,
         save_predict_images: bool = False,
-        num_classes: int = 2,
     ) -> None:
         """Initialize a `DirDataModule`.
 
@@ -41,7 +40,6 @@ class ClassificationDataModule(LightningDataModule):
             train_transforms (Compose, optional): Train split transformations. Defaults to None.
             val_test_transforms (Compose, optional): Validation and test split transformations. Defaults to None.
             save_predict_images (bool, optional): Save images in predict mode? Defaults to False.
-            num_classes (int, optional): Number of classes in the dataset.
         """
         super().__init__()
 
@@ -55,29 +53,31 @@ class ClassificationDataModule(LightningDataModule):
         self.train_transforms = train_transforms
         self.val_test_transforms = val_test_transforms
         self.save_predict_images = save_predict_images
-        self._num_classes = num_classes
         self.channels = channels
         self._class_names: Optional[list[str]] = None
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
         self.data_predict: Optional[Dataset] = None
+        self.setup_stages_done = set()
 
     @property
     def num_classes(self) -> int:
         """Get the number of classes.
 
         Returns:
-            int: The number of classes (2).
+            int: The number of classes.
         """
-        return self._num_classes
+        if self._class_names is None and self.data_train is None:
+            self.setup(stage='fit')
+
+        return len(self._class_names)
 
     @property
-    def class_names(self):
+    def class_names(self) -> Optional[list[str]]:
         """Automatically extract class names from the dataset."""
-
-        if self._class_names is None and hasattr(self.data_train, 'classes'):
-            self._class_names = self.data_train.classes
+        if self._class_names is None and self.data_train is None:
+            self.setup(stage='fit')
 
         return self._class_names
 
@@ -102,8 +102,10 @@ class ClassificationDataModule(LightningDataModule):
             stage (Optional[str], optional): The stage to setup. Either `"fit"`,
             `"validate"`, `"test"`, or `"predict"`. Defaults to None.
         """
-
         if stage in {'fit', 'validate', 'test'}:
+            if 'fit' in self.setup_stages_done:
+                return
+
             self.data_train = ImageFolder(
                 root=Path(self.train_data_dir),
                 transform=self.train_transforms,
@@ -118,11 +120,25 @@ class ClassificationDataModule(LightningDataModule):
                 root=Path(self.val_data_dir),
                 transform=self.val_test_transforms,
             )
+
+            if hasattr(self.data_train, 'classes') and self._class_names is None:
+                self._class_names = self.data_train.classes
+            
+            self.setup_stages_done.add('fit')
+
         elif stage == 'predict':
+            if 'predict' in self.setup_stages_done:
+                return
+            
             self.data_predict = ImageFolder(
                 root=Path(self.test_data_dir),
                 transform=self.val_test_transforms,
             )
+
+            if hasattr(self.data_predict, 'classes') and self._class_names is None:
+                self._class_names = self.data_predict.classes
+            
+            self.setup_stages_done.add('predict')
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
