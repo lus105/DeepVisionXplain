@@ -12,11 +12,10 @@ tags: ["classification", "train", "cnn"]
 seed: 12345
 
 trainer:
-  min_epochs: 10
-  max_epochs: 20
-  gradient_clip_val: 0.5
+  min_epochs: 20
+  max_epochs: 35
   accelerator: gpu
-  precision: "bf16"
+  precision: "bf16-mixed"
 
 data:
   batch_size: 32
@@ -42,19 +41,15 @@ data:
         replicate_borders: false
         inpaint_color: [215, 215, 215]
       - _target_: torchvision.transforms.ToTensor
-      
-  num_classes: 6
 
 model:
   net:
     _target_: src.models.components.base_model.BaseModel
     model_name: timm/mobilenetv3_large_100.ra_in1k
     pretrained: True
-    num_classes: ${data.num_classes}
   loss:
     _target_: torch.nn.CrossEntropyLoss
   ckpt_path: null
-  num_classes: ${data.num_classes}
 
 callbacks:
   model_checkpoint:

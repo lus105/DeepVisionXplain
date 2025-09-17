@@ -59,7 +59,19 @@ class BaseModel(nn.Module):
 
         """
         super().__init__()
-        self.model = get_model(model_name, model_repo, **kwargs)
+        self.model_name = model_name
+        self.model_repo = model_repo
+        self.model_kwargs = kwargs
+        self.model = None
+    
+    def load_model(self, **additional_kwargs: Any) -> None:
+        """Load or reload the model with saved kwargs and optional additional kwargs.
+        
+        Args:
+            **additional_kwargs: Additional keyword arguments to override or extend saved kwargs.
+        """
+        merged_kwargs = {**self.model_kwargs, **additional_kwargs}
+        self.model = get_model(self.model_name, self.model_repo, **merged_kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)

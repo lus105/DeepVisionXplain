@@ -48,7 +48,7 @@ def train(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
     log.info(f'Instantiating model <{cfg.model._target_}>')
-    model: LightningModule = hydra.utils.instantiate(cfg.model)
+    model: LightningModule = hydra.utils.instantiate(cfg.model, num_classes=datamodule.num_classes)
 
     log.info('Instantiating loggers...')
     loggers: list[Logger] = instantiate_loggers(cfg.get('logger'))

@@ -20,17 +20,14 @@ trainer:
 data:
   batch_size: 32
   num_workers: 1
-  num_classes: 6
 
 model:
   net:
     _target_: src.models.components.base_model.BaseModel
     model_name: timm/mobilenetv3_large_100.ra_in1k
     pretrained: True
-    num_classes: ${data.num_classes}
   loss:
     _target_: torch.nn.CrossEntropyLoss
   ckpt_path: null
-  num_classes: ${data.num_classes}
 
 export_to_onnx: True
