@@ -123,13 +123,13 @@ class ClassificationDataModule(LightningDataModule):
 
             if hasattr(self.data_train, 'classes') and self._class_names is None:
                 self._class_names = self.data_train.classes
-            
+
             self.setup_stages_done.add('fit')
 
         elif stage == 'predict':
             if 'predict' in self.setup_stages_done:
                 return
-            
+
             self.data_predict = ImageFolder(
                 root=Path(self.test_data_dir),
                 transform=self.val_test_transforms,
@@ -137,7 +137,7 @@ class ClassificationDataModule(LightningDataModule):
 
             if hasattr(self.data_predict, 'classes') and self._class_names is None:
                 self._class_names = self.data_predict.classes
-            
+
             self.setup_stages_done.add('predict')
 
     def train_dataloader(self) -> DataLoader[Any]:

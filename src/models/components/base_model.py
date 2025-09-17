@@ -63,10 +63,10 @@ class BaseModel(nn.Module):
         self.model_repo = model_repo
         self.model_kwargs = kwargs
         self.model = None
-    
+
     def load_model(self, **additional_kwargs: Any) -> None:
         """Load or reload the model with saved kwargs and optional additional kwargs.
-        
+
         Args:
             **additional_kwargs: Additional keyword arguments to override or extend saved kwargs.
         """
