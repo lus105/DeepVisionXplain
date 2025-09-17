@@ -48,6 +48,7 @@ class MNISTLitModule(LightningModule):
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
         ckpt_path: str,
+        num_classes: int = 10,
     ) -> None:
         """Initialize a `MNISTLitModule`.
 
