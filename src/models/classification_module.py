@@ -100,11 +100,14 @@ class ClassificationLitModule(LightningModule):
         x, y = batch
         logits = self.forward(x)
 
-        if self.num_classes == 2:
+        if self.num_classes == 2 and logits.shape[-1] == 1:
+            # Binary classification with single output neuron
             y = y.view(-1, 1).float()
             loss = self.criterion(logits, y)
-            preds = (logits > 0.5).float()
+            preds = (torch.sigmoid(logits) > 0.5).float().squeeze()
+            y = y.squeeze()
         else:
+            # Multi-class or binary with 2 output neurons
             y = y.long()
             loss = self.criterion(logits, y)
             preds = torch.argmax(logits, dim=1)
@@ -206,9 +209,11 @@ class ClassificationLitModule(LightningModule):
         x, y = batch
         logits = self.forward(x)
 
-        if self.num_classes == 2:
-            preds = (logits > 0.5).float()
+        if self.num_classes == 2 and logits.shape[-1] == 1:
+            # Binary classification with single output neuron
+            preds = (torch.sigmoid(logits) > 0.5).float().squeeze()
         else:
+            # Multi-class or binary with 2 output neurons
             preds = torch.argmax(logits, dim=1)
 
         return preds
