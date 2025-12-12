@@ -9,7 +9,7 @@
 [![lightning](https://img.shields.io/badge/-Lightning_2.0+-792ee5?logo=pytorchlightning&logoColor=white)](https://pytorchlightning.ai/)
 [![hydra](https://img.shields.io/badge/Config-Hydra_1.3-89b8cd)](https://hydra.cc/)
 
-<img src="docs/res/intro_figure.png" width="600" />
+<img src="docs/res/intro_figure.png" />
 
 </div>
 
