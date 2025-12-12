@@ -3,7 +3,7 @@
 # DeepVisionXplain
 <img src="docs/res/logo_xplain.png" width="100" />
 
-<strong>Model training environment</strong>  
+**Neural network training environment with MLOps tools, training API, and model explainability**
 
 [![pytorch](https://img.shields.io/badge/PyTorch_2.0+-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/get-started/locally/)
 [![lightning](https://img.shields.io/badge/-Lightning_2.0+-792ee5?logo=pytorchlightning&logoColor=white)](https://pytorchlightning.ai/)
@@ -11,39 +11,58 @@
 
 </div>
 
-## Project Description
-Neural network training environment (including various MLOps tools) with training API service and model explainability tools.
+---
+## Features
 
-#### Conda installation
+- **Model Training**: PyTorch Lightning + Hydra configuration system
+- **Training API**: FastAPI service for remote training management ([docs](docs/training_api.md))
+- **Explainability**: CNN CAM and ViT Attention Rollout ([docs](docs/explainability.md))
+- **Hyperparameter Optimization**: Integrated Optuna sweeps
+- **MLOps**: W&B integration, checkpoint management, ONNX export
+
+## Quick Start
+
+**Installation:**
 ```bash
-# clone project
 git clone https://github.com/lus105/DeepVisionXplain.git
-# change directory
 cd DeepVisionXplain
-# update conda
-conda update -n base conda
-# create conda environment and install dependencies
 conda env create -f environment.yaml -n DeepVisionXplain
-# activate conda environment
 conda activate DeepVisionXplain
+copy .env.example .env # or cp .env.example .env
 ```
 
-#### Quickstart
-Train model with default configuration (check if environment is properly set up):
+**Train a model:**
 ```bash
-# train on CPU (mnist dataset)
+# CPU
 python src/train.py trainer=cpu
-# train on GPU (mnist dataset)
+
+# GPU
 python src/train.py trainer=gpu
+
+# Specific experiment
+python src/train.py experiment=experiment_name
 ```
 
-#### Other sections
+**Run Training API:**
+```bash
+# Development
+fastapi dev src/api/main.py
 
-[Training API service](docs/training_api.md)
+# Docker
+docker compose up --build
 
-[CNN/ViT (ante-hoc) explainability](docs/explainability.md)
+# Docker (Pre-built image)
+docker-compose -f docker-compose.prod.yaml up
+```
 
+## Documentation
 
-## References
+- [Training API Service](docs/training_api.md) - REST API for managing training processes
+- [Model Explainability](docs/explainability.md) - CNN/ViT ante-hoc explainability methods
 
-[lus105/DeepTrainer](https://github.com/lus105/DeepTrainer)
+## Resources
+
+- [Research paper](https://ieeexplore.ieee.org/document/10348813)
+- [Master's project](https://epubl.ktu.edu/object/elaba:198846619/)
+
+---

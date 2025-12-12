@@ -1,26 +1,21 @@
-# CNN/ViT (ante-hoc) explainability
+## CNN/ViT (ante-hoc) explainability
+This module provides ante-hoc explainability methods for CNN and ViT models using Class Activation Mapping (CAM) and Attention Rollout techniques, respectively. The explainability methods are integrated into modified model architectures to generate visual explanations during inference.
 
 <p align="center">
-  <img src="res/explainability.png" width="250"/>
+  <img src="res/model_explainability.png" />
 </p>
 
-## Modified ViT architecture
+#### Modified ViT architecture ([code](../src/models/components/vit_rollout_multihead.py))
+
 <p align="center">
   <img src="res/vit_rollout.png"/>
 </p>
 
-## Modified CNN architecture
+#### Modified CNN architecture ([code](../src/models/components/cnn_cam_multihead.py))
+
 <p align="center">
   <img src="res/cnn_cam.png"/>
 </p>
-
-Two cnn models were trained for experimentation.
-```bash
-full size: efficientnet_v2_s. features.7 -> [1, 1280, 7, 7]
-downscaled: efficientnet_v2_s. features.6.0.block.0 -> [1, 960, 14, 14]
-full size: mobilenet_v3_large. features.16 -> [1, 960, 7, 7]
-downscaled: mobilenet_v3_large. features.13.block.0 -> [1, 672, 14, 14]
-```
 
 Train cnn/vit model:
 ```bash
@@ -39,14 +34,7 @@ python src/train.py hparams_search=vit_optuna experiment=train_vit_multi
 ```
 
 
-## Resources
+## Research
 
-- [Trained models](https://huggingface.co/DeepVisionXplain/models)
-- [Defect detection datasets](https://huggingface.co/DeepVisionXplain/datasets)
-- [Experiment logs](https://wandb.ai/team_deepvisionxplain?shareProfileType=copy)
-- [Research paper](https://epubl.ktu.edu/object/elaba:198846619/)
-
-## References
-
-- [jacobgil/vit-explain](https://github.com/jacobgil/vit-explain)
-- [rytiss/DL-defect-classification-with-CAM-output](https://github.com/rytisss/DL-defect-classification-with-CAM-output)
+- [Research paper](https://ieeexplore.ieee.org/document/10348813)
+- [Master's project](https://epubl.ktu.edu/object/elaba:198846619/)

@@ -4,7 +4,7 @@ A FastAPI-based service for managing deep learning model training processes.
 
 ## Overview
 
-The Training API provides endpoints to start, stop, monitor training processes, and retrieve training metrics. It uses a background subprocess approach to run training scripts while maintaining API responsiveness. The API includes comprehensive metrics tracking with support for PyTorch Lightning CSV logs and dataset discovery functionality.
+The Training API provides endpoints to start, stop, monitor training processes, and retrieve training metrics. It uses a background subprocess approach to run training scripts while maintaining API responsiveness. The API includes comprehensive metrics tracking.
 
 Architecture diagram:
 <p align="center">
@@ -15,9 +15,9 @@ Architecture diagram:
 ```bash
 cd DeepVisionXplain
 # Create .env file (from .env.example) and specify required paths
-
+copy .env.example .env # or cp .env.example .env
 # Build and run the Docker container
-docker-compose up --build
+docker compose up --build
 # Open documentation
 http://127.0.0.1:8000/docs
 ```
@@ -47,7 +47,6 @@ GET /ping
 }
 ```
 
-
 ## Core Endpoints
 
 ### Training Management
@@ -61,10 +60,10 @@ Starts a new training process with specified configuration.
 **Request Body:**
 ```json
 {
-  "config_name": "experiment_config.yaml",
-  "model_name": "default",
+  "config_name": "experiment_name",
+  "model_name": "default", # (model output name)
   "train_data_dir": "data/train",
-  "test_data_dir": "data/test", 
+  "test_data_dir": "data/test",
   "val_data_dir": "data/val"
 }
 ```
@@ -113,20 +112,31 @@ Lists available training configuration files from the `configs/experiment/` dire
 **Response:**
 ```json
 {
-  "available_configs": ["config1.yaml", "config2.yaml"]
+  "available_configs": ["train_cnn_multi.yaml", "train_vit_multi.yaml", "example.yaml"]
 }
 ```
 
 #### Get Trained Models
 ```http
-GET /training/trained_models
+GET /training/models
 ```
-Returns paths to trained model files (searches for `*.onnx` files in `logs/train/runs/`).
+Returns metadata about trained models (searches for `*.json` files in `logs/train/runs/`).
 
 **Response:**
 ```json
 {
-  "model_paths": ["/path/to/model1.onnx", "/path/to/model2.onnx"]
+  "models_info": [
+    {
+      "run_id": "2025-08-05_16-10-59",
+      "model_name": "model",
+      "model_path": "/path/to/model.onnx",
+      "dataset_name": "MNIST",
+      "config_name": "train_cnn_multi",
+      "class_names": ["class1", "class2"],
+      "train_metrics": {"train/loss": 0.1, "train/acc": 0.95},
+      "test_metrics": {"test/loss": 0.12, "test/acc": 0.93}
+    }
+  ]
 }
 ```
 
@@ -294,72 +304,14 @@ Returns summary statistics for a specific training run.
 - `not_running` - No training process is active
 - `error: {message}` - An error occurred during training
 
-## Training Run Status Values
-
-- `completed` - Training run finished and has metrics available
-- `in_progress` - Training run is ongoing or stopped without metrics
-
 ## Configuration
 
-- Training configurations are stored in `configs/experiment/` (`.yaml` files)
-- Model outputs are saved to `logs/train/runs/`
-- Trained models are searched in `logs/train/runs/` (`.onnx` files)
+- Training configurations are stored in `configs/experiment/` (`.yaml` files, referenced without extension)
+- Model outputs are saved to `logs/train/runs/{timestamp}/`
+- Model metadata files (`classification_model.json`) are searched in `logs/train/runs/`
 - Datasets are discovered in `data/` directory (requires `train/` and `test/` subdirectories)
-- Metrics are automatically parsed from PyTorch Lightning CSV logs
+- Metrics are automatically parsed from PyTorch Lightning CSV logs in `logs/train/runs/{timestamp}/csv/version_0/metrics.csv`
 
-## Usage Examples
-
-### Health Check:
-```bash
-curl "http://localhost:8000/ping"
-```
-
-### Start a training session:
-```bash
-curl -X POST "http://localhost:8000/training/start" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "config_name": "my_experiment.yaml",
-    "train_data_dir": "data/MNIST/train",
-    "test_data_dir": "data/MNIST/test",
-    "val_data_dir": "data/MNIST/val"
-  }'
-```
-
-### Check training status:
-```bash
-curl "http://localhost:8000/training/status"
-```
-
-### Stop training:
-```bash
-curl -X POST "http://localhost:8000/training/stop"
-```
-
-### Get available datasets:
-```bash
-curl "http://localhost:8000/training/datasets"
-```
-
-### Delete a trained model:
-```bash
-curl -X DELETE "http://localhost:8000/training/models/2025-08-13_15-09-42"
-```
-
-### Get latest training metrics:
-```bash
-curl "http://localhost:8000/training/metrics/latest"
-```
-
-### List all training runs:
-```bash
-curl "http://localhost:8000/training/metrics/runs"
-```
-
-### Get specific run summary:
-```bash
-curl "http://localhost:8000/training/metrics/runs/run_2024_01_15_14_30_45/summary"
-```
 
 ## Notes
 
